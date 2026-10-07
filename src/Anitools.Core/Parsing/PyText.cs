@@ -208,7 +208,7 @@ internal static partial class PyText
     }
 
     /// <summary>Сравнение строк по кодовым точкам — для сортировок «как sorted() в Python».</summary>
-    public static IComparer<string> CodePointComparer { get; } = Comparer<string>.Create(CompareCodePoints);
+    public static IComparer<string?> CodePointComparer { get; } = Comparer<string?>.Create(CompareCodePoints);
 
     private static void AppendRune(StringBuilder sb, Rune rune)
     {
