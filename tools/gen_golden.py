@@ -33,7 +33,7 @@ import signal
 import sys
 import types
 import unicodedata
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parent.parent
 REF_REL = "reference/python/anitools.py"
@@ -1312,6 +1312,196 @@ def g_calibrate_cq():
                                 "resolutions": ladder, "source": source, "cpu_decode": cpu},
                       "calls": calls, **res})
     FAKE_SIZES.clear()
+    return cases
+
+
+# ─── Сценарии п.7 «HLS» ──────────────────────────────────────────────────────
+
+def _probe_reply(full: dict, cmd: list[str]) -> str:
+    """Ответ ffprobe на запрос п.7 — из полного JSON фикстуры (того же, что читает C#)."""
+    streams = full.get("streams", [])
+    audio = [s for s in streams if s.get("codec_type") == "audio"]
+    video = [s for s in streams if s.get("codec_type") == "video"][:1]
+    entries = cmd[cmd.index("-show_entries") + 1]
+    if entries == "stream=index:stream_tags=title,language":
+        out = []
+        for s in audio:
+            tags = {k: v for k, v in (s.get("tags") or {}).items() if k in ("title", "language")}
+            out.append({"index": s["index"], **({"tags": tags} if tags else {})})
+        return _ffjson(out)
+    if entries == "stream=codec_name,width,height":
+        return _ffjson([{k: s[k] for k in ("codec_name", "width", "height") if k in s} for s in video])
+    if entries == "stream=width":
+        return "".join(f"{s['width']}\n" for s in video)
+    if entries == "format=duration":
+        return f"{full['format']['duration']}\n"
+    if entries == "stream=channels":
+        return "".join(f"{s.get('channels', '')}\n" for s in audio)
+    raise RuntimeError(f"неизвестный запрос ffprobe: {cmd}")
+
+
+class _ZipRecorder:
+    """zipfile.ZipFile для сценариев: запоминает имена записей, на диск кладёт маленький файл вместо архива."""
+
+    root = ""
+    zips: dict = {}
+
+    def __init__(self, path, mode="r", compression=None):
+        if mode != "w" or compression != 0:
+            raise RuntimeError(f"неожиданный zip: mode={mode} compression={compression}")
+        self.path, self.names = Path(path), []
+
+    def write(self, filename, arcname=None):
+        self.names.append(str(arcname).replace(os.sep, "/"))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.path.write_bytes(b"zip")
+        _ZipRecorder.zips[os.path.relpath(self.path, _ZipRecorder.root).replace(os.sep, "/")] = sorted(self.names)
+        return False
+
+
+def _windows_sorted(iterable, *, key=None, reverse=False):
+    """sorted() оригинала на Windows: пути (PureWindowsPath) сравниваются по частям в нижнем регистре."""
+    items = list(iterable)
+    if key is None and items and all(isinstance(x, PurePath) for x in items):
+        key = lambda p: [part.lower() for part in p.parts]  # noqa: E731
+    return sorted(items, key=key, reverse=reverse)
+
+
+FRIEREN_EP = "[SubsPlease] Sousou no Frieren - {} (1080p).mkv"
+
+# files — файлы папки (пустые), existing — уже готовые выходы, media — фикстура ffprobe по файлу (video — подмена
+# полей видеопотока), shikimori — ответ поиска, answers — ответы на вопросы оригинала ({root} — папка сценария),
+# ffmpeg_fail — номера вызовов ffmpeg с кодом 1, top_bytes — размер сегмента верхнего качества (разреженный файл),
+# options — те же решения для C#: группы (title, files при перегруппировке, shikimori_id, озвучки по раскладкам) и
+# куда писать временные файлы (near — рядом с выходом, folder — {root}/work).
+HLS_SCENARIOS = [
+    {"name": "frieren_near",
+     "files": [FRIEREN_EP.format("01"), FRIEREN_EP.format("02"), "notes.txt"],
+     "media": {FRIEREN_EP.format("01"): F1, FRIEREN_EP.format("02"): F1}, "shikimori": "frieren",
+     "answers": ["1", "1", "1", "5", "-", "6", "1", "2", "3"],
+     "options": {"groups": [{"title": "Sousou no Frieren", "shikimori_id": 52991,
+                             "layouts": [[[0, "AniLibria.TV"], [1, None], [2, "DEEP"]]]}], "work": "near"}},
+
+    {"name": "layouts_and_work_folder",
+     "files": ["Kaiju - 01.mkv", "Kaiju - 02.mkv", "Kaiju - 03.mp4", "Kaiju - 04.mkv", "Kaiju - 05.mkv"],
+     "media": {"Kaiju - 01.mkv": F1, "Kaiju - 02.mkv": F2, "Kaiju - 03.mp4": F3, "Kaiju - 04.mkv": FSIL, "Kaiju - 05.mkv": F1},
+     "shikimori": "empty",
+     "answers": ["1", "1", "12345", "1", "0", "Оригинал / JP", "6", "1", "0", None, "-", "1", "2", "2", "{root}/work"],
+     "options": {"groups": [{"title": "Kaiju", "shikimori_id": 12345,
+                             "layouts": [[[0, "AniLiberty (AniLibria)"], [1, "Оригинал / JP"], [2, "DEEP"]],
+                                         [[0, "AniLiberty (AniLibria)"], [1, "jpn"]],
+                                         [[0, None]]]}], "work": "folder"}},
+
+    {"name": "resume_retry_and_failure",
+     "files": ["Kaiju - 01.mkv", "Kaiju - 02.mkv", "Kaiju - 03.mkv"],
+     "existing": ["hls_multi/Kaiju/Kaiju - 01.zip", "hls_multi/Kaiju/audio/AniLibria.TV/Kaiju - 01.AniLibria.TV.mka"],
+     "media": {"Kaiju - 01.mkv": F2, "Kaiju - 02.mkv": F2, "Kaiju - 03.mkv": F2}, "shikimori": "empty",
+     "answers": ["1", "1", None, "5", "-", "1", "2", "3"], "ffmpeg_fail": [0, 4],
+     "options": {"groups": [{"title": "Kaiju", "shikimori_id": None, "layouts": [[[0, "AniLibria.TV"], [1, None]]]}],
+                 "work": "near"}},
+
+    {"name": "regroup_and_same_names",
+     "files": ["A - 01.mkv", "A - 01.mp4", "B - 01.mkv"],
+     "media": {"A - 01.mkv": F3, "A - 01.mp4": F3, "B - 01.mkv": F3}, "shikimori": "rezero",
+     "answers": ["2", "Re:Zero", "1,2", None, "1", None, "1", "0", "31240", "0", "Рус", "2", "1", "2", "3"],
+     "options": {"groups": [{"title": "Re:Zero", "files": ["A - 01.mkv", "A - 01.mp4"], "shikimori_id": 31240,
+                             "layouts": [[[0, "Рус"]]]}], "work": "near"}},
+
+    {"name": "separate_top_zip_and_wide_source",
+     "files": ["Big - 01.mkv"], "media": {"Big - 01.mkv": F1}, "video": {"Big - 01.mkv": {"width": 5120, "height": 2880}},
+     "shikimori": "empty", "answers": ["1", "1", None, "5", "-", "-", "1", "2", "3"], "top_bytes": 7 * 1024 ** 3 + 1,
+     "options": {"groups": [{"title": "Big", "shikimori_id": None, "layouts": [[[0, "AniLibria.TV"], [1, None], [2, None]]]}],
+                 "work": "near", "separate_top_zip": True}},
+
+    {"name": "bracket_names_order",
+     "files": ["Hellsing Ultimate OVA 01.mkv", "[Group] Kaiju - 01.mkv", "_Kaiju - 02.mkv"],
+     "media": {"Hellsing Ultimate OVA 01.mkv": F3, "[Group] Kaiju - 01.mkv": F3, "_Kaiju - 02.mkv": F3}, "shikimori": "empty",
+     "answers": ["1", "1", None, "0", None, "1", None, "0", None, "1", "2", "3"],
+     "options": {"groups": [{"title": "Kaiju", "shikimori_id": None, "layouts": [[[0, "rus"]]]},
+                            {"title": "Hellsing Ultimate OVA", "shikimori_id": None, "layouts": [[[0, "rus"]]]}],
+                 "work": "near"}},
+]
+
+
+def run_hls_scenario(sc: dict) -> dict:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="anitools-hls-") as td:
+        root = os.path.realpath(td)
+        for rel in sc["files"]:
+            Path(root, rel).write_bytes(b"")
+        for rel in sc.get("existing", []):
+            p = Path(root, *rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"done")
+
+        def probe(cmd):
+            cmd = [str(c) for c in cmd]
+            rel = os.path.relpath(cmd[-1], root).replace(os.sep, "/")
+            full = json.loads((MEDIA / f"{sc['media'][rel]}.ffprobe.json").read_text(encoding="utf-8"))
+            for s in full["streams"]:
+                if s.get("codec_type") == "video":
+                    s.update(sc.get("video", {}).get(rel, {}))
+            if cmd[0] != "ffprobe":
+                raise RuntimeError(f"сценарий {sc['name']}: неожиданный запуск {cmd}")
+            return _probe_reply(full, cmd), ""
+
+        commands, statuses, fails = [], [], set(sc.get("ffmpeg_fail", []))
+
+        def run_ffmpeg(cmd, *args, **kwargs):
+            cmd = [str(c) for c in cmd]
+            code = 1 if len(commands) in fails else 0
+            commands.append([c.replace(root, "{root}") for c in cmd])
+            for i, a in enumerate(cmd):
+                if a == "-hls_segment_filename":
+                    seg_dir = Path(cmd[i + 1]).parent
+                    with open(seg_dir / "seg000.ts", "wb") as f:  # недописанный выход и при ошибке
+                        f.truncate(sc["top_bytes"] if "top_bytes" in sc and seg_dir.name == "4K" else 100)
+                    if code == 0:
+                        (seg_dir / "seg001.ts").write_bytes(b"\0" * 100)
+                        Path(cmd[i + 2]).write_text("#EXTM3U\n", encoding="utf-8")
+                elif a.endswith(".mka") and code == 0:
+                    Path(a).write_text("mka", encoding="utf-8")
+            return code
+
+        real_process = at._process_episode_multi_res
+
+        def process(*args, **kwargs):
+            status = real_process(*args, **kwargs)
+            statuses.append(status)
+            return status
+
+        fixture = SHIKI_FIXTURES[sc["shikimori"]]
+        _ZipRecorder.root, _ZipRecorder.zips = root, {}
+        _ScriptedPrompt.answers = [a.replace("{root}", root) if isinstance(a, str) else a for a in sc["answers"]]
+        try:
+            with patched(subprocess=fake_subprocess(probe, []), Prompt=_ScriptedPrompt, Panel=_Quiet, Table=_Quiet,
+                         Progress=_Quiet, SpinnerColumn=_Quiet, TextColumn=_Quiet, BarColumn=_Quiet,
+                         TimeRemainingColumn=_Quiet, box=_Quiet(), clear_screen=lambda: None,
+                         restart_script=lambda: None, run_ffmpeg=run_ffmpeg, _process_episode_multi_res=process,
+                         _shiki_get=lambda path, tries=3: fixture, _cleanup_orphan_ramdisks=lambda: None,
+                         zipfile=types.SimpleNamespace(ZipFile=_ZipRecorder, ZIP_STORED=0), sorted=_windows_sorted,
+                         FFMPEG_PATH="ffmpeg", FFPROBE_PATH="ffprobe", ANITOOLS_WORK_DIR=""):
+                at.convert_videos_multi_res(Path(root))
+        finally:
+            at.ANITOOLS_WORK_DIR = ""
+        if _ScriptedPrompt.answers:
+            raise RuntimeError(f"сценарий {sc['name']}: лишние ответы {_ScriptedPrompt.answers}")
+        files = sorted(os.path.relpath(os.path.join(d, f), root).replace(os.sep, "/")
+                       for d, _, names in os.walk(root) for f in names)
+        return {"commands": commands, "statuses": statuses, "zips": _ZipRecorder.zips, "files": files}
+
+
+@golden("hls_scenarios", "П.7: команды, архивы и итоговые файлы оригинала для папки и ответов на вопросы")
+def g_hls_scenarios():
+    cases = []
+    for sc in HLS_SCENARIOS:
+        inp = {k: sc.get(k) for k in ("name", "files", "existing", "media", "video", "shikimori", "answers",
+                                      "ffmpeg_fail", "top_bytes", "options")}
+        cases.append({"input": inp, "output": run_hls_scenario(sc)})
     return cases
 
 
