@@ -28,7 +28,10 @@ jobs:
       - name: Эталоны совпадают с оригиналом
         run: python tools/gen_golden.py --check
       - name: ffmpeg и MKVToolNix для интеграционных тестов
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg mkvtoolnix
+        timeout-minutes: 10
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg mkvtoolnix
       - run: dotnet build -c Release
       - run: dotnet test -c Release --no-build
       - name: Скриншоты
@@ -51,6 +54,7 @@ jobs:
       # Не поставились — интеграционные тесты пропустятся, сборка не падает.
       - name: ffmpeg и MKVToolNix для интеграционных тестов
         continue-on-error: true
+        timeout-minutes: 15
         run: choco install ffmpeg mkvtoolnix -y --no-progress
       - run: dotnet build -c Release
       - run: dotnet test -c Release --no-build
