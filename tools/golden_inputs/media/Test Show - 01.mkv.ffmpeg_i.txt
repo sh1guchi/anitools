@@ -1,0 +1,34 @@
+Input #0, matroska,webm, from '{root}/Test Show - 01.mkv':
+  Metadata:
+    ENCODER         : Lavf60.16.100
+  Duration: 00:00:03.02, start: -0.023000, bitrate: 906 kb/s
+  Stream #0:0: Video: h264 (Constrained Baseline), yuv420p(progressive), 160x90 [SAR 1:1 DAR 16:9], 24 fps, 24 tbr, 1k tbn
+    Metadata:
+      ENCODER         : Lavc60.31.102 libx264
+      DURATION        : 00:00:03.000000000
+  Stream #0:1(rus): Audio: aac (LC), 44100 Hz, mono, fltp (default)
+    Metadata:
+      title           : AniLibria.TV
+      ENCODER         : Lavc60.31.102 aac
+      DURATION        : 00:00:03.023000000
+  Stream #0:2(jpn): Audio: flac, 44100 Hz, mono, s16
+    Metadata:
+      title           : Оригинальная
+      ENCODER         : Lavc60.31.102 flac
+      DURATION        : 00:00:03.000000000
+  Stream #0:3(rus): Audio: ac3, 48000 Hz, 5.1(side), fltp, 448 kb/s
+    Metadata:
+      title           : DEEP
+      ENCODER         : Lavc60.31.102 ac3
+      DURATION        : 00:00:03.000000000
+  Stream #0:4(rus): Subtitle: ass
+    Metadata:
+      title           : Надписи
+      ENCODER         : Lavc60.31.102 ass
+      DURATION        : 00:00:02.000000000
+  Stream #0:5(eng): Subtitle: subrip
+    Metadata:
+      title           : Full
+      ENCODER         : Lavc60.31.102 srt
+      DURATION        : 00:00:02.000000000
+At least one output file must be specified

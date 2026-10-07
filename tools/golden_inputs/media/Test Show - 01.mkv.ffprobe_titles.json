@@ -1,0 +1,23 @@
+{
+  "programs": [],
+  "streams": [
+    {
+      "index": 1,
+      "tags": {
+        "title": "AniLibria.TV"
+      }
+    },
+    {
+      "index": 2,
+      "tags": {
+        "title": "Оригинальная"
+      }
+    },
+    {
+      "index": 3,
+      "tags": {
+        "title": "DEEP"
+      }
+    }
+  ]
+}

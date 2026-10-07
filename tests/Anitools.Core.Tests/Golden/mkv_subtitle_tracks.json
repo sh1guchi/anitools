@@ -1,0 +1,17 @@
+{
+  "function": "mkv_subtitle_tracks",
+  "description": "Дорожки субтитров из mkvmerge -J (py:2560): [id, {name, codec_id, language, language_ietf}]",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "1. Test Show - 01.AniLibria.TV.mka.mkvmerge.json", "output": []},
+    {"input": "Resolve Export.mov.mkvmerge.json", "output": []},
+    {"input": "Silent Show - 01.mkv.mkvmerge.json", "output": []},
+    {"input": "Test Show - 01.mka.mkvmerge.json", "output": []},
+    {"input": "Test Show - 01.mkv.mkvmerge.json", "output": [[4, {"name": "Надписи", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": ""}], [5, {"name": "Full", "codec_id": "S_TEXT/UTF8", "language": "eng", "language_ietf": ""}]]},
+    {"input": "Test Show - 02.mkv.mkvmerge.json", "output": [[3, {"name": "Full", "codec_id": "S_TEXT/UTF8", "language": "eng", "language_ietf": ""}], [4, {"name": "Надписи", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": ""}]]},
+    {"input": "Test_Show_-_03.mp4.mkvmerge.json", "output": [[2, {"name": "Язык: rus", "codec_id": "", "language": "rus", "language_ietf": ""}]]},
+    {"input": {"inline": {"tracks": [{"id": 0, "type": "video", "codec": "AVC/H.264/MPEG-4p10", "properties": {"codec_id": "V_MPEG4/ISO/AVC"}}, {"id": 1, "type": "subtitles", "codec": "SubStationAlpha", "properties": {"language": "rus"}, "tags": {"simple": [{"name": "TITLE", "value": "Из тегов"}]}}, {"id": 2, "type": "subtitles", "codec": "SubRip/SRT", "properties": {"language": "eng", "language_ietf": "en"}}, {"id": 3, "type": "subtitles", "codec": "HDMV PGS", "properties": {}}, {"id": 4, "type": "subtitles", "codec": "VobSub", "properties": {"track_name": "  "}}, {"id": 5, "type": "subtitles", "codec": "Unknown", "codec_id": "", "properties": {"track_name": "Без кодека"}}, {"id": 6, "type": "audio", "codec_id": "S_TEXT/ASS", "properties": {"track_name": "Аудио с S_TEXT"}}]}}, "output": [[1, {"name": "Из тегов", "codec_id": "", "language": "rus", "language_ietf": ""}], [2, {"name": "Язык: eng", "codec_id": "S_TEXT/UTF8", "language": "eng", "language_ietf": "en"}], [3, {"name": "Субтитры 4", "codec_id": "S_HDMV/PGS", "language": "", "language_ietf": ""}], [4, {"name": "  ", "codec_id": "S_VOBSUB", "language": "", "language_ietf": ""}], [5, {"name": "Без кодека", "codec_id": "", "language": "", "language_ietf": ""}], [6, {"name": "Аудио с S_TEXT", "codec_id": "S_TEXT/ASS", "language": "", "language_ietf": ""}]]}
+  ]
+}

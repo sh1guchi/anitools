@@ -1,0 +1,60 @@
+{
+  "attachments": [],
+  "chapters": [],
+  "container": {
+    "properties": {
+      "container_type": 17,
+      "duration": 3000000000,
+      "is_providing_timestamps": true,
+      "muxing_application": "Lavf60.16.100",
+      "segment_uid": "00000000000000000000000000000000",
+      "timestamp_scale": 1000000,
+      "writing_application": "Lavf60.16.100"
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "Matroska"
+  },
+  "errors": [],
+  "file_name": "{root}/Silent Show - 01.mkv",
+  "global_tags": [
+    {
+      "num_entries": 1
+    }
+  ],
+  "identification_format_version": 19,
+  "track_tags": [
+    {
+      "num_entries": 2,
+      "track_id": 0
+    }
+  ],
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "codec_id": "V_MPEG4/ISO/AVC",
+        "codec_private_data": "0142c00affe100186742c00ada0a37e4c044000003000400000300c03c489a8001000468ce0fc8",
+        "codec_private_length": 39,
+        "default_duration": 41666666,
+        "default_track": false,
+        "display_dimensions": "160x90",
+        "display_unit": 0,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "und",
+        "minimum_timestamp": 0,
+        "num_index_entries": 1,
+        "number": 1,
+        "packetizer": "mpeg4_p10_video",
+        "pixel_dimensions": "160x90",
+        "tag_duration": "00:00:03.000000000",
+        "tag_encoder": "Lavc60.31.102 libx264",
+        "uid": 1
+      },
+      "type": "video"
+    }
+  ],
+  "warnings": []
+}

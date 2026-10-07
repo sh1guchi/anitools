@@ -57,6 +57,8 @@ def load_reference():
     mod.FFMPEG_PATH = "ffmpeg"
     mod.FFPROBE_PATH = "ffprobe"
     mod.ANITOOLS_WORK_DIR = ""
+    # Оригинал печатает предупреждения в консоль — генератору они не нужны
+    mod.console = types.SimpleNamespace(print=lambda *a, **k: None)
     return mod
 
 
@@ -567,6 +569,131 @@ def g_shiki_original_name():
             out = call(at._shiki_original_name, sid)
         cases.append({"input": {"id": sid, "response": resp}, "api_paths": paths, **out})
     return cases
+
+
+# ─── Медиа: MOV и mkvmerge ───────────────────────────────────────────────────
+
+MEDIA = INPUTS / "media"
+
+
+def _box(kind: bytes, payload: bytes, *, size64: bool = False, size0: bool = False) -> bytes:
+    if size64:
+        return (1).to_bytes(4, "big") + kind + (16 + len(payload)).to_bytes(8, "big") + payload
+    if size0:
+        return (0).to_bytes(4, "big") + kind + payload
+    return (8 + len(payload)).to_bytes(4, "big") + kind + payload
+
+
+def _hdlr(handler: bytes, name: bytes) -> bytes:
+    # version/flags(4) + pre_defined(4) + handler_type(4) + reserved(12) + name
+    return _box(b"hdlr", b"\0" * 8 + handler + b"\0" * 12 + name)
+
+
+def _trak(handler: bytes, hdlr_name: bytes = b"", udta: bytes = b"") -> bytes:
+    body = _box(b"mdia", _box(b"mdhd", b"\0" * 24) + _hdlr(handler, hdlr_name))
+    if udta:
+        body += _box(b"udta", udta)
+    return _box(b"trak", _box(b"tkhd", b"\0" * 84) + body)
+
+
+def _intl_text(text: str) -> bytes:
+    raw = text.encode("utf-8")
+    return len(raw).to_bytes(2, "big") + b"\x55\xc4" + raw
+
+
+MOV_SAMPLES = {
+    "names_of_all_kinds": _box(b"ftyp", b"qt  \0\0\0\0qt  ") + _box(b"moov", b"".join([
+        _box(b"mvhd", b"\0" * 100),
+        _trak(b"vide", b"\x0cVideoHandler"),
+        _trak(b"soun", b"\x0cSoundHandler", _box(b"name", "AniLibria.TV\0".encode())),
+        _trak(b"soun", b"", _box(b"\xa9nam", _intl_text("Оригинальная"))),
+        _trak(b"soun", b"\x04DEEP"),
+        _trak(b"soun", b"\x0cSoundHandler"),
+        _trak(b"soun", "Studio Band\0".encode()),
+        _trak(b"soun", b"", _box(b"titl", b"  \0\0 Dream Cast \0")),
+        _trak(b"soun", b"", _box(b"name", b"bad \xff\xfe utf8")),
+        _trak(b"soun", b"core media audio\0"),
+        _trak(b"text", b"", _box(b"name", b"Subtitle")),
+    ])) + _box(b"mdat", b"\0" * 32),
+    "moov_64bit_size": _box(b"moov", _trak(b"soun", b"", _box(b"name", b"Track A")), size64=True),
+    "moov_to_end": _box(b"wide", b"") + _box(b"moov", _trak(b"soun", b"", _box(b"name", b"Last")), size0=True),
+    "truncated_trak": _box(b"moov", _trak(b"soun", b"", _box(b"name", b"Ok"))
+                           + (500).to_bytes(4, "big") + b"trak" + b"\0" * 20),
+    "short_hdlr": _box(b"moov", _box(b"trak", _box(b"mdia", _box(b"hdlr", b"\0" * 8 + b"so")))),
+    "no_moov": _box(b"ftyp", b"isom") + _box(b"mdat", b"\0" * 16),
+    "garbage": b"not a quicktime file at all",
+    "empty": b"",
+}
+
+
+@golden("mov_audio_titles", "Имена аудиодорожек из боксов QuickTime/MP4 (py:1589–1701); вход — байты файла в base64")
+def g_mov_audio_titles():
+    import base64
+    import tempfile
+    cases = []
+    with tempfile.TemporaryDirectory() as td:
+        for name, data in MOV_SAMPLES.items():
+            path = Path(td) / f"{name}.mov"
+            path.write_bytes(data)
+            cases.append({"input": {"name": name, "base64": base64.b64encode(data).decode("ascii")},
+                          **call(at._read_mov_audio_titles, str(path))})
+        cases.append({"input": {"name": "missing_file", "base64": None},
+                      **call(at._read_mov_audio_titles, str(Path(td) / "missing.mov"))})
+    return cases
+
+
+@golden("mkv_subtitle_tracks", "Дорожки субтитров из mkvmerge -J (py:2560): [id, {name, codec_id, language, language_ietf}]")
+def g_mkv_subtitle_tracks():
+    cases = []
+    for fixture in sorted(MEDIA.glob("*.mkvmerge.json")):
+        name = fixture.name.removesuffix(".mkvmerge.json")
+        identify = fixture.read_text(encoding="utf-8")
+
+        def handler(cmd, identify=identify):
+            return (identify, "") if cmd[:2] == ["mkvmerge", "-J"] else ("", "")
+
+        calls: list = []
+        with patched(subprocess=fake_subprocess(handler, calls)):
+            res = call(at.list_subtitle_tracks, str(MEDIA / name), quiet=True)
+        if "output" in res:
+            count, tracks, ok = res["output"]
+            res["output"] = [[tid, {k: info[k] for k in ("name", "codec_id", "language", "language_ietf") if k in info}]
+                             for tid, info in tracks]
+        cases.append({"input": f"{name}.mkvmerge.json", **res})
+    synthetic = {
+        # имя из тегов, запасные имена, codec_id из названия кодека
+        "synthetic": {"tracks": [
+            {"id": 0, "type": "video", "codec": "AVC/H.264/MPEG-4p10", "properties": {"codec_id": "V_MPEG4/ISO/AVC"}},
+            {"id": 1, "type": "subtitles", "codec": "SubStationAlpha", "properties": {"language": "rus"},
+             "tags": {"simple": [{"name": "TITLE", "value": "Из тегов"}]}},
+            {"id": 2, "type": "subtitles", "codec": "SubRip/SRT", "properties": {"language": "eng", "language_ietf": "en"}},
+            {"id": 3, "type": "subtitles", "codec": "HDMV PGS", "properties": {}},
+            {"id": 4, "type": "subtitles", "codec": "VobSub", "properties": {"track_name": "  "}},
+            {"id": 5, "type": "subtitles", "codec": "Unknown", "codec_id": "", "properties": {"track_name": "Без кодека"}},
+            {"id": 6, "type": "audio", "codec_id": "S_TEXT/ASS", "properties": {"track_name": "Аудио с S_TEXT"}},
+        ]},
+    }
+    for name, data in synthetic.items():
+        identify = json.dumps(data, ensure_ascii=False)
+        with patched(subprocess=fake_subprocess(lambda cmd, j=identify: (j, "") if cmd[:2] == ["mkvmerge", "-J"] else ("", ""), [])):
+            res = call(at.list_subtitle_tracks, name, quiet=True)
+        if "output" in res:
+            res["output"] = [[tid, {k: info[k] for k in ("name", "codec_id", "language", "language_ietf") if k in info}]
+                             for tid, info in res["output"][1]]
+        cases.append({"input": {"inline": data}, **res})
+    return cases
+
+
+@golden("list2cmdline", "Командная строка для логов ошибок (subprocess.list2cmdline, py:846)")
+def g_list2cmdline():
+    import subprocess as sp
+    inputs = [
+        ["ffmpeg", "-nostdin", "-y", "-i", r"D:\anime\Sousou no Frieren\Frieren - 01.mkv", "-map", "0:v:0"],
+        ["mkvextract", "tracks", r"D:\a b\x.mkv", r"3:D:\a b\надписи\x.надписи.ass"],
+        ["a", "", "b c", "d\te"], ["C:\\path with space\\"], ["C:\\no_space\\"], ['say "hi"'], ['a"b'],
+        ['a\\"b'], ['a\\\\"b c'], ["\\\\server\\share\\x y\\"], ["title=AniLibria.TV x DEEP"], [],
+    ]
+    return [{"input": args, **call(sp.list2cmdline, args)} for args in inputs]
 
 
 # ─── Строки Python ───────────────────────────────────────────────────────────

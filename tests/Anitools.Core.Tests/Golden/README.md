@@ -8,8 +8,9 @@ python3 tools/gen_golden.py          # перегенерировать
 python3 tools/gen_golden.py --check  # проверить, что эталоны актуальны (так делает CI)
 ```
 
-Входы: `tools/golden_inputs/filenames.txt` (~270 имён файлов), `titles.txt` (названия) и
-наборы прямо в `tools/gen_golden.py` (фикстуры Shikimori, дорожки субтитров, вывод ffprobe и т.п.).
+Входы: `tools/golden_inputs/filenames.txt` (~270 имён файлов), `titles.txt` (названия),
+`media/` — реальный вывод ffprobe / ffmpeg / mkvmerge по сгенерированным файлам (`tools/capture_media_fixtures.py`)
+и наборы прямо в `tools/gen_golden.py` (фикстуры Shikimori, дорожки субтитров, боксы MOV и т.п.).
 
 ## Формат
 

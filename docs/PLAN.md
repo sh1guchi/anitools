@@ -869,10 +869,25 @@ NVENC/scale_cuda/NVDEC и CPU-фолбэк на реальной видеока�
   (в оригинале «1-99999999» подвесил бы программу).
 
 **Этап 3 — медиа и простые операции (облако)**
-- [ ] `ProcessRunner` (UTF-8, отмена, хвост stderr, `-progress pipe:1`), `MediaProbe` (ffprobe JSON, mkvmerge -J), `MovAtomReader`.
+- [x] `ProcessRunner` (UTF-8, отмена, хвост stderr, `-progress pipe:1`), `MediaProbe` (ffprobe JSON, mkvmerge -J), `MovAtomReader`.
 - [ ] Операции 1, 2 (оба режима), 3, 4, 6: Options → Plan → Execute; интеграционные тесты на сгенерированных файлах сверяют выход через ffprobe (потоки, title, language, disposition) и имена файлов.
 - [ ] П.3: группировка серий по набору слотов, отдельные порядок/тайтлы/язык на набор; тест: у одной серии нет внешнего файла → её команда без этой дорожки, остальные не съехали.
-- [ ] Логи ошибок, снятие read-only.
+- [x] Логи ошибок, снятие read-only.
+
+Решения этапа 3 (часть 1 — процессы и медиа):
+- `ProcessRunner`: аргументы через `ArgumentList`, вывод в UTF-8, stdin закрыт, отмена = `Kill(entireProcessTree)`,
+  хвост stderr 400 строк, прогресс ffmpeg — `-progress pipe:1 -nostats` (`FfmpegProgressParser`).
+- Найдено тестами: без UTF-8-локали (Linux, `LC_ALL=C`) mkvmerge выдаёт битый JSON с кириллицей, а mkvextract
+  не понимает кириллицу в имени файла. Поэтому на Linux/macOS дочерним процессам ставится `LC_ALL=C.UTF-8`,
+  а `mkvmerge -J` вызывается с `--output-charset UTF-8` (в оригинале без; на Windows страхует от кодовой страницы консоли).
+- `ToolLocator`: настройки → `FFMPEG_PATH`/`FFPROBE_PATH` → PATH → `Program Files\MKVToolNix` / `System32`;
+  шим Chocolatey заменяется настоящим exe из `chocolatey\lib\…\tools`. В CI на Windows ffmpeg ставится через
+  Chocolatey, как у пользователя, и тест проверяет, что найден именно настоящий exe.
+- `MediaProbe`: один `ffprobe -show_streams -show_format` вместо разбора `ffmpeg -i`; `CodecDescription` повторяет
+  «Audio: …» из `ffmpeg -i` (сверено на всех фикстурах) — для имён папок дорожек без тайтла.
+- Фикстуры реального вывода ffprobe/ffmpeg/mkvmerge — `tools/capture_media_fixtures.py` → `tools/golden_inputs/media/`;
+  новые эталоны `mov_audio_titles`, `mkv_subtitle_tracks`, `list2cmdline`.
+- Логи ошибок — формат оригинала; два лога одного файла в одну секунду не затирают друг друга (`…_2.log`).
 
 **Этап 4 — переименование и Shikimori (облако)**
 - [ ] `ShikimoriClient` (ретраи, 429, 404, таймаут) на фейковом HTTP; ранжирование по golden.

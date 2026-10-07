@@ -1,0 +1,60 @@
+{
+  "attachments": [],
+  "chapters": [],
+  "container": {
+    "properties": {
+      "container_type": 17,
+      "duration": 3023000000,
+      "is_providing_timestamps": true,
+      "muxing_application": "Lavf60.16.100",
+      "segment_uid": "00000000000000000000000000000000",
+      "timestamp_scale": 1000000,
+      "writing_application": "Lavf60.16.100"
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "Matroska"
+  },
+  "errors": [],
+  "file_name": "{root}/1. Test Show - 01.AniLibria.TV.mka",
+  "global_tags": [
+    {
+      "num_entries": 1
+    }
+  ],
+  "identification_format_version": 19,
+  "track_tags": [
+    {
+      "num_entries": 2,
+      "track_id": 0
+    }
+  ],
+  "tracks": [
+    {
+      "codec": "AAC",
+      "id": 0,
+      "properties": {
+        "audio_bits_per_sample": 32,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "codec_delay": 23219955,
+        "codec_id": "A_AAC",
+        "codec_private_data": "120856e500",
+        "codec_private_length": 5,
+        "default_track": false,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "rus",
+        "minimum_timestamp": 0,
+        "num_index_entries": 1,
+        "number": 1,
+        "tag_duration": "00:00:03.023000000",
+        "tag_encoder": "Lavc60.31.102 aac",
+        "track_name": "AniLibria.TV",
+        "uid": 1
+      },
+      "type": "audio"
+    }
+  ],
+  "warnings": []
+}

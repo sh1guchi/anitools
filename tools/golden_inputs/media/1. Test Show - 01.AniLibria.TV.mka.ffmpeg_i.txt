@@ -1,0 +1,10 @@
+Input #0, matroska,webm, from '{root}/1. Test Show - 01.AniLibria.TV.mka':
+  Metadata:
+    ENCODER         : Lavf60.16.100
+  Duration: 00:00:03.02, start: -0.023000, bitrate: 73 kb/s
+  Stream #0:0(rus): Audio: aac (LC), 44100 Hz, mono, fltp
+    Metadata:
+      title           : AniLibria.TV
+      ENCODER         : Lavc60.31.102 aac
+      DURATION        : 00:00:03.023000000
+At least one output file must be specified
