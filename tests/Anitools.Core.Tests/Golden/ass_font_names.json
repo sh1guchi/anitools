@@ -1,0 +1,15 @@
+{
+  "function": "ass_font_names",
+  "description": "Шрифты из .ass: стили и теги \\fn (ass_fonts.py: read_ass + parse_font_names); вход — байты в base64",
+  "source": "reference/python/extra/ass_fonts.py",
+  "source_sha256": "ef2ba8381e6a31c6560f76716cee93cbb1045a7ffc258044adb14d8fa23c11f8",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"name": "styles_and_fn", "base64": "W1NjcmlwdCBJbmZvXQpUaXRsZTogeAoKW1Y0KyBTdHlsZXNdCkZvcm1hdDogTmFtZSwgRm9udG5hbWUsIEZvbnRzaXplClN0eWxlOiBEZWZhdWx0LEFyaWFsLDIwClN0eWxlOiBTaWducyxATVMgR290aGljICwxOApTdHlsZTogQmFkCgpbRXZlbnRzXQpGb3JtYXQ6IExheWVyLCBTdGFydCwgRW5kLCBTdHlsZSwgVGV4dApEaWFsb2d1ZTogMCwwOjAwOjAxLjAwLDA6MDA6MDIuMDAsRGVmYXVsdCx7XGZuS29taWthIEF4aXN90KLQtdC60YHRgntcZm590YHQsdGA0L7RgXtcYjFcZm4gVGltZXMgTmV3IFJvbWFuIFxpMX0KQ29tbWVudDogMCwwOjAwOjAxLjAwLDA6MDA6MDIuMDAsRGVmYXVsdCx7XGZuTm90IFVzZWR9Cg=="}, "output": ["Arial", "Komika Axis", "MS Gothic", "Times New Roman"]},
+    {"input": {"name": "custom_format_bom", "base64": "77u/W1Y0IFN0eWxlc10KRm9ybWF0OiBOYW1lLCBGb250c2l6ZSwgRm9udG5hbWUKU3R5bGU6IEEsMjAsVmVyZGFuYQpbdjQrIHN0eWxlc10KU3R5bGU6IEIsMTgsVGFob21hCltFdmVudHNdCkRJQUxPR1VFOiAwLDA6MDA6MDEuMDAsMDowMDowMi4wMCxBLHtcZm5Db3VyaWVyIE5ld314Cg=="}, "output": ["Courier New", "Tahoma", "Verdana"]},
+    {"input": {"name": "utf16", "base64": "//5bAFYANAArACAAUwB0AHkAbABlAHMAXQAKAEYAbwByAG0AYQB0ADoAIABOAGEAbQBlACwAIABGAG8AbgB0AG4AYQBtAGUACgBTAHQAeQBsAGUAOgAgAEQAZQBmAGEAdQBsAHQALAAoBEAEOAREBEIEIAAeBDQEOAQ9BAoAWwBFAHYAZQBuAHQAcwBdAAoARABpAGEAbABvAGcAdQBlADoAIAAwACwAMAA6ADAAMAA6ADAAMQAuADAAMAAsADAAOgAwADAAOgAwADIALgAwADAALAB4ACwAewBcAGYAbgAoBEAEOAREBEIEIAAUBDIEMAR9AAoA"}, "output": ["Шрифт Два", "Шрифт Один"]},
+    {"input": {"name": "cp1251", "base64": "W1Y0KyBTdHlsZXNdCkZvcm1hdDogTmFtZSwgRm9udG5hbWUKU3R5bGU6IERlZmF1bHQs2PDo9PIg0vDoCg=="}, "output": ["Шрифт Три"]},
+    {"input": {"name": "no_fontname_in_format", "base64": "W1Y0KyBTdHlsZXNdCkZvcm1hdDogTmFtZSwgRm9udApTdHlsZTogRGVmYXVsdCxTZWNvbmQsVGhpcmQKCltGb250c10KU3R5bGU6IFgsWQo="}, "output": ["Second"]},
+    {"input": {"name": "crlf_and_spaces", "base64": "ICBbVjQrIFN0eWxlc10gIA0KICBGb3JtYXQgOiBOYW1lICwgRm9udG5hbWUNCiBTdHlsZTpEZWZhdWx0LCAgR2VvcmdpYSAgDQo="}, "output": ["Georgia"]}
+  ]
+}
