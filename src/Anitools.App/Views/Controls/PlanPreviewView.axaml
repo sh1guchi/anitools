@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Anitools.App.ViewModels"
+             x:Class="Anitools.App.Views.Controls.PlanPreviewView"
+             x:DataType="vm:PlanPreviewViewModel">
+  <!-- Файлы и что с ними будет; снятая галочка — файл не трогать -->
+  <DockPanel IsVisible="{Binding HasRows}">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="10,0,0,6">
+      <CheckBox x:Name="AllBox" IsThreeState="True" IsChecked="{Binding AllChecked}" Content="все" MinWidth="0" />
+      <TextBlock x:Name="SummaryText" Grid.Column="1" Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" Margin="16,0,0,0" />
+    </Grid>
+    <Border Classes="card" Padding="0">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Grid.IsSharedSizeScope="True" Margin="10,6">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:PlanRowViewModel">
+              <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="Size" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanRun}" MinWidth="0" Padding="4,0" />
+                <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" MaxWidth="520"
+                           TextTrimming="CharacterEllipsis" Margin="4,0,16,0" ToolTip.Tip="{Binding Label}" />
+                <TextBlock Grid.Column="2" Text="{Binding Size}" Classes="muted" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,16,0" />
+                <TextBlock Grid.Column="3" Text="{Binding Target}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           Classes.skip="{Binding IsSkip}" Classes.error="{Binding IsError}" ToolTip.Tip="{Binding Target}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>

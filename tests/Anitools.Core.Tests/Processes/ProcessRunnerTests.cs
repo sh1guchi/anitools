@@ -101,4 +101,24 @@ public sealed class ProcessRunnerTests
             new ProcessSpec("/bin/sh", ["-c", "echo ${LC_ALL:-${LC_CTYPE:-$LANG}}"]), TestContext.Current.CancellationToken);
         Assert.Matches("(?i)utf-?8", result.StandardOutput);
     }
+
+    [Fact]
+    public void Closing_job_kills_its_processes_and_their_children()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Job Object — только на Windows");
+        var job = Anitools.Core.Platform.ChildProcessJob.TryCreate();
+        Assert.NotNull(job);
+        // cmd запускает ping дочерним процессом — он тоже в задании
+        using var process = Process.Start(new ProcessStartInfo("cmd.exe", "/d /c ping -n 60 127.0.0.1 > nul")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        })!;
+
+        Assert.True(job.Assign(process));
+        Assert.False(process.WaitForExit(500));
+        job.Dispose();
+
+        Assert.True(process.WaitForExit(10_000), "После закрытия задания процесс должен завершиться");
+    }
 }

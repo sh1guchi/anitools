@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Anitools.App.ViewModels"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Controls.PageHeader"
+             x:DataType="vm:PageViewModel">
+  <!-- Заголовок страницы, «обновить», индикатор загрузки, сообщение об ошибке и уведомление -->
+  <StackPanel Spacing="10" Margin="0,0,0,12">
+    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+      <mi:MaterialIcon Kind="{Binding Icon}" Classes="accent" Width="26" Height="26" Margin="0,0,10,0" />
+      <TextBlock Grid.Column="1" Classes="h1" Text="{Binding Title}" VerticalAlignment="Center" />
+      <ProgressBar Grid.Column="2" IsIndeterminate="True" Width="90" MinWidth="0" Margin="16,0,0,0" HorizontalAlignment="Left"
+                   VerticalAlignment="Center" IsVisible="{Binding IsLoading}" />
+      <Button Grid.Column="3" Classes="icon" Command="{Binding RefreshCommand}" ToolTip.Tip="Перечитать папку"
+              IsVisible="{Binding UsesFolder}">
+        <mi:MaterialIcon Kind="Refresh" Width="20" Height="20" />
+      </Button>
+    </Grid>
+    <Border Classes="message" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <SelectableTextBlock x:Name="MessageText" Text="{Binding Message}" TextWrapping="Wrap" />
+    </Border>
+    <Border Classes="notice" IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Margin="0,0,8,0" VerticalAlignment="Center" />
+        <TextBlock x:Name="NoticeText" Grid.Column="1" Text="{Binding Notice}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="link" Content="Задачи →" Command="{Binding ShowJobsCommand}" />
+      </Grid>
+    </Border>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Anitools.App.ViewModels"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.JobsPageView"
+             x:DataType="vm:JobsPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+      <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center"
+                 Text="Задачи выполняются по одной: видеокарта и диск заняты одной командой, остальные ждут." />
+      <Button Grid.Column="1" Command="{Binding ClearFinishedCommand}" Content="Убрать законченные" />
+    </Grid>
+    <TextBlock DockPanel.Dock="Top" Classes="muted" Text="Задач пока нет — запустите что-нибудь на странице инструмента."
+               IsVisible="{Binding IsEmpty}" Margin="0,8,0,0" />
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl x:Name="JobsList" ItemsSource="{Binding Jobs}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="vm:JobViewModel">
+            <Border Classes="card" Margin="0,0,0,8">
+              <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                  <Panel Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <mi:MaterialIcon Kind="{Binding Icon}" Classes.accent="{Binding IsRunning}" Classes.ok="{Binding IsDone}"
+                                     Classes.bad="{Binding IsFailed}" Classes.muted="{Binding IsMuted}" Width="22" Height="22" />
+                  </Panel>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Status}" Classes="muted" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="{Binding Time}" Classes="muted" VerticalAlignment="Center" Margin="12,0" />
+                  <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" Content="Отмена" />
+                    <Button Command="{Binding OpenFolderCommand}" ToolTip.Tip="Открыть папку">
+                      <mi:MaterialIcon Kind="FolderOpenOutline" />
+                    </Button>
+                    <ToggleButton IsChecked="{Binding IsLogOpen}" ToolTip.Tip="Журнал задачи">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <mi:MaterialIcon Kind="TextBoxOutline" />
+                        <TextBlock Text="Лог" />
+                      </StackPanel>
+                    </ToggleButton>
+                  </StackPanel>
+                </Grid>
+                <ProgressBar Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding IsIndeterminate}"
+                             IsVisible="{Binding IsRunning}" MinWidth="0" />
+                <TextBlock Text="{Binding Detail}" Classes="muted small" TextWrapping="Wrap"
+                           IsVisible="{Binding Detail, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Grid IsVisible="{Binding IsLogOpen}" RowDefinitions="Auto,Auto">
+                  <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                           FontFamily="{StaticResource MonoFont}" FontSize="12" MaxHeight="260" />
+                  <Button Grid.Row="1" Classes="link" HorizontalAlignment="Right" Command="{Binding CopyLogCommand}" Content="Скопировать журнал" />
+                </Grid>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
