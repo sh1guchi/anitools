@@ -1689,6 +1689,156 @@ def g_audio_tool_commands():
     return cases
 
 
+# mka_muxer.py без пакета anitopy в C# опирается на наш Anitomy (docs/PLAN.md §2.9.1): эталоны снимаются так же —
+# вместо anitopy подставляется встроенный anitomy оригинала anitools.py
+mka.anitopy = types.SimpleNamespace(parse=at.anitomy_parse)
+mka.ANITOPY_AVAILABLE = True
+
+MKA_NAMES = [
+    "1. Show - 01.AniLibria.TV.mka", "12. Show - 01.DEEP.mka", "Show - 01 [AniDUB].mka", "Show Name - 05 (JAM).mka",
+    "[Group] Sousou no Frieren - 01 (1080p).mka", "Sousou no Frieren - 01.AniLiberty (AniLibria).mka", "Show_12_RUS.ac3",
+    "Show E07.mp3", "Movie [AniDUB].mka", "Movie.flac", "1. Movie.flac", "2.Show - 02.x.mka", "Show - 1001.mka",
+    "Show ep 3.opus", "Show - 01v2.mka", "Show [03].mka", "Show - 01 - 02.mka", "Re꞉Zero - 01.mka", "Show: Part 2 - 03.mka",
+    "a<b>c - 01.mka", "Шоу - 01.Студия.mka", "   .mka", "10. 10.mka",
+]
+
+
+def _natural(name):
+    num, low = mka._natural_key(name)
+    return [None if num == float("inf") else num, low]
+
+
+@golden("mka_names", "Имена в сборке .mka (mka_muxer.py): префикс «N. », номер серии, база имени выхода, ключ сортировки", MKA_REL)
+def g_mka_names():
+    cases = []
+    for name in MKA_NAMES:
+        out = {"strip_track_num": mka.strip_track_num(name), "track_num": mka.track_num(name),
+               "parse_episode": mka.parse_episode(name), "episode_base": mka.episode_base(name), "natural_key": _natural(name)}
+        cases.append({"input": name, "output": out})
+    return cases
+
+
+@golden("mka_strip_trailing_episode", "Хвостовой номер серии в метке озвучки (mka_muxer.py: _strip_trailing_episode)", MKA_REL)
+def g_mka_strip_trailing():
+    pairs = [("AniFilm 01", "01"), ("AniFilm 01", "02"), ("Studio 2x2", "02"), ("AniFilm - 1", "01"), ("AniFilm_007", "07"),
+             ("AniFilm.01", "1"), ("01", "01"), ("AniFilm 01", None), ("AniFilm 01", "abc"), (" AniFilm 12 ", "12"),
+             ("", "01"), (None, "01"), ("AniFilm 0", "00"), ("Dub 2024", "2024"), ("AniFilm 01 ", "1")]
+    return [{"input": {"label": l, "ep": e}, **call(mka._strip_trailing_episode, l, e)} for l, e in pairs]
+
+
+@golden("mka_voice_folder", "Папка озвучки относительно корня (mka_muxer.py: voice_folder): [метка, номер]", MKA_REL)
+def g_mka_voice_folder():
+    root = "/root/anime"
+    rels = ["1. AniDUB/1. Show - 01.AniDUB.mka", "AniDUB/Show - 01.mka", "Show - 01.mka", "12.  DEEP /x.mka",
+            "1. /x.mka", "Audio only/2. JAM/2. Show - 01.JAM.mka", "3.JAM/x.mka"]
+    return [{"input": rel, **call(lambda r: list(mka.voice_folder(f"{root}/{r}", root)), rel)} for rel in rels]
+
+
+@golden("mka_detect_lang", "Язык по метке/тайтлу в сборке .mka (mka_muxer.py: detect_lang)", MKA_REL)
+def g_mka_detect_lang():
+    return cases_for(mka.detect_lang, ["Оригинальная", "Original JP", "jp", "JPN", "Яп", "English Dub", "ENG", "en", "Англ.",
+                                       "eng-sub", "AniLibria", "", None, "Japanese", "Jp.Dub", "Stereo"])
+
+
+# file → {"title": тайтл первой аудиодорожки или null, "streams": число аудиодорожек}; answers — ответы process();
+# ffmpeg_fail — номера вызовов ffmpeg с ошибкой; options — те же решения для C#
+MKA_SCENARIOS = [
+    {"name": "anitools_folders", "files": {
+        "1. AniLibria.TV/1. Show - 01.AniLibria.TV.mka": {"title": "AniLibria.TV", "streams": 1},
+        "1. AniLibria.TV/1. Show - 02.AniLibria.TV.mka": {"title": "AniLibria.TV", "streams": 1},
+        "2. Оригинальная/2. Show - 01.Оригинальная.mka": {"title": "Оригинальная", "streams": 1},
+        "2. Оригинальная/2. Show - 02.Оригинальная.mka": {"title": "Оригинальная", "streams": 1},
+        "10. DEEP/10. Show - 01.DEEP.mka": {"title": "DEEP Eng", "streams": 2},
+        "MKA/old.mka": {"title": None, "streams": 1}, ".hidden/1. Show - 01.x.mka": {"title": None, "streams": 1},
+        "notes.txt": None},
+     "answers": ["1", "1", "2", "1", "5", "0", "Оригинал", "0", None, "1", "rus"],
+     "options": {"mode": "episodes", "order": None, "titles": {"AniLibria.TV": "AniLibria.TV", "Оригинальная": "Оригинал", "DEEP": "DEEP"},
+                 "language": "rus"}},
+    {"name": "loose_files_brackets_and_reorder", "files": {
+        "Show - 01 [AniDUB].mka": {"title": None, "streams": 1}, "Show - 01 [AniLibria].mka": {"title": None, "streams": 1},
+        "Show - 02 [AniDUB].mka": {"title": None, "streams": 1}, "Show - 02 [AniLibria].mka": {"title": "AniLibria 02", "streams": 1},
+        "Extra [AniDUB].mka": {"title": None, "streams": 1}},
+     "existing": ["MKA/Show - 01.mka"], "ffmpeg_fail": [0],
+     "answers": ["1", "1", "1", "2,1", "2", "2"],
+     "options": {"mode": "episodes", "order": [1, 0], "titles": None, "language": None}},
+    {"name": "all_in_one_movie", "files": {
+        "Movie [AniDUB].mka": {"title": "AniDUB", "streams": 1}, "Movie [JAM].mka": {"title": "Original", "streams": 1},
+        "Movie.Comments.mka": {"title": None, "streams": 3}},
+     "answers": ["2", "Фильм: Конец?", "1", "2", "2", "1", None],
+     "options": {"mode": "single", "name": "Фильм: Конец?", "order": None, "titles": None, "language": "rus"}},
+]
+
+
+def run_mka_scenario(sc: dict) -> dict:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="anitools-mka-") as td:
+        root = os.path.realpath(td)
+        for rel in list(sc["files"]) + sc.get("existing", []):
+            p = Path(root, *rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"done" if rel in sc.get("existing", []) else b"")
+
+        def probe(cmd):
+            cmd = [str(c) for c in cmd]
+            rel = os.path.relpath(cmd[-1], root).replace(os.sep, "/")
+            info = sc["files"][rel]
+            entries = cmd[cmd.index("-show_entries") + 1]
+            if entries == "stream_tags=title":
+                return (f"{info['title']}\n" if info["title"] else ""), ""
+            if entries == "stream=index":
+                return "".join(f"{i}\n" for i in range(info["streams"])), ""
+            raise RuntimeError(f"неизвестный запрос ffprobe: {cmd}")
+
+        commands, fails = [], set(sc.get("ffmpeg_fail", []))
+
+        class FakePopen:
+            def __init__(self, cmd, *args, **kwargs):
+                self.cmd = [str(c).replace(root, "{root}") for c in cmd]
+                self.returncode = 1 if len(commands) in fails else 0
+                commands.append(self.cmd)
+
+            def communicate(self):
+                return "", "ошибка" if self.returncode else ""
+
+            def poll(self):
+                return self.returncode
+
+        sub = fake_subprocess(probe, [])
+        sub.Popen = FakePopen
+        _ScriptedPrompt.answers = list(sc["answers"])
+        with patched_module(mka, subprocess=sub, Prompt=_ScriptedPrompt, Panel=_Quiet, Table=_Quiet, Progress=_Quiet,
+                            SpinnerColumn=_Quiet, TextColumn=_Quiet, BarColumn=_Quiet, TimeRemainingColumn=_Quiet,
+                            box=_Quiet(), console=_Quiet(), clear_screen=lambda: None, FFMPEG_PATH="ffmpeg", FFPROBE_PATH="ffprobe",
+                            write_process_error_log=lambda *a, **k: None, log_error=lambda *a, **k: None):
+            real_walk = os.walk
+
+            def ntfs_walk(top):
+                # Порядок файловой системы — как у NTFS; списки те же, что у os.walk: оригинал правит dirs на месте
+                for d, ds, fs in real_walk(top):
+                    ds.sort(key=str.upper)
+                    fs.sort(key=str.upper)
+                    yield d, ds, fs
+
+            mka.os = types.SimpleNamespace(**{k: getattr(os, k) for k in ("path", "sep", "name", "environ", "makedirs", "system")},
+                                           walk=ntfs_walk)
+            try:
+                mka.process(root)
+            finally:
+                mka.os = os
+        if _ScriptedPrompt.answers:
+            raise RuntimeError(f"сценарий {sc['name']}: лишние ответы {_ScriptedPrompt.answers}")
+        return {"commands": commands}
+
+
+@golden("mka_scenarios", "Сборка озвучек в .mka (mka_muxer.py: process): команды ffmpeg для папки и ответов на вопросы", MKA_REL)
+def g_mka_scenarios():
+    cases = []
+    for sc in MKA_SCENARIOS:
+        inp = {k: sc.get(k) for k in ("name", "files", "existing", "ffmpeg_fail", "answers", "options")}
+        cases.append({"input": inp, "output": run_mka_scenario(sc)})
+    return cases
+
+
 @contextlib.contextmanager
 def patched_module(mod, **attrs):
     """Временно подменить глобальные имена в модуле соседнего скрипта."""

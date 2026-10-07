@@ -1,0 +1,24 @@
+{
+  "function": "mka_strip_trailing_episode",
+  "description": "Хвостовой номер серии в метке озвучки (mka_muxer.py: _strip_trailing_episode)",
+  "source": "reference/python/extra/mka_muxer.py",
+  "source_sha256": "2a3dd7ca4acda6a861d3d4e83a8e4016341811bb14b630af1245ac3694ab66a1",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"label": "AniFilm 01", "ep": "01"}, "output": "AniFilm"},
+    {"input": {"label": "AniFilm 01", "ep": "02"}, "output": "AniFilm 01"},
+    {"input": {"label": "Studio 2x2", "ep": "02"}, "output": "Studio 2x2"},
+    {"input": {"label": "AniFilm - 1", "ep": "01"}, "output": "AniFilm"},
+    {"input": {"label": "AniFilm_007", "ep": "07"}, "output": "AniFilm"},
+    {"input": {"label": "AniFilm.01", "ep": "1"}, "output": "AniFilm"},
+    {"input": {"label": "01", "ep": "01"}, "output": "01"},
+    {"input": {"label": "AniFilm 01", "ep": null}, "output": "AniFilm 01"},
+    {"input": {"label": "AniFilm 01", "ep": "abc"}, "output": "AniFilm 01"},
+    {"input": {"label": " AniFilm 12 ", "ep": "12"}, "output": "AniFilm"},
+    {"input": {"label": "", "ep": "01"}, "output": ""},
+    {"input": {"label": null, "ep": "01"}, "output": ""},
+    {"input": {"label": "AniFilm 0", "ep": "00"}, "output": "AniFilm"},
+    {"input": {"label": "Dub 2024", "ep": "2024"}, "output": "Dub"},
+    {"input": {"label": "AniFilm 01 ", "ep": "1"}, "output": "AniFilm"}
+  ]
+}
