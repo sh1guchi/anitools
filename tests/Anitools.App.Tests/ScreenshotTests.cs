@@ -194,6 +194,44 @@ public sealed class ScreenshotTests
         dialog.Close();
     }
 
+    [AvaloniaFact]
+    public async Task Hls_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes, "Sousou no Frieren OVA - 01.mkv", "hls_multi/52991 - Sousou no Frieren/Sousou no Frieren - 01.zip"]);
+        app.Runner.FfprobeJson = path => path.EndsWith("07.mkv", StringComparison.Ordinal)
+            ? PagesTests.ThreeVoices.Replace("\"DEEP\"", "\"Commentary\"", StringComparison.Ordinal)
+            : PagesTests.ThreeVoices;
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.HlsPage;
+        page.IsNearOutput = true;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Groups.Count == 2 && page.Preview.Rows.Count == 13, "план HLS");
+        var main = page.Groups[0];
+        app.Dialogs.NextShikimori = new ShikimoriChoice(new ShikimoriAnime(52991, "Sousou no Frieren", "Фрирен", "2023", "tv", 28), null);
+        await main.PickShikimoriCommand.ExecuteAsync(null);
+        main.Layouts[1].Rows[2].IsTaken = false;
+        page.Groups[1].IsIncluded = false;
+
+        Capture(window, "hls");
+    }
+
+    [AvaloniaFact]
+    public async Task Regroup_dialog()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(4), "Sousou no Frieren OVA - 01.mkv", "NCOP.mkv"]);
+        app.Runner.FfprobeJson = _ => PagesTests.ThreeVoices;
+        var inspection = await Anitools.Core.Operations.Hls.HlsOperation.InspectAsync(app.Folder, app.Services.Probe, TestContext.Current.CancellationToken);
+        var regroup = new RegroupViewModel(inspection.Files, inspection.Groups);
+        regroup.Rows.Single(r => r.Name == "NCOP.mkv").Group = "";
+        var dialog = new RegroupDialog(regroup);
+        dialog.Show();
+        AppFixture.Flush();
+
+        var frame = Screenshots.Capture(dialog, "regroup");
+        Assert.True(Screenshots.CountColors(frame) > 50);
+        dialog.Close();
+    }
+
     private static async Task<(MainWindowViewModel Vm, MainWindow Window)> OpenAsync(AppFixture app)
     {
         var vm = app.CreateViewModel();

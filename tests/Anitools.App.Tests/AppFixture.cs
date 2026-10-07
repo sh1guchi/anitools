@@ -228,4 +228,9 @@ internal sealed class FakeDialogs : IDialogService
         LastShikimori = picker;
         return Task.FromResult(NextShikimori);
     }
+
+    /// <summary>Что «сделают» в перегруппировке: правка строк и ответ.</summary>
+    public Func<RegroupViewModel, bool> Regroup { get; set; } = _ => false;
+
+    public Task<bool> RegroupAsync(RegroupViewModel regroup) => Task.FromResult(Regroup(regroup));
 }

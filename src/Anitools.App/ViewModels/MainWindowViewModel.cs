@@ -36,6 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         SettingsPage = new SettingsPageViewModel(this);
         VideoOnlyPage = new VideoOnlyPageViewModel(this);
         RemuxPage = new RemuxPageViewModel(this);
+        HlsPage = new HlsPageViewModel(this);
         AudioExtractPage = new AudioExtractPageViewModel(this);
         AudioMuxPage = new AudioMuxPageViewModel(this);
         SubtitlesPage = new SubtitlesPageViewModel(this);
@@ -46,7 +47,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
             new NavHeader("ВИДЕО"),
             VideoOnlyPage,
             RemuxPage,
-            Soon("HLS", MaterialIconKind.LayersTripleOutline, "HLS мульти-разрешение: 360p…4K в zip + озвучки .mka."),
+            HlsPage,
             Soon("Хардсаб", MaterialIconKind.Subtitles, "Вшить .ass в видео (hevc_nvenc, 10 бит)."),
             new NavHeader("АУДИО"),
             AudioExtractPage,
@@ -114,6 +115,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     public VideoOnlyPageViewModel VideoOnlyPage { get; }
 
     public RemuxPageViewModel RemuxPage { get; }
+
+    public HlsPageViewModel HlsPage { get; }
 
     public AudioExtractPageViewModel AudioExtractPage { get; }
 
