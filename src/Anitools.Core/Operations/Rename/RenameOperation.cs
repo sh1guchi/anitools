@@ -244,13 +244,17 @@ public static class RenameJournal
             ? Directory.EnumerateFiles(directory, "rename_*.json").OrderBy(p => p, StringComparer.Ordinal).LastOrDefault()
             : null;
 
-    /// <summary>Откат: новое → старое, в обратном порядке. Занятые имена не трогаются (ошибка по файлу).</summary>
+    /// <summary>
+    /// Откат: новое → старое, в обратном порядке. Занятые имена не трогаются (ошибка по файлу).
+    /// В журнале остаётся только то, что можно откатить повторно; больше нечего — журнал удаляется.
+    /// </summary>
     public static RenameResult Undo(string journalPath)
     {
         var journal = JsonSerializer.Deserialize<Journal>(File.ReadAllText(journalPath))
             ?? throw new InvalidDataException("Пустой журнал переименования");
         var restored = new List<(string, string)>();
         var failed = new List<(string, string)>();
+        var retry = new List<Entry>();
         foreach (var entry in journal.Renames.Reverse())
         {
             var from = Path.Combine(journal.Folder, entry.New);
@@ -264,6 +268,7 @@ public static class RenameJournal
                 else if (File.Exists(to) && !string.Equals(Path.GetFullPath(from), Path.GetFullPath(to), StringComparison.OrdinalIgnoreCase))
                 {
                     failed.Add((entry.New, $"имя {entry.Old} уже занято"));
+                    retry.Add(entry);
                 }
                 else
                 {
@@ -274,14 +279,18 @@ public static class RenameJournal
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 failed.Add((entry.New, ex.Message));
+                retry.Add(entry);
             }
         }
 
-        if (failed.Count == 0)
+        if (retry.Count == 0)
         {
             File.Delete(journalPath);
+            return new RenameResult(restored, failed, null);
         }
 
-        return new RenameResult(restored, failed, failed.Count == 0 ? null : journalPath);
+        retry.Reverse();
+        File.WriteAllText(journalPath, JsonSerializer.Serialize(journal with { Renames = retry }, new JsonSerializerOptions { WriteIndented = true }));
+        return new RenameResult(restored, failed, journalPath);
     }
 }

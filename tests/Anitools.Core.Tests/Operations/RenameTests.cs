@@ -85,6 +85,32 @@ public sealed class RenameTests
     }
 
     [Fact]
+    public void Undo_leaves_taken_name_alone_and_keeps_it_in_journal()
+    {
+        using var dir = new TempDir();
+        dir.File("[Group] Show - 01 [1080p].mkv", "1");
+        dir.File("[Group] Show - 02 [1080p].mkv", "2");
+        var rows = RenameOperation.Plan(dir.Path, RenameOperation.ListFiles(dir.Path), new RenameOptions { BaseName = "Show" });
+        var journal = RenameOperation.Execute(dir.Path, rows, dir.Combine("_logs")).JournalPath!;
+        dir.File("[Group] Show - 01 [1080p].mkv", "новый файл со старым именем");
+
+        var undo = RenameJournal.Undo(journal);
+
+        Assert.Equal([("Show - 02.mkv", "[Group] Show - 02 [1080p].mkv")], undo.Renamed);
+        Assert.Equal([("Show - 01.mkv", "имя [Group] Show - 01 [1080p].mkv уже занято")], undo.Failed);
+        Assert.Equal("новый файл со старым именем", File.ReadAllText(dir.Combine("[Group] Show - 01 [1080p].mkv")));
+
+        // В журнале осталась только серия 01: освободили имя — повторный откат её возвращает
+        Assert.Equal(journal, undo.JournalPath);
+        File.Delete(dir.Combine("[Group] Show - 01 [1080p].mkv"));
+        var again = RenameJournal.Undo(journal);
+        Assert.Equal([("Show - 01.mkv", "[Group] Show - 01 [1080p].mkv")], again.Renamed);
+        Assert.Empty(again.Failed);
+        Assert.Null(again.JournalPath);
+        Assert.False(File.Exists(journal));
+    }
+
+    [Fact]
     public void Bad_options_are_plan_errors()
     {
         using var dir = new TempDir();
