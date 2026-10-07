@@ -129,7 +129,8 @@ public sealed class HlsScenarioTests
         };
     }
 
-    private static string Normalize(string arg, string root) => arg.Replace(root, "{root}", StringComparison.Ordinal).Replace('\\', '/');
+    /// <summary>Слеши — к прямым до замены корня: путь сегментов и на Windows уже с прямыми (as_posix, как в оригинале).</summary>
+    private static string Normalize(string arg, string root) => arg.Replace('\\', '/').Replace(root.Replace('\\', '/'), "{root}", StringComparison.Ordinal);
 
     private static string Relative(string path, string root) => Path.GetRelativePath(root, path).Replace('\\', '/');
 }
