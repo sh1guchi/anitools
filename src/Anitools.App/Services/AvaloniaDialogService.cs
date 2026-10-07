@@ -1,3 +1,4 @@
+using Anitools.App.ViewModels;
 using Anitools.App.Views.Dialogs;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
@@ -57,6 +58,9 @@ public sealed class AvaloniaDialogService(Window owner) : IDialogService
             await clipboard.SetTextAsync(text);
         }
     }
+
+    public async Task<ShikimoriChoice> PickShikimoriAsync(ShikimoriPickerViewModel picker) =>
+        await new ShikimoriDialog(picker).ShowDialog<ShikimoriChoice?>(owner) ?? ShikimoriChoice.Skip;
 
     private async Task<IStorageFolder?> StartAsync(string? start)
     {

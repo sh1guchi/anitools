@@ -36,6 +36,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         SettingsPage = new SettingsPageViewModel(this);
         VideoOnlyPage = new VideoOnlyPageViewModel(this);
         RemuxPage = new RemuxPageViewModel(this);
+        AudioExtractPage = new AudioExtractPageViewModel(this);
+        AudioMuxPage = new AudioMuxPageViewModel(this);
+        SubtitlesPage = new SubtitlesPageViewModel(this);
+        RenamePage = new RenamePageViewModel(this);
 
         Navigation =
         [
@@ -45,21 +49,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
             Soon("HLS", MaterialIconKind.LayersTripleOutline, "HLS мульти-разрешение: 360p…4K в zip + озвучки .mka."),
             Soon("Хардсаб", MaterialIconKind.Subtitles, "Вшить .ass в видео (hevc_nvenc, 10 бит)."),
             new NavHeader("АУДИО"),
-            Soon("Только аудио", MaterialIconKind.Headphones, "Аудиодорожки отдельными файлами или в один .mka."),
-            Soon("Сборка аудио", MaterialIconKind.PlaylistMusic, "Видео + выбранные и внешние дорожки в нужном порядке."),
+            AudioExtractPage,
+            AudioMuxPage,
             Soon("Озвучки → .mka", MaterialIconKind.MicrophoneOutline, "Озвучки из папок в один .mka на серию."),
             Soon("Сдвиг аудио", MaterialIconKind.ClockOutline, "Задержка или обрезка начала аудио."),
             Soon("Перекодировать", MaterialIconKind.Waveform, "Аудио в AAC, MP3, Opus, FLAC…"),
             Soon("Дорожки файла", MaterialIconKind.FileMusicOutline, "Таблица аудиодорожек и список для копирования."),
             new NavHeader("СУБТИТРЫ"),
-            Soon("Извлечь", MaterialIconKind.SubtitlesOutline, "Субтитры из серий: по ID, тайтлу или языку."),
+            SubtitlesPage,
             Soon("Сдвиг", MaterialIconKind.TimerEditOutline, "Сдвиг .srt/.ass на N секунд."),
             Soon("Чистка стилей", MaterialIconKind.Broom, "Убрать строки .ass по стилю или актёру (с бэкапом)."),
             new NavHeader("ШРИФТЫ"),
             Soon("Для .ass", MaterialIconKind.FormatFont, "Шрифты из .ass → fonts.zip (своя папка, система, скачивание)."),
             Soon("Из видео", MaterialIconKind.ArchiveArrowDownOutline, "Вложенные шрифты из MKV → fonts.zip."),
             new NavHeader("ФАЙЛЫ"),
-            Soon("Переименовать", MaterialIconKind.RenameOutline, "«Название - 01.ext» по номерам серий, с откатом."),
+            RenamePage,
             new NavSeparator(),
             JobsPage,
             SettingsPage,
@@ -110,6 +114,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     public VideoOnlyPageViewModel VideoOnlyPage { get; }
 
     public RemuxPageViewModel RemuxPage { get; }
+
+    public AudioExtractPageViewModel AudioExtractPage { get; }
+
+    public AudioMuxPageViewModel AudioMuxPage { get; }
+
+    public SubtitlesPageViewModel SubtitlesPage { get; }
+
+    public RenamePageViewModel RenamePage { get; }
 
     public string Version { get; } = $"{AppInfo.Name} {AppInfo.Version}";
 

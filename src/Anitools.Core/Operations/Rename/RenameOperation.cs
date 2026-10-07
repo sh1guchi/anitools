@@ -238,6 +238,19 @@ public static class RenameJournal
         return path;
     }
 
+    /// <summary>Папка и число переименований в журнале (для кнопки отката); не читается — null.</summary>
+    public static (string Folder, int Count)? Describe(string journalPath)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<Journal>(File.ReadAllText(journalPath)) is { } journal ? (journal.Folder, journal.Renames.Count) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>Самый свежий журнал (по имени файла) или null.</summary>
     public static string? Latest(string directory) =>
         Directory.Exists(directory)
