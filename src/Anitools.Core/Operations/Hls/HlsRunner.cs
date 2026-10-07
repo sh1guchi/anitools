@@ -149,6 +149,12 @@ public sealed class HlsEpisodeProcessor(IProcessRunner runner, ToolPaths tools, 
             run.CleanUp();
             return new HlsEpisodeResult(episode, HlsEpisodeOutcome.Cancelled, "Отменено") { Notes = run.Notes };
         }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+            // Диск переполнен, нет доступа, ffmpeg не запустился — серия не готова, временные файлы прочь
+            run.CleanUp();
+            return new HlsEpisodeResult(episode, HlsEpisodeOutcome.Failed, ex.Message) { Notes = run.Notes };
+        }
     }
 
     private sealed class EpisodeRun(

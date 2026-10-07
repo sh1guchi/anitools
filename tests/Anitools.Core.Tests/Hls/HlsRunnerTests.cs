@@ -123,6 +123,20 @@ public sealed class HlsRunnerTests
     }
 
     [Fact]
+    public async Task Program_that_cannot_start_fails_the_episode_and_cleans_up()
+    {
+        using var dir = new TempDir();
+        var (plan, probe) = await PlanAsync(dir, 2);
+        var ffmpeg = new FakeFfmpeg { BeforeFfmpeg = (n, _) => { if (n == 0) { throw new System.ComponentModel.Win32Exception(2, "Не удаётся найти указанный файл"); } } };
+
+        var result = await Runner(ffmpeg, probe, dir).ExecuteAsync(plan, dir.Combine("work"), cancellationToken: Ct);
+
+        Assert.Equal([HlsEpisodeOutcome.Failed, HlsEpisodeOutcome.Done], result.Episodes.Select(e => e.Outcome));
+        Assert.Contains("найти", result.Episodes[0].Message);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(dir.Combine("work")));
+    }
+
+    [Fact]
     public async Task Heavy_top_quality_goes_to_separate_zip()
     {
         using var dir = new TempDir();
