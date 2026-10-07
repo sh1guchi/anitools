@@ -1,0 +1,31 @@
+{
+  "function": "shikimori_search_variants",
+  "description": "Запасные запросы к Shikimori (py:529): пути API по порядку, если всё пусто",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "Sousou no Frieren", "api_paths": ["animes?search=Sousou%20no%20Frieren&limit=15&order=popularity"], "output": []},
+    {"input": "Re:Zero kara Hajimeru Isekai Seikatsu", "api_paths": ["animes?search=Re%3AZero%20kara%20Hajimeru%20Isekai%20Seikatsu&limit=15&order=popularity", "animes?search=Re%20Zero%20kara%20Hajimeru%20Isekai%20Seikatsu&limit=15&order=popularity", "animes?search=Re%20Zero%20kara&limit=15&order=popularity"], "output": []},
+    {"input": "Kaguya-sama wa Kokurasetai: Ultra Romantic", "api_paths": ["animes?search=Kaguya-sama%20wa%20Kokurasetai%3A%20Ultra%20Romantic&limit=15&order=popularity", "animes?search=Kaguya-sama%20wa%20Kokurasetai%20Ultra%20Romantic&limit=15&order=popularity", "animes?search=Kaguya-sama%20wa%20Kokurasetai&limit=15&order=popularity"], "output": []},
+    {"input": "Steins;Gate 0", "api_paths": ["animes?search=Steins%3BGate%200&limit=15&order=popularity", "animes?search=Steins%20Gate%200&limit=15&order=popularity"], "output": []},
+    {"input": "Dr. Stone: New World", "api_paths": ["animes?search=Dr.%20Stone%3A%20New%20World&limit=15&order=popularity", "animes?search=Dr%20Stone%20New%20World&limit=15&order=popularity", "animes?search=Dr%20Stone%20New&limit=15&order=popularity"], "output": []},
+    {"input": "Bocchi the Rock!", "api_paths": ["animes?search=Bocchi%20the%20Rock%21&limit=15&order=popularity", "animes?search=Bocchi%20the%20Rock&limit=15&order=popularity"], "output": []},
+    {"input": "K-On!!", "api_paths": ["animes?search=K-On%21%21&limit=15&order=popularity", "animes?search=K-On&limit=15&order=popularity"], "output": []},
+    {"input": "Kono Subarashii Sekai ni Shukufuku wo!", "api_paths": ["animes?search=Kono%20Subarashii%20Sekai%20ni%20Shukufuku%20wo%21&limit=15&order=popularity", "animes?search=Kono%20Subarashii%20Sekai%20ni%20Shukufuku%20wo&limit=15&order=popularity", "animes?search=Kono%20Subarashii%20Sekai&limit=15&order=popularity"], "output": []},
+    {"input": "Hunter x Hunter (2011)", "api_paths": ["animes?search=Hunter%20x%20Hunter%20%282011%29&limit=15&order=popularity", "animes?search=Hunter%20x%20Hunter%202011&limit=15&order=popularity", "animes?search=Hunter%20x%20Hunter&limit=15&order=popularity"], "output": []},
+    {"input": "Fate/stay night [Unlimited Blade Works]", "api_paths": ["animes?search=Fate/stay%20night%20%5BUnlimited%20Blade%20Works%5D&limit=15&order=popularity", "animes?search=Fate/stay%20night%20Unlimited%20Blade%20Works&limit=15&order=popularity", "animes?search=Fate/stay%20night%20Unlimited&limit=15&order=popularity"], "output": []},
+    {"input": "Title  with   spaces", "api_paths": ["animes?search=Title%20%20with%20%20%20spaces&limit=15&order=popularity", "animes?search=Title%20with%20spaces&limit=15&order=popularity"], "output": []},
+    {"input": "Провожающая в последний путь Фрирен", "api_paths": ["animes?search=%D0%9F%D1%80%D0%BE%D0%B2%D0%BE%D0%B6%D0%B0%D1%8E%D1%89%D0%B0%D1%8F%20%D0%B2%20%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9%20%D0%BF%D1%83%D1%82%D1%8C%20%D0%A4%D1%80%D0%B8%D1%80%D0%B5%D0%BD&limit=15&order=popularity", "animes?search=%D0%9F%D1%80%D0%BE%D0%B2%D0%BE%D0%B6%D0%B0%D1%8E%D1%89%D0%B0%D1%8F%20%D0%B2%20%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9&limit=15&order=popularity"], "output": []},
+    {"input": "【推しの子】", "api_paths": ["animes?search=%E3%80%90%E6%8E%A8%E3%81%97%E3%81%AE%E5%AD%90%E3%80%91&limit=15&order=popularity"], "output": []},
+    {"input": "", "api_paths": ["animes?search=&limit=15&order=popularity"], "output": []},
+    {"input": "a", "api_paths": ["animes?search=a&limit=15&order=popularity"], "output": []},
+    {"input": "One Two Three Four", "api_paths": ["animes?search=One%20Two%20Three%20Four&limit=15&order=popularity", "animes?search=One%20Two%20Three&limit=15&order=popularity"], "output": []},
+    {"input": "One Two Three", "api_paths": ["animes?search=One%20Two%20Three&limit=15&order=popularity"], "output": []},
+    {"input": "'Quoted' \"name\"", "api_paths": ["animes?search=%27Quoted%27%20%22name%22&limit=15&order=popularity", "animes?search=Quoted%20name&limit=15&order=popularity"], "output": []},
+    {"input": "~Tilde~", "api_paths": ["animes?search=~Tilde~&limit=15&order=popularity", "animes?search=Tilde&limit=15&order=popularity"], "output": []},
+    {"input": "Gintama.", "api_paths": ["animes?search=Gintama.&limit=15&order=popularity", "animes?search=Gintama&limit=15&order=popularity"], "output": []},
+    {"input": "100% Pascal-sensei", "api_paths": ["animes?search=100%25%20Pascal-sensei&limit=15&order=popularity"], "output": []},
+    {"input": "Mob Psycho 100 & Co + #1", "api_paths": ["animes?search=Mob%20Psycho%20100%20%26%20Co%20%2B%20%231&limit=15&order=popularity", "animes?search=Mob%20Psycho%20100&limit=15&order=popularity"], "output": []}
+  ]
+}

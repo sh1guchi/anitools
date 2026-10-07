@@ -816,9 +816,19 @@ NVENC/scale_cuda/NVDEC и CPU-фолбэк на реальной видеока�
 ## 7. Этапы и критерии готовности
 
 **Этап 1 — скелет (облако)**
-- [ ] `Anitools.slnx`, проекты из §3.2, `Directory.Build.props/Packages.props`, `global.json`, `.editorconfig`.
-- [ ] Пустое окно Avalonia открывается в headless-тесте, скриншот сохраняется.
-- [ ] `tools/gen_golden.py` работает, эталоны закоммичены.
+- [x] `Anitools.slnx`, проекты из §3.2, `Directory.Build.props/Packages.props`, `global.json`, `.editorconfig`.
+- [x] Пустое окно Avalonia открывается в headless-тесте, скриншот сохраняется.
+- [x] `tools/gen_golden.py` работает, эталоны закоммичены.
+
+Решения этапа 1:
+- Версии: Avalonia 12.1.3, CommunityToolkit.Mvvm 8.4.2, xunit.v3 3.2.2 (на ней собран Avalonia.Headless.XUnit 12.1.3),
+  `global.json` — SDK 10.0.100+ (`latestFeature`). Иконки (Material.Icons.Avalonia) подключить на этапе 7.
+- Скриншоты тесты пишут в `artifacts/screenshots/`; в `docs/screenshots/` — только с `ANITOOLS_UPDATE_SCREENSHOTS=1`,
+  чтобы обычный прогон тестов на Windows не менял файлы в git.
+- Эталоны (`tests/Anitools.Core.Tests/Golden/`, 39 файлов): шире списка §5.2 — ещё разбор вывода ffprobe/ffmpeg
+  (длительность, каналы, дорожки, NVDEC, битрейт по окнам), полный подбор CQ с «проигрыванием» команд, запросы
+  к Shikimori, константы. `source_sha256` считается по тексту с LF: CRLF-версия даёт `8920902b…49d50a` (как выше).
+- CI (`.github/workflows/ci.yml`): Linux — `gen_golden.py --check`, сборка, тесты; Windows — сборка и тесты.
 
 **Этап 2 — чистая логика (облако)**
 - [ ] Anitomy, номер серии, названия/сезоны/санитизация, track-id список, язык, натуральная сортировка, codec→ext, выбор субтитров по тайтлу/языку.

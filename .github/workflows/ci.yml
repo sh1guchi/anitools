@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  AVALONIA_TELEMETRY_OPTOUT: 1
+
+jobs:
+  linux:
+    name: Linux (сборка, тесты, эталоны)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Эталоны совпадают с оригиналом
+        run: python tools/gen_golden.py --check
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+      - name: Скриншоты
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots-linux
+          path: artifacts/screenshots
+          if-no-files-found: ignore
+
+  windows:
+    name: Windows (сборка, тесты)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+      - name: Скриншоты
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots-windows
+          path: artifacts/screenshots
+          if-no-files-found: ignore

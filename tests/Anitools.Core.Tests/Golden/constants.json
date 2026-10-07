@@ -1,0 +1,27 @@
+{
+  "function": "constants",
+  "description": "Константы оригинала, которые C# должен повторить один в один",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "_AT_KEYWORDS", "output": {"anime_type": ["OVA", "ONA", "OAD", "OAV", "SP", "SPECIAL", "SPECIALS", "Movie", "Movies", "MOVIE", "MOVIES", "TV", "NCED", "NCOP", "OP", "ED", "CM", "PV", "Preview", "Gekijouban", "Tokubetsu", "Special Episode"], "audio_term": ["2CH", "2.0CH", "5.1", "5.1CH", "7.1", "7.1CH", "DTS", "DTS-MA", "DTS-ES", "DTS-HD", "DTS:X", "FLAC", "FLAC5.1", "FLAC7.1", "AAC", "AAC2.0", "AAC5.1", "AC3", "DD2.0", "DD5.1", "DD7.1", "Dolby", "TrueHD", "MP3", "OGG", "VORBIS", "HE-AAC", "LC-AAC", "EAC3", "Dual Audio", "Dual-Audio", "DualAudio", "Multi-Audio", "MultiAudio", "Commentary"], "video_term": ["8bit", "8-bit", "10bit", "10-bit", "10bits", "Hi10", "Hi444", "Hi444P", "Hi444PP", "H264", "H.264", "x264", "AVC", "H265", "H.265", "x265", "HEVC", "AV1", "VP8", "VP9", "Xvid", "DivX", "HDR", "HDR10", "HDR10+", "HLG", "DV", "Dolby Vision", "BT.709", "BT.2020", "60FPS", "120FPS", "24FPS"], "video_resolution": ["480p", "480i", "576p", "576i", "720p", "720i", "1080p", "1080i", "2160p", "4K", "UHD", "FHD", "HD", "SD", "1280x720", "1920x1080", "3840x2160"], "source": ["BD", "Blu-ray", "BluRay", "BLURAY", "DVD", "DVDRIP", "DVDRip", "HDTV", "HDTVRip", "WEB", "WEB-DL", "WEBDL", "WEBRip", "WEBRIP", "Crunchyroll", "Funimation", "Amazon", "Netflix", "VHSRip", "VHS", "LaserDisc", "LD"], "subtitles": ["ASS", "SSA", "SRT", "PGS", "SUB", "VOBSUB", "Soft Subs", "SoftSubs", "Softsubs", "Hard Subs", "HardSubs", "Hardsubs", "Multi-Subs", "MultiSubs", "Dubbed", "Subbed"], "file_extension": ["mkv", "mk3d", "mka", "mks", "mp4", "m4v", "m4a", "avi", "divx", "flv", "f4v", "mov", "qt", "wmv", "asf", "ogv", "ogg", "ts", "m2ts", "m2t", "mts", "rmvb", "rm", "3gp"], "language": ["RUS", "ENG", "JPN", "CHI", "KOR", "SPA", "POR", "FRA", "GER", "ITA", "ARA", "THA", "VIE", "Russian", "English", "Japanese", "Chinese", "RAW"], "episode_prefix": ["Ep", "Ep.", "EP", "EP.", "Episode", "Episodes", "E", "EPS", "Eps", "SP", "OVA", "ONA", "Movie"], "season_prefix": ["S", "Season", "Seasons", "Saison"]}},
+    {"input": "_SHIKI_KIND_RU", "output": {"tv": "TV", "ova": "OVA", "ona": "ONA", "special": "Спешл", "tv_special": "Спешл", "movie": "Фильм", "music": "Клип", "pv": "PV", "cm": "CM"}},
+    {"input": "_ROMAN_SEASON", "output": {"II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6}},
+    {"input": "_SHIKI_KINDS", "output": {"OVA": ["ova"], "ONA": ["ona"], "Special": ["special", "tv_special"], "Movie": ["movie"]}},
+    {"input": "_SPECIAL_LABELS", "output": {"ova": "OVA", "oav": "OVA", "oad": "OVA", "ona": "ONA", "sp": "Special", "special": "Special", "specials": "Special", "movie": "Movie", "movies": "Movie"}},
+    {"input": "_VOICE_OPTIONS", "output": ["AniLiberty (AniLibria)", "ТО Дубляжная", "Studio Band", "Оригинальная", "AniLibria.TV", "DEEP", "AniStar x DEEP", "AniLibria.TV x DEEP", "ТО Дубляжная x DEEP", "SHIZA Project", "AniDUB", "OnWave", "Reanimedia", "Dream Cast", "JAM", "AniPlague", "Animedia", "Shachiburi", "Ancord", "KANSAI Studio"]},
+    {"input": "_HLS_RESOLUTIONS", "output": [["360p", 640, 360, 800000], ["480p", 854, 480, 1500000], ["720p", 1280, 720, 3000000], ["1080p", 1920, 1080, 5000000], ["2K", 2560, 1440, 8000000], ["4K", 3840, 2160, 16000000]]},
+    {"input": "_HLS_SEGMENT_TIME", "output": 6},
+    {"input": "_HLS_FIXED_CQ", "output": 21.0},
+    {"input": "_HLS_FIXED_CQ_PEAK", "output": 4},
+    {"input": "_HLS_NVENC_PRESET", "output": "p4"},
+    {"input": "_HLS_CAL_WINDOWS", "output": 10},
+    {"input": "_HLS_CAL_TOLERANCE", "output": 0.03},
+    {"input": "_HLS_CAL_MAX_PASSES", "output": 4},
+    {"input": "_HLS_CQ_START", "output": 26.0},
+    {"input": "_HLS_CQ_RANGE", "output": [14.0, 40.0]},
+    {"input": "_NVDEC_MAX_SIZE", "output": {"h264": 4096, "mpeg2video": 4080, "mpeg1video": 4080, "mpeg4": 2048, "vc1": 2048, "hevc": 8192, "av1": 8192, "vp9": 8192, "vp8": 4096}},
+    {"input": "_MOV_GENERIC_HANDLERS", "output": ["soundhandler", "sound handler", "apple sound media handler", "core media audio", "core media sound", "mainconcept", "audio", "sound", "isomediahandler", "ffmpeg", "lavf", "lavc", "handler"]}
+  ]
+}

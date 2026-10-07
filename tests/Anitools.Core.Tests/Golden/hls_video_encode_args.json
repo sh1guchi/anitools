@@ -1,0 +1,20 @@
+{
+  "function": "hls_video_encode_args",
+  "description": "Параметры h264_nvenc для одного качества (py:3972)",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"vbr": 800000, "rate_control": null}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-b:v", "800000", "-maxrate", "1600000", "-bufsize", "3200000"]},
+    {"input": {"vbr": 16000000, "rate_control": null}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-b:v", "16000000", "-maxrate", "32000000", "-bufsize", "64000000"]},
+    {"input": {"vbr": 3000000, "rate_control": {"cq": 21.0, "maxrate": 12000000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "21.00", "-b:v", "0", "-maxrate", "12000000", "-bufsize", "24000000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 23.456789, "maxrate": 2000000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "23.46", "-b:v", "0", "-maxrate", "2000000", "-bufsize", "4000000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 19.995, "maxrate": 3750000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "20.00", "-b:v", "0", "-maxrate", "3750000", "-bufsize", "7500000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 14.005, "maxrate": 7500000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "14.01", "-b:v", "0", "-maxrate", "7500000", "-bufsize", "15000000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 40.0, "maxrate": 12500000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "40.00", "-b:v", "0", "-maxrate", "12500000", "-bufsize", "25000000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 26.125, "maxrate": 20000000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "26.12", "-b:v", "0", "-maxrate", "20000000", "-bufsize", "40000000"]},
+    {"input": {"vbr": 1500000, "rate_control": {"cq": 21.0049999, "maxrate": 40000000}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "21.00", "-b:v", "0", "-maxrate", "40000000", "-bufsize", "80000000"]},
+    {"input": {"vbr": 1, "rate_control": {"cq": 0.004999, "maxrate": 1}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "0.00", "-b:v", "0", "-maxrate", "1", "-bufsize", "2"]},
+    {"input": {"vbr": 5000000, "rate_control": {"cq": 99.999, "maxrate": 0}}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-cq", "100.00", "-b:v", "0", "-maxrate", "0", "-bufsize", "0"]}
+  ]
+}
