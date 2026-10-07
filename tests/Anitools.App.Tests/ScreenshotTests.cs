@@ -1,5 +1,10 @@
+using System.Net;
+using System.Text;
+using Anitools.App.ViewModels;
 using Anitools.App.Views;
+using Anitools.App.Views.Dialogs;
 using Anitools.Core.Jobs;
+using Anitools.Core.Shikimori;
 using Avalonia.Headless.XUnit;
 
 namespace Anitools.App.Tests;
@@ -88,6 +93,120 @@ public sealed class ScreenshotTests
         AppFixture.Flush();
 
         Capture(window, "settings");
+    }
+
+    [AvaloniaFact]
+    public async Task Audio_extract_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes]);
+        app.Runner.FfprobeJson = _ => PagesTests.ThreeVoices;
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.AudioExtractPage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 3, "дорожки");
+        page.Tracks[2].IsSelected = true;
+        page.IsSingleMka = true;
+        page.OutputTracks[0].Title = "AniLiberty (AniLibria)";
+
+        Capture(window, "audio-extract");
+    }
+
+    [AvaloniaFact]
+    public async Task Audio_mux_page()
+    {
+        using var app = new AppFixture().WithFiles(
+        [
+            .. Episodes.Take(4),
+            .. Episodes.Take(3).Select(e => $"Audio only/2. DEEP/2. {Path.GetFileNameWithoutExtension(e)}.DEEP.mka"),
+        ]);
+        app.Runner.FfprobeJson = path => path.EndsWith(".mka", StringComparison.Ordinal)
+            ? """{"streams":[{"index":0,"codec_type":"audio","codec_name":"ac3","channels":6,"tags":{"title":"DEEP"}}],"format":{}}"""
+            : PagesTests.ThreeVoices;
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.AudioMuxPage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Sets.Count == 2 && !page.IsAnalyzing, "наборы");
+        page.SourceTracks[1].IsSelected = false;
+        await AppFixture.WaitUntilAsync(() => page.Sets.Count == 2 && page.Sets[0].Slots.Count == 3 && !page.IsAnalyzing, "без оригинала");
+
+        Capture(window, "audio-mux");
+    }
+
+    [AvaloniaFact]
+    public async Task Subtitles_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes]);
+        app.Runner.MkvmergeJson = path => path.EndsWith("05.mkv", StringComparison.Ordinal)
+            ? """{"container":{"type":"Matroska"},"tracks":[{"id":2,"type":"subtitles","codec":"SubStationAlpha","properties":{"codec_id":"S_TEXT/ASS","track_name":"Signs","language":"eng"}}],"attachments":[]}"""
+            : """
+              {"container":{"type":"Matroska"},"tracks":[
+                {"id":3,"type":"subtitles","codec":"SubStationAlpha","properties":{"codec_id":"S_TEXT/ASS","track_name":"Надписи","language":"rus"}},
+                {"id":4,"type":"subtitles","codec":"SubStationAlpha","properties":{"codec_id":"S_TEXT/ASS","track_name":"Полные","language":"rus"}},
+                {"id":5,"type":"subtitles","codec":"SubRip/SRT","properties":{"codec_id":"S_TEXT/UTF8","track_name":"English","language":"eng"}}
+              ],"attachments":[]}
+              """;
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.SubtitlesPage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 3 && page.Preview.Rows.Count == 12, "план");
+        page.IsByTitle = true;
+        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Any(r => r.IsSkip) && !page.IsPlanning, "по тайтлу");
+
+        Capture(window, "subtitles");
+    }
+
+    [AvaloniaFact]
+    public async Task Rename_page()
+    {
+        using var app = new AppFixture().WithFiles(
+        [
+            .. Enumerable.Range(1, 8).Select(n => $"[SubsPlease] Sousou no Frieren - {n:00} (1080p) [ABCD1234].mkv"),
+            "Sousou no Frieren - 09.mkv",
+            "NCOP.mkv",
+        ]);
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.RenamePage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Rows.Count == 10, "строки");
+        page.Rows.Single(r => r.File.StartsWith("Sousou", StringComparison.Ordinal)).Episode = "10";
+
+        Capture(window, "rename");
+    }
+
+    [AvaloniaFact]
+    public async Task Shikimori_dialog()
+    {
+        const string results = """
+            [{"id":52991,"name":"Sousou no Frieren","russian":"Провожающая в последний путь Фрирен","kind":"tv","episodes":28,"aired_on":"2023-09-29"},
+             {"id":59978,"name":"Sousou no Frieren 2nd Season","russian":"Провожающая в последний путь Фрирен 2","kind":"tv","episodes":0,"aired_on":"2026-01-16"},
+             {"id":56805,"name":"Sousou no Frieren: ●● no Mahou","russian":"Провожающая в последний путь Фрирен: Магия ●●","kind":"special","episodes":0,"aired_on":"2023-10-06"},
+             {"id":57000,"name":"Sousou no Frieren Recap","russian":"","kind":"tv_special","episodes":1,"aired_on":null}]
+            """;
+        using var http = new HttpClient(new Answer(results));
+        var picker = new ShikimoriPickerViewModel(new ShikimoriClient(http, null, (_, _) => Task.CompletedTask), "Sousou no Frieren");
+        var dialog = new ShikimoriDialog(picker);
+        dialog.Show();
+        await AppFixture.WaitUntilAsync(() => picker.Results.Count == 4, "результаты");
+
+        AppFixture.Flush();
+        var frame = Screenshots.Capture(dialog, "shikimori");
+        Assert.True(Screenshots.CountColors(frame) > 50);
+        dialog.Close();
+    }
+
+    private static async Task<(MainWindowViewModel Vm, MainWindow Window)> OpenAsync(AppFixture app)
+    {
+        var vm = app.CreateViewModel();
+        var window = new MainWindow { DataContext = vm };
+        window.Show();
+        await vm.CheckToolsAsync();
+        return (vm, window);
+    }
+
+    private sealed class Answer(string json) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") });
     }
 
     private static void Capture(MainWindow window, string name)

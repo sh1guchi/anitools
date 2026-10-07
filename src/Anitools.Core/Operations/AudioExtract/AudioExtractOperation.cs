@@ -32,6 +32,12 @@ public sealed record AudioExtractOptions
 
     /// <summary>SingleMka: язык по умолчанию (jpn/eng угадываются по тайтлу); null — язык не проставлять.</summary>
     public string? Language { get; init; } = "rus";
+
+    /// <summary>
+    /// SingleMka: язык дорожки, выбранный вручную (номер дорожки → код; пусто — не ставить), важнее
+    /// <see cref="Language"/> и угадывания. Нет ключа — как в оригинале.
+    /// </summary>
+    public IReadOnlyDictionary<int, string>? Languages { get; init; }
 }
 
 /// <summary>Что есть в папке для п.2: файлы и дорожки первого из них.</summary>
@@ -102,6 +108,10 @@ public static class AudioExtractOperation
         return names;
     }
 
+    /// <summary>Язык по умолчанию для «один .mka»: jpn/eng по своему и настоящему тайтлу, иначе <paramref name="fallback"/>.</summary>
+    public static string DefaultLanguage(AudioTrackInfo track, string? title, string fallback) =>
+        LanguageGuess.Detect(string.Join(" ", new[] { title, track.Title }.Where(t => !string.IsNullOrEmpty(t)))) ?? fallback;
+
     private static OperationPlan PlanSeparate(AudioExtractSource source, AudioExtractOptions options, string outputFolder)
     {
         var multi = options.TrackIds.Count > 1;
@@ -148,12 +158,15 @@ public static class AudioExtractOperation
             id => id,
             id => options.Titles is not null && options.Titles.TryGetValue(id, out var own) ? own : source.Tracks[id].Title);
         var langs = new Dictionary<int, string>();
-        if (options.Language is { } defaultLang)
+        foreach (var id in ids)
         {
-            foreach (var id in ids)
+            if (options.Languages is not null && options.Languages.TryGetValue(id, out var chosen))
             {
-                var text = string.Join(" ", new[] { titles[id], source.Tracks[id].Title }.Where(t => !string.IsNullOrEmpty(t)));
-                langs[id] = LanguageGuess.Detect(text) ?? defaultLang;
+                langs[id] = chosen.Trim();
+            }
+            else if (options.Language is { } defaultLang)
+            {
+                langs[id] = DefaultLanguage(source.Tracks[id], titles[id], defaultLang);
             }
         }
 

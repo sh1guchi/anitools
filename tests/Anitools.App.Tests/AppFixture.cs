@@ -115,6 +115,12 @@ internal sealed class FakeRunner : IProcessRunner
 
     public TaskCompletionSource? Gate { get; set; }
 
+    /// <summary>JSON ffprobe по пути файла; null — без дорожек.</summary>
+    public Func<string, string?> FfprobeJson { get; set; } = _ => null;
+
+    /// <summary>JSON mkvmerge -J по пути файла; null — пустая Matroska.</summary>
+    public Func<string, string?> MkvmergeJson { get; set; } = _ => null;
+
     public int ExitCode { get; set; }
 
     public async Task<ProcessResult> RunAsync(ProcessSpec spec, CancellationToken cancellationToken = default)
@@ -139,7 +145,12 @@ internal sealed class FakeRunner : IProcessRunner
 
         if (program == "ffprobe")
         {
-            return Ok("""{"streams":[],"format":{"duration":"1420.0"}}""");
+            return Ok(FfprobeJson(spec.Arguments[^1]) ?? """{"streams":[],"format":{"duration":"1420.0"}}""");
+        }
+
+        if (program == "mkvmerge" && spec.Arguments.Contains("-J"))
+        {
+            return Ok(MkvmergeJson(spec.Arguments[^1]) ?? """{"container":{"type":"Matroska"},"tracks":[],"attachments":[]}""");
         }
 
         if (Gate is { } gate)
@@ -205,5 +216,16 @@ internal sealed class FakeDialogs : IDialogService
     {
         Clipboard = text;
         return Task.CompletedTask;
+    }
+
+    /// <summary>Что «выберут» в диалоге Shikimori; диалог тоже запоминается — по нему видно, что искали.</summary>
+    public ShikimoriChoice NextShikimori { get; set; } = ShikimoriChoice.Skip;
+
+    public ShikimoriPickerViewModel? LastShikimori { get; private set; }
+
+    public Task<ShikimoriChoice> PickShikimoriAsync(ShikimoriPickerViewModel picker)
+    {
+        LastShikimori = picker;
+        return Task.FromResult(NextShikimori);
     }
 }

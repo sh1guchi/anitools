@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.RenamePageView"
+             x:DataType="p:RenamePageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
+      <StackPanel Spacing="8">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TextBlock Text="Базовое название:" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <TextBox x:Name="BaseNameBox" Grid.Column="1" Text="{Binding BaseName}" />
+          <Button Grid.Column="2" Margin="8,0,0,0" Command="{Binding SearchShikimoriCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <mi:MaterialIcon Kind="Magnify" />
+              <TextBlock Text="Найти на Shikimori" />
+            </StackPanel>
+          </Button>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Нумерация файлов начинается с:" VerticalAlignment="Center" />
+          <TextBox x:Name="StartBox" Text="{Binding NumberingStart}" Width="60" />
+          <TextBlock Text="Суффикс:" VerticalAlignment="Center" Margin="18,0,0,0" />
+          <TextBox Text="{Binding Suffix}" Width="160" PlaceholderText="напр. надписи" />
+        </StackPanel>
+        <TextBlock Classes="muted small" TextWrapping="Wrap"
+                   Text="Номер в строке можно поправить руками — он берётся как есть. Пустой номер — файл не трогать." />
+      </StackPanel>
+    </Border>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button Classes="link" HorizontalAlignment="Left" Command="{Binding UndoCommand}"
+              IsVisible="{Binding UndoText, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <mi:MaterialIcon Kind="Undo" />
+          <TextBlock x:Name="UndoTextBlock" Text="{Binding UndoText}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="RenameButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RenameCommand}"
+              IsEnabled="{Binding RenameCount, Converter={x:Static v:Converters.IsPositive}}"
+              Content="{Binding RenameCount, StringFormat='Переименовать ({0})'}" />
+    </Grid>
+    <TextBlock DockPanel.Dock="Top" Classes="muted" Text="{Binding Summary}" Margin="10,0,0,6" />
+    <Border Classes="card" Padding="0" IsVisible="{Binding Rows.Count, Converter={x:Static v:Converters.IsPositive}}">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Grid.IsSharedSizeScope="True" Margin="10,6">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="p:RenameRowViewModel">
+              <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="Old" />
+                  <ColumnDefinition Width="64" />
+                  <ColumnDefinition Width="28" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding File}" VerticalAlignment="Center" MaxWidth="460" TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="{Binding File}" Margin="0,0,10,0" />
+                <TextBox Grid.Column="1" Text="{Binding Episode}" HorizontalContentAlignment="Center" MinHeight="0" Padding="4,2"
+                         FontWeight="{Binding IsManual, Converter={x:Static v:Converters.BoldIf}}" />
+                <TextBlock Grid.Column="2" Text="→" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted" />
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding NewName}" Classes.skip="{Binding !WillRename}" />
+                  <TextBlock Text="{Binding Note}" Classes.error="{Binding IsProblem}" Classes.muted="{Binding !IsProblem}" />
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>

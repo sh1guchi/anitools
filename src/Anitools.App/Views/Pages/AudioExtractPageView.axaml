@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.AudioExtractPageView"
+             x:DataType="p:AudioExtractPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
+              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
+              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+    </Grid>
+    <ScrollViewer DockPanel.Dock="Top" MaxHeight="430" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,12">
+      <StackPanel Spacing="12" Margin="0,0,12,0">
+        <Border Classes="card" IsVisible="{Binding Tracks.Count, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Classes="h2" Text="Дорожки" />
+              <TextBlock Classes="muted" Text="{Binding TracksCaption}" VerticalAlignment="Center" />
+            </StackPanel>
+            <ItemsControl x:Name="TracksList" ItemsSource="{Binding Tracks}" Grid.IsSharedSizeScope="True">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="p:AudioTrackRowViewModel">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="30" />
+                      <ColumnDefinition Width="Auto" SharedSizeGroup="T" />
+                      <ColumnDefinition Width="Auto" SharedSizeGroup="C" />
+                      <ColumnDefinition Width="Auto" SharedSizeGroup="Ch" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox IsChecked="{Binding IsSelected}" MinWidth="0" />
+                    <TextBlock Grid.Column="1" Text="{Binding Number}" Classes="muted" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,18,0" />
+                    <TextBlock Grid.Column="3" Text="{Binding Codec}" VerticalAlignment="Center" Margin="0,0,18,0" />
+                    <TextBlock Grid.Column="4" Text="{Binding Channels}" VerticalAlignment="Center" Margin="0,0,18,0" />
+                    <TextBlock Grid.Column="5" Text="{Binding Language}" Classes="muted" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card" IsVisible="{Binding HasSeveralSelected}">
+          <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+              <TextBlock Text="Сохранение:" VerticalAlignment="Center" />
+              <RadioButton x:Name="SeparateRadio" GroupName="audioMode" Content="отдельный файл на дорожку" IsChecked="{Binding IsSeparate}" />
+              <RadioButton x:Name="SingleRadio" GroupName="audioMode" Content="все выбранные в один .mka" IsChecked="{Binding IsSingleMka}" />
+            </StackPanel>
+            <CheckBox Content="номер дорожки в имени папки и файла («1. AniLibria.TV»)" IsChecked="{Binding NumberTracks}" IsVisible="{Binding ShowsNumbering}" />
+            <StackPanel Spacing="4" IsVisible="{Binding ShowsOutputTracks}">
+              <TextBlock Classes="muted" Text="Дорожки в .mka — по порядку; первая станет дорожкой по умолчанию." />
+              <ItemsControl x:Name="OutputList" ItemsSource="{Binding OutputTracks}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="p:OutputTrackRowViewModel">
+                    <Grid ColumnDefinitions="28,200,*,110,Auto" Margin="0,2">
+                      <TextBlock Text="{Binding Position}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                      <TextBlock Grid.Column="1" Text="{Binding Source}" Classes="muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                      <ComboBox Grid.Column="2" IsEditable="True" HorizontalAlignment="Stretch" PlaceholderText="тайтл"
+                                ItemsSource="{Binding $parent[UserControl].((p:AudioExtractPageViewModel)DataContext).Voices}"
+                                Text="{Binding Title}" />
+                      <ComboBox Grid.Column="3" IsEditable="True" HorizontalAlignment="Stretch" Margin="6,0,0,0" PlaceholderText="язык"
+                                ItemsSource="{Binding $parent[UserControl].((p:AudioExtractPageViewModel)DataContext).LanguageCodes}"
+                                Text="{Binding Language}" />
+                      <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="6,0,0,0">
+                        <Button Classes="icon" ToolTip.Tip="Выше" CommandParameter="{Binding}"
+                                Command="{Binding $parent[UserControl].((p:AudioExtractPageViewModel)DataContext).MoveUpCommand}">
+                          <mi:MaterialIcon Kind="ArrowUp" />
+                        </Button>
+                        <Button Classes="icon" ToolTip.Tip="Ниже" CommandParameter="{Binding}"
+                                Command="{Binding $parent[UserControl].((p:AudioExtractPageViewModel)DataContext).MoveDownCommand}">
+                          <mi:MaterialIcon Kind="ArrowDown" />
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+    <c:PlanPreviewView DataContext="{Binding Preview}" />
+  </DockPanel>
+</UserControl>

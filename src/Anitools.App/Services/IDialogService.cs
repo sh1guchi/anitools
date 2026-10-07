@@ -1,3 +1,5 @@
+using Anitools.App.ViewModels;
+
 namespace Anitools.App.Services;
 
 /// <summary>Диалоги и действия с системой — отдельно от моделей представления, чтобы их можно было тестировать.</summary>
@@ -19,4 +21,7 @@ public interface IDialogService
     Task OpenUrlAsync(string url);
 
     Task CopyTextAsync(string text);
+
+    /// <summary>Поиск тайтла на Shikimori (§4.9); закрыли окно — «пропустить».</summary>
+    Task<ShikimoriChoice> PickShikimoriAsync(ShikimoriPickerViewModel picker);
 }

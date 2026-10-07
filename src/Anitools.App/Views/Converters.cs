@@ -1,4 +1,5 @@
 using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace Anitools.App.Views;
 
@@ -12,4 +13,10 @@ public static class Converters
     public static FuncValueConverter<int, string> RunText { get; } = new(n => n > 0 ? $"Запустить ({n})" : "Запустить");
 
     public static FuncValueConverter<string?, bool> IsNotEmpty { get; } = new(s => !string.IsNullOrEmpty(s));
+
+    /// <summary>0 серий у Shikimori — «ещё неизвестно»: пусто, как в оригинале.</summary>
+    public static FuncValueConverter<int, string> EmptyIfZero { get; } = new(n => n == 0 ? "" : n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+    /// <summary>Номер, поправленный руками, — жирным.</summary>
+    public static FuncValueConverter<bool, FontWeight> BoldIf { get; } = new(b => b ? FontWeight.Bold : FontWeight.Normal);
 }
