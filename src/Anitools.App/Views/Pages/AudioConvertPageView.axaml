@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.AudioConvertPageView"
+             x:DataType="p:AudioConvertPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
+      <StackPanel Spacing="8">
+        <WrapPanel Orientation="Horizontal">
+          <TextBlock Text="Формат:" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox x:Name="FormatBox" ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" Width="100" Margin="0,0,16,0" />
+          <TextBlock Text="битрейт" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBox Text="{Binding Bitrate}" Width="70" IsEnabled="{Binding HasBitrate}" Margin="0,0,16,0" />
+          <TextBlock Text="каналов" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBox Text="{Binding Channels}" Width="56" PlaceholderText="как есть" Margin="0,0,16,0" />
+          <TextBlock Text="файлов сразу" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBox Text="{Binding Workers}" Width="56" />
+        </WrapPanel>
+        <CheckBox Content="чинить метки времени (наложения обрезаются, дыры — тишиной)" IsChecked="{Binding FixTimestamps}" />
+        <TextBlock Classes="muted" Text="Выход — папка «converted»." />
+      </StackPanel>
+    </Border>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
+              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
+              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+    </Grid>
+    <c:PlanPreviewView DataContext="{Binding Preview}" />
+  </DockPanel>
+</UserControl>

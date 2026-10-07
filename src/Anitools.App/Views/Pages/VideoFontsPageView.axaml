@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:ot="using:Anitools.Core.Operations.TrackList"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.VideoFontsPageView"
+             x:DataType="p:VideoFontsPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <TextBlock DockPanel.Dock="Top" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,12"
+               Text="Вложенные шрифты всех видео папки (MKV) → fonts.zip; одинаковые имена — один раз, из первого видео." />
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}" Content="Собрать fonts.zip"
+              IsEnabled="{Binding Videos.Count, Converter={x:Static v:Converters.IsPositive}}" />
+    </Grid>
+    <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,12,0,0"
+            IsVisible="{Binding Result, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock x:Name="ResultText" Text="{Binding Result}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Content="Открыть папку" Command="{Binding OpenZipFolderCommand}"
+                IsVisible="{Binding ZipPath, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      </Grid>
+    </Border>
+    <Border Classes="card">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="VideosList" ItemsSource="{Binding Videos}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="x:String">
+              <TextBlock Text="{Binding}" Margin="0,2" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>

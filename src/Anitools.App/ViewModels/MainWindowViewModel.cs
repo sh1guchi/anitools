@@ -8,7 +8,6 @@ using Anitools.Core.Processes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Material.Icons;
 
 namespace Anitools.App.ViewModels;
 
@@ -41,6 +40,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         AudioMuxPage = new AudioMuxPageViewModel(this);
         SubtitlesPage = new SubtitlesPageViewModel(this);
         RenamePage = new RenamePageViewModel(this);
+        HardsubPage = new HardsubPageViewModel(this);
+        MkaMuxPage = new MkaMuxPageViewModel(this);
+        AudioShiftPage = new AudioShiftPageViewModel(this);
+        AudioConvertPage = new AudioConvertPageViewModel(this);
+        TrackListPage = new TrackListPageViewModel(this);
+        SubShiftPage = new SubShiftPageViewModel(this);
+        AssEditPage = new AssEditPageViewModel(this);
+        AssFontsPage = new AssFontsPageViewModel(this);
+        VideoFontsPage = new VideoFontsPageViewModel(this);
 
         Navigation =
         [
@@ -48,21 +56,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
             VideoOnlyPage,
             RemuxPage,
             HlsPage,
-            Soon("Хардсаб", MaterialIconKind.Subtitles, "Вшить .ass в видео (hevc_nvenc, 10 бит)."),
+            HardsubPage,
             new NavHeader("АУДИО"),
             AudioExtractPage,
             AudioMuxPage,
-            Soon("Озвучки → .mka", MaterialIconKind.MicrophoneOutline, "Озвучки из папок в один .mka на серию."),
-            Soon("Сдвиг аудио", MaterialIconKind.ClockOutline, "Задержка или обрезка начала аудио."),
-            Soon("Перекодировать", MaterialIconKind.Waveform, "Аудио в AAC, MP3, Opus, FLAC…"),
-            Soon("Дорожки файла", MaterialIconKind.FileMusicOutline, "Таблица аудиодорожек и список для копирования."),
+            MkaMuxPage,
+            AudioShiftPage,
+            AudioConvertPage,
+            TrackListPage,
             new NavHeader("СУБТИТРЫ"),
             SubtitlesPage,
-            Soon("Сдвиг", MaterialIconKind.TimerEditOutline, "Сдвиг .srt/.ass на N секунд."),
-            Soon("Чистка стилей", MaterialIconKind.Broom, "Убрать строки .ass по стилю или актёру (с бэкапом)."),
+            SubShiftPage,
+            AssEditPage,
             new NavHeader("ШРИФТЫ"),
-            Soon("Для .ass", MaterialIconKind.FormatFont, "Шрифты из .ass → fonts.zip (своя папка, система, скачивание)."),
-            Soon("Из видео", MaterialIconKind.ArchiveArrowDownOutline, "Вложенные шрифты из MKV → fonts.zip."),
+            AssFontsPage,
+            VideoFontsPage,
             new NavHeader("ФАЙЛЫ"),
             RenamePage,
             new NavSeparator(),
@@ -125,6 +133,24 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     public SubtitlesPageViewModel SubtitlesPage { get; }
 
     public RenamePageViewModel RenamePage { get; }
+
+    public HardsubPageViewModel HardsubPage { get; }
+
+    public MkaMuxPageViewModel MkaMuxPage { get; }
+
+    public AudioShiftPageViewModel AudioShiftPage { get; }
+
+    public AudioConvertPageViewModel AudioConvertPage { get; }
+
+    public TrackListPageViewModel TrackListPage { get; }
+
+    public SubShiftPageViewModel SubShiftPage { get; }
+
+    public AssEditPageViewModel AssEditPage { get; }
+
+    public AssFontsPageViewModel AssFontsPage { get; }
+
+    public VideoFontsPageViewModel VideoFontsPage { get; }
 
     public string Version { get; } = $"{AppInfo.Name} {AppInfo.Version}";
 
@@ -284,9 +310,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         var current = Services.Jobs.Current;
         CurrentJob = current is null || current.IsFinished ? null : JobsPage.Jobs.FirstOrDefault(j => j.Job == current);
     }
-
-    private PlaceholderPageViewModel Soon(string title, MaterialIconKind icon, string description) =>
-        new(this, title, icon, description);
 
     private static long? DefaultFileSize(string path)
     {
