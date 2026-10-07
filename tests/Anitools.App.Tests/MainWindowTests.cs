@@ -191,7 +191,7 @@ public sealed class MainWindowTests
 
         item.CancelCommand.Execute(null);
         await job.Completion.WaitAsync(TestContext.Current.CancellationToken);
-        await AppFixture.WaitUntilAsync(() => item.State == JobState.Cancelled, "отмена");
+        await AppFixture.WaitUntilAsync(() => item.State == JobState.Cancelled && vm.CurrentJob is null, "отмена");
 
         Assert.False(item.CanCancel);
         Assert.Null(vm.JobsPage.Badge);

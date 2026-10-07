@@ -73,6 +73,20 @@ public sealed class JobQueueTests
     public async Task Failure_or_exception_does_not_stop_the_queue()
     {
         var queue = new JobQueue();
+        var stillCurrent = new List<bool>();
+        var allFinished = new TaskCompletionSource();
+        queue.JobFinished += job =>
+        {
+            lock (stillCurrent)
+            {
+                stillCurrent.Add(queue.Current == job);
+                if (stillCurrent.Count == 3)
+                {
+                    allFinished.SetResult();
+                }
+            }
+        };
+
         var a = queue.Enqueue("ошибки", "/a", _ => Task.FromResult(new JobOutcome(false, "1 ошибка")));
         var b = queue.Enqueue("исключение", "/b", _ => throw new InvalidOperationException("сломалось"));
         var c = queue.Enqueue("нормальная", "/c", context =>
@@ -80,14 +94,6 @@ public sealed class JobQueueTests
             context.Log("привет");
             return Task.FromResult(new JobOutcome(true, "1 готово"));
         });
-        var finished = new List<string>();
-        queue.JobFinished += job =>
-        {
-            lock (finished)
-            {
-                finished.Add(job.Title);
-            }
-        };
 
         await queue.WhenIdleAsync().WaitAsync(Ct);
 
@@ -99,6 +105,9 @@ public sealed class JobQueueTests
         Assert.Equal(1.0, c.Snapshot.Fraction);
         Assert.EndsWith("привет", Assert.Single(c.Log));
 
+        // к событию «закончилась» задача уже не текущая (строка состояния её не покажет)
+        await allFinished.Task.WaitAsync(Ct);
+        Assert.Equal([false, false, false], stillCurrent);
         queue.ClearFinished();
         Assert.Empty(queue.Jobs);
     }

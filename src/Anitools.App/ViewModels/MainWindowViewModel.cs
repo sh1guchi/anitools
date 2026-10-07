@@ -267,7 +267,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     private void UpdateCurrentJob()
     {
         var current = Services.Jobs.Current;
-        CurrentJob = current is null ? null : JobsPage.Jobs.FirstOrDefault(j => j.Job == current);
+        CurrentJob = current is null || current.IsFinished ? null : JobsPage.Jobs.FirstOrDefault(j => j.Job == current);
     }
 
     private PlaceholderPageViewModel Soon(string title, MaterialIconKind icon, string description) =>

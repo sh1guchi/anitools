@@ -140,6 +140,15 @@ public sealed class JobQueue(Func<DateTime>? clock = null)
             job.Finish(JobState.Failed, ex.Message);
         }
 
+        // К событию «закончилась» текущей задачи уже нет — строка состояния не должна её показывать
+        lock (_lock)
+        {
+            if (_current == job)
+            {
+                _current = null;
+            }
+        }
+
         JobFinished?.Invoke(job);
     }
 }
