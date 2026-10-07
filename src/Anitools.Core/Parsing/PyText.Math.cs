@@ -22,6 +22,13 @@ internal static partial class PyText
         return c != 0 && double.IsFinite(c) ? sum + c : sum;
     }
 
+    /// <summary>str(float) для обычных чисел: кратчайшая запись, у целых — «.0» (1.0 → «1.0», 0.25 → «0.25»).</summary>
+    public static string FloatStr(double value)
+    {
+        var s = value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+        return s.Contains('.', StringComparison.Ordinal) || s.Contains('E', StringComparison.Ordinal) || !double.IsFinite(value) ? s : s + ".0";
+    }
+
     /// <summary>a // b для float (float_floor_div): через fmod, с «прилипанием» частного к ближайшему целому.</summary>
     public static double FloorDiv(double a, double b)
     {

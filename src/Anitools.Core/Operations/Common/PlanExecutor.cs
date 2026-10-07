@@ -42,33 +42,63 @@ public sealed record OperationProgress(int ItemIndex, int ItemCount, PlanItem It
 /// </summary>
 public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools, ErrorLogWriter logs, IMediaProbe? probe = null)
 {
+    /// <param name="maxParallel">Сколько шагов выполнять одновременно (сдвиг и перекодирование аудио — по 6–8, как в оригинале).</param>
     public async Task<OperationResult> ExecuteAsync(
         OperationPlan plan,
         IProgress<OperationProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        int maxParallel = 1)
     {
-        var results = new List<ItemResult>();
-        var toRun = plan.Items.Where(i => i.Status == PlanItemStatus.Run).ToList();
+        var results = new ItemResult?[plan.Items.Count];
+        var count = plan.Items.Count(i => i.Status == PlanItemStatus.Run);
+        using var slots = new SemaphoreSlim(Math.Max(1, maxParallel));
+        var running = new List<Task>();
         var index = 0;
-        foreach (var item in plan.Items)
+        for (var i = 0; i < plan.Items.Count; i++)
         {
+            var item = plan.Items[i];
             if (item.Status != PlanItemStatus.Run)
             {
-                results.Add(new ItemResult(item, item.Status == PlanItemStatus.Skip ? ItemOutcome.Skipped : ItemOutcome.Failed, item.Reason));
+                results[i] = new ItemResult(item, item.Status == PlanItemStatus.Skip ? ItemOutcome.Skipped : ItemOutcome.Failed, item.Reason);
+                continue;
+            }
+
+            try
+            {
+                await slots.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                results[i] = new ItemResult(item, ItemOutcome.NotRun);
                 continue;
             }
 
             if (cancellationToken.IsCancellationRequested)
             {
-                results.Add(new ItemResult(item, ItemOutcome.NotRun));
+                slots.Release();
+                results[i] = new ItemResult(item, ItemOutcome.NotRun);
                 continue;
             }
 
-            index++;
-            results.Add(await RunItemAsync(item, index, toRun.Count, progress, cancellationToken).ConfigureAwait(false));
+            var slot = i;
+            var number = ++index;
+            running.Add(Task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        results[slot] = await RunItemAsync(item, number, count, progress, cancellationToken).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        slots.Release();
+                    }
+                },
+                CancellationToken.None));
         }
 
-        return new OperationResult(results);
+        await Task.WhenAll(running).ConfigureAwait(false);
+        return new OperationResult([.. results.Select(r => r!)]);
     }
 
     private async Task<ItemResult> RunItemAsync(PlanItem item, int index, int count, IProgress<OperationProgress>? progress, CancellationToken ct)
@@ -130,6 +160,24 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
                 ReadOnlyAttr.Clear(output);
             }
 
+            if (item.RenameOnSuccess is var (from, to))
+            {
+                try
+                {
+                    if (File.Exists(to))
+                    {
+                        ReadOnlyAttr.Clear(to);
+                    }
+
+                    File.Move(from, to, overwrite: true);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    DeleteOutputs(item);
+                    return new ItemResult(item, ItemOutcome.Failed, $"Не удалось переименовать {Path.GetFileName(from)} → {Path.GetFileName(to)}: {ex.Message}");
+                }
+            }
+
             progress?.Report(new OperationProgress(index, count, item, 1));
             return result.ExitCode == 0
                 ? new ItemResult(item, ItemOutcome.Done)
@@ -165,13 +213,18 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
             var duration = probe is null ? null : await DurationAsync(item.Source, ct).ConfigureAwait(false);
             var parser = new FfmpegProgressParser(p => progress?.Report(new OperationProgress(
                 index, count, item, duration is > 0 ? p.Fraction(duration.Value) : null, p.Speed, p.Bitrate)));
-            return new ProcessSpec(exe, ["-progress", "pipe:1", "-nostats", .. command.Arguments]) { OnStdoutLine = parser.Feed };
+            return new ProcessSpec(exe, ["-progress", "pipe:1", "-nostats", .. command.Arguments])
+            {
+                OnStdoutLine = parser.Feed,
+                WorkingDirectory = command.WorkingDirectory,
+            };
         }
 
         if (command.Tool == Tool.Mkvextract)
         {
             return new ProcessSpec(exe, ["--output-charset", "UTF-8", .. command.Arguments])
             {
+                WorkingDirectory = command.WorkingDirectory,
                 // «Progress: 45%» идут через \r — ReadLine режет и по нему; остальные строки — в лог ошибки
                 OnStdoutLine = line =>
                 {
@@ -191,7 +244,7 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
             };
         }
 
-        return new ProcessSpec(exe, command.Arguments);
+        return new ProcessSpec(exe, command.Arguments) { WorkingDirectory = command.WorkingDirectory };
     }
 
     private async Task<double?> DurationAsync(string path, CancellationToken ct)

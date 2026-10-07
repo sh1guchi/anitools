@@ -66,8 +66,23 @@ def load_reference():
 at = load_reference()
 
 
-def source_sha256() -> str:
-    return hashlib.sha256(REF.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+def source_sha256(rel: str = REF_REL) -> str:
+    return hashlib.sha256((ROOT / rel).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+EXTRA_REL = "reference/python/extra"
+
+
+def load_extra(file_name: str):
+    """Соседний скрипт из reference/python/extra (импорт без запуска main)."""
+    path = ROOT / EXTRA_REL / file_name
+    name = "extra_" + "".join(c if c.isalnum() else "_" for c in path.stem)
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if hasattr(mod, "terminate_all_processes"):
+        atexit.unregister(mod.terminate_all_processes)
+    return mod
 
 
 # ─── Общие помощники ─────────────────────────────────────────────────────────
@@ -156,12 +171,12 @@ def fake_subprocess(handler, calls: list):
 
 # ─── Реестр эталонов ─────────────────────────────────────────────────────────
 
-GOLDENS: list[tuple[str, str, object]] = []
+GOLDENS: list[tuple[str, str, object, str]] = []
 
 
-def golden(name: str, description: str):
+def golden(name: str, description: str, source: str = REF_REL):
     def deco(fn):
-        GOLDENS.append((name, description, fn))
+        GOLDENS.append((name, description, fn, source))
         return fn
     return deco
 
@@ -1505,10 +1520,196 @@ def g_hls_scenarios():
     return cases
 
 
+# ─── Соседние скрипты (reference/python/extra), этап 6 ────────────────────────
+
+SUBDELAY_REL = f"{EXTRA_REL}/subtitle_delay+1s.py"
+STYLES_REL = f"{EXTRA_REL}/edit_styles.py"
+HARDSUB_REL = f"{EXTRA_REL}/hardsub.py"
+MKA_REL = f"{EXTRA_REL}/mka_muxer.py"
+XFONTS_REL = f"{EXTRA_REL}/extract_fonts.py"
+DECOD_REL = f"{EXTRA_REL}/audio_decod.py"
+CUT_REL = f"{EXTRA_REL}/delay-1s.py"
+
+subdelay = load_extra("subtitle_delay+1s.py")
+styles = load_extra("edit_styles.py")
+hardsub = load_extra("hardsub.py")
+mka = load_extra("mka_muxer.py")
+xfonts = load_extra("extract_fonts.py")
+decod = load_extra("audio_decod.py")
+cut = load_extra("delay-1s.py")
+
+
+@golden("sub_shift_times", "Сдвиг одной метки времени SRT/ASS (subtitle_delay+1s.py: shift_time_srt/ass)", SUBDELAY_REL)
+def g_sub_shift_times():
+    srt = ["00:00:01,000", "00:00:00,500", "01:59:59,999", "99:59:59,999", "00:00:00,000", "00:00:01.000", "1:2:3,4"]
+    ass = ["0:00:01.00", "0:00:00.50", "9:59:59.99", "1:2:3.4", "0:00:01,00"]
+    shifts = [1.0, -1.0, -2.5, 0.0015, -0.0015, 0.015, -0.015, 0.009, 3600.0, 0.1 + 0.2]
+    cases = []
+    for kind, times, fn in (("srt", srt, subdelay.shift_time_srt), ("ass", ass, subdelay.shift_time_ass)):
+        for t in times:
+            for sh in shifts:
+                cases.append({"input": {"kind": kind, "time": t, "shift": sh}, **call(fn, t, sh)})
+    return cases
+
+
+SRT_SAMPLE = ("1\n00:00:01,000 --> 00:00:02,500\nПривет\n\n2\n00:00:03,000-->00:00:04,000\nМир\n\n"
+              "3\n00:00:00,200   -->   00:00:00,900\nРано\n\n4\n00:00:05,000 --> 00:00:06,000 X1:10 Y1:20\nКоорд\n")
+ASS_SAMPLE = ("\ufeff[Script Info]\nScriptType: v4.00+\n\n[Events]\n"
+              "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+              "Dialogue: 0,0:00:01.00,0:00:02.50,Default,,0,0,0,,Текст, с, запятыми\n"
+              "Comment: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,Комментарий не сдвигается\n"
+              "Dialogue: 10,0:00:00.20,0:00:00.90,Signs,,0,0,0,,{\\pos(10,20)}Надпись\n"
+              "Dialogue: 0,10:00:00.00,10:00:01.00,Default,,0,0,0,,Десять часов не совпадают с шаблоном\n"
+              "Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,Dialogue: 0,0:00:05.00,0:00:06.00,внутри\n")
+
+
+@golden("sub_shift_text", "Сдвиг файла субтитров целиком (subtitle_delay+1s.py: process_srt/process_ass), вход с LF", SUBDELAY_REL)
+def g_sub_shift_text():
+    import tempfile
+    cases = []
+    for kind, text in (("srt", SRT_SAMPLE), ("ass", ASS_SAMPLE)):
+        for sh in (1.0, -1.0, 0.25):
+            with tempfile.TemporaryDirectory() as td:
+                src, dst = Path(td, "in." + kind), Path(td, "out." + kind)
+                src.write_text(text, encoding="utf-8")
+                (subdelay.process_srt if kind == "srt" else subdelay.process_ass)(src, dst, sh)
+                cases.append({"input": {"kind": kind, "text": text, "shift": sh}, "output": dst.read_bytes().decode("utf-8")})
+    return cases
+
+
+ASS_FILES = {
+    "Ep 01.ass": "[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,Default,Хару,0,0,0,,Привет\n"
+                 "Dialogue: 0,0:00:02.00,0:00:03.00,Signs,,0,0,0,,Надпись\n"
+                 "Comment: 0,0:00:02.00,0:00:03.00,Signs,,0,0,0,,Комментарий\n"
+                 "Dialogue: 0,0:00:03.00,0:00:04.00, Default ,Мико,0,0,0,,Пробелы вокруг стиля\n",
+    "ep 02.ASS": "\ufeff[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,OP,,0,0,0,,Опенинг\n"
+                 "Dialogue: 0,0:00:01.00,0:00:02.00,Default,Хару,0,0,0,,Снова\n"
+                 "Dialogue: 0,0:00:01.00\n",
+    "A.ass": "[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,ED,Хор,0,0,0,,Эндинг",
+    "notes.txt": "Dialogue: 0,0:00:01.00,0:00:02.00,Txt,,0,0,0,,не .ass\n",
+}
+
+
+@golden("ass_style_values", "Чистка .ass (edit_styles.py): значения поля с примером файла и файлы после удаления строк", STYLES_REL)
+def g_ass_style_values():
+    import io
+    import tempfile
+    cases = []
+    real_listdir = os.listdir
+    for field, remove in ((3, ["Signs", "OP"]), (4, ["", "Хор"]), (3, [])):
+        with tempfile.TemporaryDirectory() as td:
+            for name, text in ASS_FILES.items():
+                Path(td, name).write_text(text, encoding="utf-8")
+            styles.os = types.SimpleNamespace(listdir=lambda p: sorted(real_listdir(p), key=str.upper), path=os.path)
+            try:
+                values, examples, files = styles.get_all_values(td, field)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    styles.remove_lines(td, files, field, set(remove))
+            finally:
+                styles.os = os
+            after = {name: Path(td, name).read_bytes().decode("utf-8") for name in files}
+        cases.append({"input": {"files": ASS_FILES, "field": field, "remove": remove},
+                      "output": {"values": values, "examples": examples, "files": after}})
+    return cases
+
+
+@golden("escape_filter", "Путь для фильтра subtitles в хардсабе (hardsub.py: escape_filter)", HARDSUB_REL)
+def g_escape_filter():
+    inputs = ["Ep 01.ass", "Fonts", r"C:\anime\[Group] Show - 01.ass", "a'b,c;d[e]f:g.ass", r"back\slash", "Тайтл, серия 1.ass", ""]
+    return cases_for(hardsub.escape_filter, inputs)
+
+
+def _audio_only_json(full: dict) -> str:
+    keep = ("index", "codec_name", "channels", "channel_layout", "disposition", "tags")
+    streams = [{k: s[k] for k in keep if k in s} for s in full.get("streams", []) if s.get("codec_type") == "audio"]
+    return json.dumps({"programs": [], "streams": streams}, ensure_ascii=False, indent=4)
+
+
+TRACK_JSON = {
+    "Своя раскладка": {"streams": [
+        {"index": 0, "codec_type": "audio", "codec_name": "aac", "channels": 2, "channel_layout": "stereo",
+         "disposition": {"default": 1}, "tags": {"title": "AniLibria.TV", "language": "rus"}},
+        {"index": 1, "codec_type": "audio", "codec_name": "ac3", "channels": 6, "disposition": {"default": 0},
+         "tags": {"title": "", "language": "jpn"}},
+        {"index": 2, "codec_type": "audio", "codec_name": "opus", "disposition": {}, "tags": {}},
+    ]},
+}
+
+
+@golden("track_rows", "Дорожки файла (mka_muxer.py: probe_tracks) и списки для копирования (print_copy_block 1/2/3)", MKA_REL)
+def g_track_rows():
+    import io
+    cases = []
+    sources = {name: json.loads((MEDIA / f"{name}.ffprobe.json").read_text(encoding="utf-8"))
+               for name in ("Test Show - 01.mkv", "Test Show - 02.mkv", "Resolve Export.mov", "Silent Show - 01.mkv")}
+    sources.update(TRACK_JSON)
+    for name, full in sources.items():
+        reply = _audio_only_json(full)
+        with patched_module(mka, subprocess=fake_subprocess(lambda cmd, r=reply: (r, ""), [])):
+            tracks = mka.probe_tracks("x.mka")
+        blocks = {}
+        for fmt in ("1", "2", "3"):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                mka.print_copy_block(tracks, fmt)
+            blocks[fmt] = out.getvalue()
+        cases.append({"input": {"name": name, "ffprobe": full}, "output": {"tracks": tracks, "copy": blocks}})
+    return cases
+
+
+@golden("font_attachments", "Шрифт ли вложение mkvmerge (extract_fonts.py: is_font)", XFONTS_REL)
+def g_font_attachments():
+    inputs = [
+        {"file_name": "Arial.TTF", "content_type": "application/x-truetype-font"},
+        {"file_name": "a.otf", "content_type": "application/vnd.ms-opentype"},
+        {"file_name": "font.woff2", "content_type": "application/octet-stream"},
+        {"file_name": "cover.jpg", "content_type": "image/jpeg"},
+        {"file_name": "noext", "content_type": "font/ttf"},
+        {"file_name": "x.EOT", "content_type": ""},
+        {"file_name": "x.ttc", "content_type": "application/octet-stream"},
+        {"file_name": "", "content_type": "FONT/SFNT"},
+        {"content_type": "font/otf"},
+        {"file_name": "a.woff"},
+    ]
+    return cases_for(xfonts.is_font, inputs)
+
+
+@golden("audio_tool_commands", "Команды перекодирования аудио (audio_decod.py: все форматы) и обрезки начала (delay-1s.py)", DECOD_REL)
+def g_audio_tool_commands():
+    cases = []
+    for fmt, (ext, codec) in decod.CODEC_MAP.items():
+        calls = []
+        with patched_module(decod, subprocess=fake_subprocess(lambda cmd: ("", ""), calls), OUTDIR=Path("converted")):
+            decod.process_file(Path("Track 01.flac"), "ffmpeg", ext, codec)
+        cases.append({"input": {"tool": "audio_decod", "format": fmt, "source": "Track 01.flac"}, "output": calls})
+    calls = []
+    with patched_module(cut, subprocess=fake_subprocess(lambda cmd: ("", ""), calls), OUTDIR=Path("audio_fixed")):
+        cut.process_file(Path("Track 01.flac"), "ffmpeg")
+    cases.append({"input": {"tool": "delay-1s", "source": "Track 01.flac", "seconds": cut.CUT_SECONDS}, "output": calls})
+    return cases
+
+
+@contextlib.contextmanager
+def patched_module(mod, **attrs):
+    """Временно подменить глобальные имена в модуле соседнего скрипта."""
+    missing = object()
+    old = {k: getattr(mod, k, missing) for k in attrs}
+    for k, v in attrs.items():
+        setattr(mod, k, v)
+    try:
+        yield
+    finally:
+        for k, v in old.items():
+            if v is missing:
+                delattr(mod, k)
+            else:
+                setattr(mod, k, v)
+
+
 # ─── Запись ──────────────────────────────────────────────────────────────────
 
-def render(name: str, description: str, sha: str, cases: list, extra: dict) -> str:
-    head = {"function": name, "description": description, "source": REF_REL, "source_sha256": sha,
+def render(name: str, description: str, source: str, cases: list, extra: dict) -> str:
+    head = {"function": name, "description": description, "source": source, "source_sha256": source_sha256(source),
             "python": platform.python_version(), **extra}
     dumps = lambda v: json.dumps(v, ensure_ascii=False, allow_nan=False)  # noqa: E731
     lines = ["{"]
@@ -1527,14 +1728,13 @@ def render(name: str, description: str, sha: str, cases: list, extra: dict) -> s
 
 
 def build() -> dict[str, str]:
-    sha = source_sha256()
     files = {}
-    for name, description, fn in GOLDENS:
+    for name, description, fn, source in GOLDENS:
         result = fn()
         cases, extra = result if isinstance(result, tuple) else (result, {})
         if not cases:
             raise SystemExit(f"{name}: нет ни одного случая")
-        files[f"{name}.json"] = render(name, description, sha, cases, extra)
+        files[f"{name}.json"] = render(name, description, source, cases, extra)
     return files
 
 

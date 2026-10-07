@@ -1,0 +1,19 @@
+{
+  "function": "font_attachments",
+  "description": "Шрифт ли вложение mkvmerge (extract_fonts.py: is_font)",
+  "source": "reference/python/extra/extract_fonts.py",
+  "source_sha256": "54eb8ea18c47aef7db8ab72130d925fa03bd2cd29057a505f17c31d4e0699301",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"file_name": "Arial.TTF", "content_type": "application/x-truetype-font"}, "output": true},
+    {"input": {"file_name": "a.otf", "content_type": "application/vnd.ms-opentype"}, "output": true},
+    {"input": {"file_name": "font.woff2", "content_type": "application/octet-stream"}, "output": true},
+    {"input": {"file_name": "cover.jpg", "content_type": "image/jpeg"}, "output": false},
+    {"input": {"file_name": "noext", "content_type": "font/ttf"}, "output": true},
+    {"input": {"file_name": "x.EOT", "content_type": ""}, "output": true},
+    {"input": {"file_name": "x.ttc", "content_type": "application/octet-stream"}, "output": false},
+    {"input": {"file_name": "", "content_type": "FONT/SFNT"}, "output": true},
+    {"input": {"content_type": "font/otf"}, "output": true},
+    {"input": {"file_name": "a.woff"}, "output": true}
+  ]
+}

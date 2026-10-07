@@ -8,6 +8,9 @@ public sealed record PlannedCommand(Tool Tool, IReadOnlyList<string> Arguments)
     /// <summary>Коды выхода «с предупреждениями»: не ошибка, если все выходные файлы на месте и не пустые (mkvextract: 1).</summary>
     public IReadOnlyList<int> WarningExitCodes { get; init; } = [];
 
+    /// <summary>Папка, из которой запускать (хардсаб: пути в фильтре subtitles — относительные); null — текущая.</summary>
+    public string? WorkingDirectory { get; init; }
+
     public override string ToString() => CommandLine.Format([Tool.ToString().ToLowerInvariant(), .. Arguments]);
 }
 
@@ -38,6 +41,11 @@ public sealed record PlanItem
 
     /// <summary>Выходные файлы (полные пути): при ошибке и отмене недописанные удаляются.</summary>
     public IReadOnlyList<string> Outputs { get; init; } = [];
+
+    /// <summary>
+    /// После успеха переименовать (с заменой): так недописанный «x.part.mkv» никогда не спутать с готовым «x.mkv».
+    /// </summary>
+    public (string From, string To)? RenameOnSuccess { get; init; }
 
     public PlannedCommand? Command { get; init; }
 }

@@ -34,6 +34,8 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg mkvtoolnix
       - run: dotnet build -c Release
       - run: dotnet test -c Release --no-build
+        env:
+          ANITOOLS_REQUIRE_TOOLS: 1  # интеграционные тесты не пропускаются, а падают, если программ нет
       - name: Скриншоты
         if: always()
         uses: actions/upload-artifact@v7
@@ -51,11 +53,24 @@ jobs:
         with:
           dotnet-version: 10.0.x
       # Как у пользователя: ffmpeg через Chocolatey (шим в chocolatey\bin), MKVToolNix в Program Files.
-      # Не поставились — интеграционные тесты пропустятся, сборка не падает.
+      # Репозиторий Chocolatey иногда отвечает 504 — три попытки. Поставились — интеграционные тесты обязательны
+      # (ANITOOLS_REQUIRE_TOOLS), нет — пропускаются с заметным предупреждением, сборка не падает.
       - name: ffmpeg и MKVToolNix для интеграционных тестов
         continue-on-error: true
-        timeout-minutes: 15
-        run: choco install ffmpeg mkvtoolnix -y --no-progress
+        timeout-minutes: 25
+        shell: pwsh
+        run: |
+          for ($i = 1; $i -le 3; $i++) {
+            choco install ffmpeg mkvtoolnix -y --no-progress
+            if ((Get-Command ffmpeg -ErrorAction SilentlyContinue) -and (Test-Path "$env:ProgramFiles\MKVToolNix\mkvmerge.exe")) {
+              "ANITOOLS_REQUIRE_TOOLS=1" >> $env:GITHUB_ENV
+              exit 0
+            }
+            Write-Host "Попытка $i не удалась"
+            Start-Sleep -Seconds (30 * $i)
+          }
+          Write-Host "::warning::ffmpeg/MKVToolNix не поставились через Chocolatey — интеграционные тесты на Windows пропущены"
+          exit 1
       - run: dotnet build -c Release
       - run: dotnet test -c Release --no-build
       - name: Скриншоты
