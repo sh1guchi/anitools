@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Anitools.Core.Operations.Subtitles;
 
 namespace Anitools.Core.Tests;
 
@@ -37,6 +38,21 @@ public sealed class GoldenFilesTests
         // docs/PLAN.md: sha256 оригинала на Windows (CRLF) — 8920902b…49d50a. В репозитории файл с LF,
         // хэш считается после приведения CRLF → LF, поэтому здесь — LF-версия того же файла.
         Assert.Equal("224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a", GoldenFile.ReferenceSha256());
+    }
+
+    [Fact]
+    public void GoldenAssert_reports_wrong_answers_and_missing_errors()
+    {
+        // неверный ответ
+        Assert.ThrowsAny<Exception>(() => GoldenAssert.All("codec_id_to_ext", _ => ".ass"));
+        // ответ вместо исключения (в parse_track_ids есть случаи с ValueError)
+        Assert.ThrowsAny<Exception>(() => GoldenAssert.All("parse_track_ids", _ => new[] { 0 }));
+        // верная реализация проходит, но лишняя пометка «известное расхождение» на совпадающем случае — ошибка
+        GoldenAssert.All("codec_id_to_ext", input => SubtitleTrackMatcher.CodecIdToExtension(input.GetString()!));
+        Assert.ThrowsAny<Exception>(() => GoldenAssert.All(
+            "codec_id_to_ext",
+            input => SubtitleTrackMatcher.CodecIdToExtension(input.GetString()!),
+            new Dictionary<string, string> { ["\"S_TEXT/ASS\""] = "совпадает — пометка лишняя" }));
     }
 
     [Fact]
