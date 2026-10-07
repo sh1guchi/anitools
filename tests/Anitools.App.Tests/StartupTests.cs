@@ -17,19 +17,20 @@ public sealed class StartupTests : IDisposable
     public void Folder_argument_variants()
     {
         var show = Path.Combine(_root, "Sousou no Frieren");
+        var elsewhere = Path.GetTempPath();
 
         Assert.Equal(StartupRequest.None, StartupArguments.Parse([], _root));
-        Assert.Equal(show, StartupArguments.Parse([show], "/").Folder);
+        Assert.Equal(show, StartupArguments.Parse([show], elsewhere).Folder);
         // относительный путь — от текущей папки консоли; «.» — она сама (ani.bat передаёт "%CD%\.")
         Assert.Equal(show, StartupArguments.Parse(["Sousou no Frieren"], _root).Folder);
-        Assert.Equal(show, StartupArguments.Parse([Path.Combine(show, ".")], "/").Folder);
+        Assert.Equal(show, StartupArguments.Parse([Path.Combine(show, ".")], elsewhere).Folder);
         // без кавычек путь с пробелами приходит частями
-        Assert.Equal(show, StartupArguments.Parse([Path.Combine(_root, "Sousou"), "no", "Frieren"], "/").Folder);
+        Assert.Equal(show, StartupArguments.Parse([Path.Combine(_root, "Sousou"), "no", "Frieren"], elsewhere).Folder);
         // файл — его папка; хвостовая косая и кавычка срезаются
-        Assert.Equal(show, StartupArguments.Parse([Path.Combine(show, "Frieren - 01.mkv")], "/").Folder);
-        Assert.Equal(show, StartupArguments.Parse([show + Path.DirectorySeparatorChar + "\""], "/").Folder);
+        Assert.Equal(show, StartupArguments.Parse([Path.Combine(show, "Frieren - 01.mkv")], elsewhere).Folder);
+        Assert.Equal(show, StartupArguments.Parse([show + Path.DirectorySeparatorChar + "\""], elsewhere).Folder);
 
-        var missing = StartupArguments.Parse([Path.Combine(_root, "нет такой")], "/");
+        var missing = StartupArguments.Parse([Path.Combine(_root, "нет такой")], elsewhere);
         Assert.Null(missing.Folder);
         Assert.Equal($"Папка не найдена: {Path.Combine(_root, "нет такой")}", missing.Error);
     }

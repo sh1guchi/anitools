@@ -36,7 +36,7 @@ public static class StartupArguments
             string full;
             try
             {
-                full = Path.GetFullPath(cleaned, currentDirectory);
+                full = Path.IsPathFullyQualified(cleaned) ? Path.GetFullPath(cleaned) : Path.GetFullPath(cleaned, currentDirectory);
             }
             catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
             {
