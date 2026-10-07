@@ -70,7 +70,7 @@ internal static class GoldenAssert
     /// <summary>Имя исключения Python, которому соответствует исключение .NET, или null (тогда тест падает как есть).</summary>
     public static string? PythonError(Exception ex) => ex switch
     {
-        FormatException or OverflowException => "ValueError",
+        FormatException or OverflowException or ArgumentOutOfRangeException => "ValueError",
         KeyNotFoundException => "KeyError",
         IndexOutOfRangeException => "IndexError",
         _ => null,
