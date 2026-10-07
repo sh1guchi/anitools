@@ -92,6 +92,9 @@ public static class HlsOperation
 
     public const string UntitledGroup = "Без названия";
 
+    /// <summary>Причина пропуска серии, которая уже сконвертирована (резюм).</summary>
+    public const string AlreadyDone = "уже готово";
+
     public static IReadOnlyList<string> Extensions { get; } = [".mp4", ".mkv", ".avi", ".m2ts", ".mov"];
 
     /// <summary>
@@ -192,7 +195,7 @@ public static class HlsOperation
                 }
 
                 var planned = episode with { EpisodeName = EpisodeName(file.Name, used), Voices = voices, Status = PlanItemStatus.Run };
-                episodes.Add(planned.IsDone ? planned with { Status = PlanItemStatus.Skip, Reason = "уже готово" } : planned);
+                episodes.Add(planned.IsDone ? planned with { Status = PlanItemStatus.Skip, Reason = AlreadyDone } : planned);
             }
         }
 

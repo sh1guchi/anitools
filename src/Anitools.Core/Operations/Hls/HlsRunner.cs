@@ -130,7 +130,7 @@ public sealed class HlsEpisodeProcessor(IProcessRunner runner, ToolPaths tools, 
         // Резюм: zip пишется до переноса аудио, значит zip + все .mka на месте — серия готова целиком
         if (episode.IsDone)
         {
-            return new HlsEpisodeResult(episode, HlsEpisodeOutcome.Skipped, "уже готово");
+            return new HlsEpisodeResult(episode, HlsEpisodeOutcome.Skipped, HlsOperation.AlreadyDone);
         }
 
         var ffmpeg = _tools.Ffmpeg ?? throw new ToolNotFoundException(Tool.Ffmpeg);
