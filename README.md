@@ -4,3 +4,43 @@
 
 - План и полное описание поведения: [docs/PLAN.md](docs/PLAN.md)
 - Оригинал (не менять): [reference/python/](reference/python/)
+
+## Структура
+
+| Папка | Что там |
+|---|---|
+| `src/Anitools.Core` | вся логика, без UI (.NET 10) |
+| `src/Anitools.App` | GUI на Avalonia, собирается в `Anitools.exe` |
+| `tests/Anitools.Core.Tests` | тесты ядра + golden-эталоны из оригинала (`Golden/`) |
+| `tests/Anitools.App.Tests` | headless-тесты окон и скриншоты |
+| `tools/gen_golden.py` | снимает эталоны с `reference/python/anitools.py` |
+
+## Сборка и тесты
+
+Нужен .NET 10 SDK (и Python 3.11+ — только для перегенерации эталонов).
+
+```bash
+dotnet build
+dotnet test
+dotnet run --project src/Anitools.App -- "D:\anime\Папка с сериями"
+```
+
+Скриншоты экранов тесты пишут в `artifacts/screenshots/` (не в git). Обновить те, что лежат
+в [docs/screenshots/](docs/screenshots/):
+
+```bash
+ANITOOLS_UPDATE_SCREENSHOTS=1 dotnet test tests/Anitools.App.Tests
+```
+
+Эталоны:
+
+```bash
+python3 tools/gen_golden.py          # перегенерировать
+python3 tools/gen_golden.py --check  # проверить, что актуальны
+```
+
+## Статус
+
+- [x] Этап 1 — скелет решения, пустое окно, golden-эталоны
+- [ ] Этап 2 — чистая логика (anitomy, номера серий, названия…)
+- [ ] Этапы 3–8 — см. [docs/PLAN.md §7](docs/PLAN.md)

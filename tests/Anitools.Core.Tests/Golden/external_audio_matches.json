@@ -1,0 +1,32 @@
+{
+  "function": "external_audio_matches",
+  "description": "Внешний аудиофайл относится к серии base (py:1707)",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"filename": "Title - 05.AniLibria.TV.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "Title - 05.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "Title - 051.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "Title - 05", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "1. Title - 05.AniLibria.TV.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "10. Title - 05.DEEP.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "01. Show.mka", "base_name": "01. Show"}, "output": true},
+    {"input": {"filename": "01. Show.mka", "base_name": "Show"}, "output": true},
+    {"input": {"filename": "Title - 05 [AniLibria].mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "Title - 05v2.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "title - 05.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "Title - 05Ж.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "Title - 05_rus.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "Title - 05 .mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "2. 2. Title - 05.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "2.Title - 05.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "2 . Title - 05.mka", "base_name": "Title - 05"}, "output": false},
+    {"input": {"filename": "Title - 05", "base_name": ""}, "output": false},
+    {"input": {"filename": "", "base_name": "Title"}, "output": false},
+    {"input": {"filename": "Title - 05.mka", "base_name": "Title - 05.mka"}, "output": false},
+    {"input": {"filename": "Title - 05（JP）.mka", "base_name": "Title - 05"}, "output": true},
+    {"input": {"filename": "Провожающая - 01.Студия.mka", "base_name": "Провожающая - 01"}, "output": true},
+    {"input": {"filename": "Провожающая - 012.mka", "base_name": "Провожающая - 01"}, "output": false}
+  ]
+}

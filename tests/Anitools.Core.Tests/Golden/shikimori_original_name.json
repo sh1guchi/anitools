@@ -1,0 +1,13 @@
+{
+  "function": "shikimori_original_name",
+  "description": "Оригинальное название по ID (py:651)",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": {"id": "52991", "response": {"id": 52991, "name": "Sousou no Frieren", "russian": "Провожающая в последний путь Фрирен"}}, "api_paths": ["animes/52991"], "output": "Sousou no Frieren"},
+    {"input": {"id": "1", "response": {"id": 1, "name": "", "russian": "Только русское"}}, "api_paths": ["animes/1"], "output": null},
+    {"input": {"id": "2", "response": {"id": 2, "russian": "Без name"}}, "api_paths": ["animes/2"], "output": null},
+    {"input": {"id": "404", "response": null}, "api_paths": ["animes/404"], "output": null}
+  ]
+}

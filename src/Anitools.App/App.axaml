@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Anitools.App.App"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FFA855F7" />
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FF1D1726" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#33A855F7" />
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <!-- пурпурный акцент, как рамки rich в консольной версии -->
+        <ColorPaletteResources x:Key="Dark" Accent="#FFA855F7" RegionColor="#FF15121B" />
+        <ColorPaletteResources x:Key="Light" Accent="#FF8B2FD9" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+  </Application.Styles>
+</Application>

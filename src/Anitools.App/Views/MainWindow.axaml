@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Anitools.App.ViewModels"
+        x:Class="Anitools.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="anitools"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="600">
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Шапка: ▌ ANITOOLS by shiguchi + рабочая папка -->
+    <Border Grid.Row="0"
+            Padding="16,12"
+            Background="{StaticResource HeaderBackgroundBrush}"
+            BorderBrush="{StaticResource DividerBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,24,*">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <Border Width="5" Height="26" CornerRadius="1" Background="{StaticResource AccentBrush}" />
+          <TextBlock Text="ANITOOLS" FontSize="20" FontWeight="Bold" LetterSpacing="2"
+                     VerticalAlignment="Center" />
+          <TextBlock Text="by shiguchi" Opacity="0.55" VerticalAlignment="Center" Margin="0,4,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                    HorizontalAlignment="Right" VerticalAlignment="Center">
+          <TextBlock Text="Папка:" Opacity="0.55" VerticalAlignment="Center" />
+          <TextBlock x:Name="FolderText" Text="{Binding Folder}" FontWeight="SemiBold"
+                     TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Страницы инструментов появятся на следующих этапах (см. docs/PLAN.md §4) -->
+    <TextBlock Grid.Row="1"
+               Text="Инструменты появятся на следующих этапах"
+               HorizontalAlignment="Center" VerticalAlignment="Center"
+               FontSize="16" Opacity="0.5" />
+
+    <!-- Строка состояния -->
+    <Border Grid.Row="2"
+            Padding="16,6"
+            BorderBrush="{StaticResource DividerBrush}"
+            BorderThickness="0,1,0,0">
+      <TextBlock x:Name="VersionText" Text="{Binding Version}" FontSize="12" Opacity="0.55" />
+    </Border>
+
+  </Grid>
+</Window>

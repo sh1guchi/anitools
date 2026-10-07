@@ -1,0 +1,14 @@
+{
+  "function": "natural_sort",
+  "description": "Натуральная сортировка по префиксу 'N. ' (py:1723): ключ и порядок",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "cases": [
+    {"input": ["10. DEEP", "2. AniLibria.TV", "1. Оригинальная", "Audio only", "audio", "3. Studio Band"], "output": {"sorted": ["1. Оригинальная", "2. AniLibria.TV", "3. Studio Band", "10. DEEP", "audio", "Audio only"], "keys": [[10, "10. deep"], [2, "2. anilibria.tv"], [1, "1. оригинальная"], [null, "audio only"], [null, "audio"], [3, "3. studio band"]]}},
+    {"input": ["1. b", "1. B", "1. a", "01. c", "001. d", "1.e", "1 . f", "x", "X", "_", "Ж", "ж", "й", "ё", "Е"], "output": {"sorted": ["001. d", "01. c", "1. a", "1. b", "1. B", "1.e", "1 . f", "_", "x", "X", "Е", "Ж", "ж", "й", "ё"], "keys": [[1, "1. b"], [1, "1. b"], [1, "1. a"], [1, "01. c"], [1, "001. d"], [1, "1.e"], [null, "1 . f"], [null, "x"], [null, "x"], [null, "_"], [null, "ж"], [null, "ж"], [null, "й"], [null, "ё"], [null, "е"]]}},
+    {"input": ["Title - 10.mka", "Title - 9.mka", "Title - 1.mka", "title - 2.mka"], "output": {"sorted": ["Title - 1.mka", "Title - 10.mka", "title - 2.mka", "Title - 9.mka"], "keys": [[null, "title - 10.mka"], [null, "title - 9.mka"], [null, "title - 1.mka"], [null, "title - 2.mka"]]}},
+    {"input": ["10. Ten", "2. Two", "02. Zero two", "Two"], "output": {"sorted": ["02. Zero two", "2. Two", "10. Ten", "Two"], "keys": [[10, "10. ten"], [2, "2. two"], [2, "02. zero two"], [null, "two"]]}},
+    {"input": [], "output": {"sorted": [], "keys": []}}
+  ]
+}

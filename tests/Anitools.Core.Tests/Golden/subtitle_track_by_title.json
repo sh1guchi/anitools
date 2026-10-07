@@ -1,0 +1,40 @@
+{
+  "function": "subtitle_track_by_title",
+  "description": "Дорожка субтитров серии по тайтлу эталона (py:2798) → [id, ext] | null",
+  "source": "reference/python/anitools.py",
+  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
+  "python": "3.13.16",
+  "fixtures": {
+    "ru_signs_full_en": [[2, {"id": 2, "name": "Надписи", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [3, {"id": 3, "name": "Полные", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [4, {"id": 4, "name": "English", "codec_id": "S_TEXT/UTF8", "language": "eng", "language_ietf": "en"}]],
+    "other_order": [[3, {"id": 3, "name": "Полные", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [4, {"id": 4, "name": "Надписи [Studio]", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [5, {"id": 5, "name": "English", "codec_id": "S_HDMV/PGS", "language": "eng", "language_ietf": "en"}]],
+    "no_language": [[2, {"id": 2, "name": "Субтитры 3", "codec_id": "S_TEXT/ASS", "language": "", "language_ietf": ""}], [3, {"id": 3, "name": "Язык: und", "codec_id": "S_TEXT/ASS", "language": "und", "language_ietf": "und"}]],
+    "duplicates": [[2, {"id": 2, "name": "Full", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [3, {"id": 3, "name": "Full", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [4, {"id": 4, "name": "Full Signs", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}]],
+    "ietf_only": [[2, {"id": 2, "name": "RU", "codec_id": "S_TEXT/ASS", "language": "", "language_ietf": "ru"}], [3, {"id": 3, "name": "EN", "codec_id": "S_TEXT/UTF8", "language": "", "language_ietf": "en-US"}]],
+    "casefold": [[2, {"id": 2, "name": "Straße", "codec_id": "S_TEXT/ASS", "language": "ger", "language_ietf": "de"}], [3, {"id": 3, "name": "STRASSE Signs", "codec_id": "S_TEXT/ASS", "language": "ger", "language_ietf": "de"}]],
+    "spaces": [[2, {"id": 2, "name": "  Надписи  ", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [3, {"id": 3, "name": "надписи и песни", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}]],
+    "single": [[7, {"id": 7, "name": "Signs", "codec_id": "S_VOBSUB", "language": "eng", "language_ietf": "en"}]],
+    "empty": []
+  },
+  "cases": [
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": "Надписи"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": "надписи "}, "output": [2, ".ass"]},
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": "Полн"}, "output": [3, ".ass"]},
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": "e"}, "output": [4, ".srt"]},
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": "Нет такой"}, "output": null},
+    {"input": {"tracks": "ru_signs_full_en", "ref_title": ""}, "output": null},
+    {"input": {"tracks": "other_order", "ref_title": "Надписи"}, "output": [4, ".ass"]},
+    {"input": {"tracks": "other_order", "ref_title": "Полные"}, "output": [3, ".ass"]},
+    {"input": {"tracks": "other_order", "ref_title": "english"}, "output": [5, ".sup"]},
+    {"input": {"tracks": "no_language", "ref_title": "Субтитры 3"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "duplicates", "ref_title": "Full"}, "output": null},
+    {"input": {"tracks": "duplicates", "ref_title": "full signs"}, "output": [4, ".ass"]},
+    {"input": {"tracks": "duplicates", "ref_title": "Signs"}, "output": [4, ".ass"]},
+    {"input": {"tracks": "casefold", "ref_title": "STRASSE"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "casefold", "ref_title": "straße"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "spaces", "ref_title": "Надписи"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "spaces", "ref_title": "надписи"}, "output": [2, ".ass"]},
+    {"input": {"tracks": "single", "ref_title": ""}, "output": [7, ".sub"]},
+    {"input": {"tracks": "single", "ref_title": "sig"}, "output": [7, ".sub"]},
+    {"input": {"tracks": "empty", "ref_title": "Надписи"}, "output": null}
+  ]
+}
