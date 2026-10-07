@@ -4,6 +4,7 @@
         xmlns:sh="using:Anitools.Core.Shikimori"
         xmlns:v="using:Anitools.App.Views"
         xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        Icon="/Assets/anitools.ico"
         x:Class="Anitools.App.Views.Dialogs.ShikimoriDialog"
         x:DataType="vm:ShikimoriPickerViewModel"
         Title="Поиск на Shikimori"

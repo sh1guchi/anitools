@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Anitools.App.ViewModels"
+        Icon="/Assets/anitools.ico"
         x:Class="Anitools.App.Views.Dialogs.RegroupDialog"
         x:DataType="vm:RegroupViewModel"
         Title="Перегруппировка"

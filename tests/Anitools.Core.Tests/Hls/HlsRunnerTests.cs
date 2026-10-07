@@ -256,12 +256,18 @@ public sealed class HlsRunnerTests
         var queue = new Anitools.Core.Jobs.JobQueue();
 
         var job = queue.Enqueue("HLS · Show", dir.Path, Anitools.Core.Jobs.HlsJobs.Run(
-            plan, Runner(ffmpeg, probe, dir), new Anitools.Core.WorkDir.NearOutputWorkDir(), calibrates: false, _ =>
+            plan,
+            Runner(ffmpeg, probe, dir),
+            new Anitools.Core.WorkDir.NearOutputWorkDir(),
+            calibrates: false,
+            _ =>
             {
                 shutdowns++;
                 return Task.FromResult(true);
-            }));
+            },
+            _ => Task.FromResult<IReadOnlyList<char>>(['R'])));
         await job.Completion.WaitAsync(Ct);
+        Assert.Contains(job.Log, l => l.EndsWith("Снят незакрытый RAM-диск R: от прошлого запуска.", StringComparison.Ordinal));
 
         Assert.Equal(Anitools.Core.Jobs.JobState.Failed, job.State);
         Assert.Equal("1 готово · 1 ошибка", job.Snapshot.Summary);

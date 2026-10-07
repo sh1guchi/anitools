@@ -5,6 +5,8 @@
     <AssemblyName>Anitools</AssemblyName>
     <RootNamespace>Anitools.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- tools/make_icon.py -->
+    <ApplicationIcon>Assets\anitools.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- LibraryImport (AllowSetForegroundWindow) генерирует unsafe-код -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -12,6 +14,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Anitools.App.Tests" />
+    <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
   <ItemGroup>
