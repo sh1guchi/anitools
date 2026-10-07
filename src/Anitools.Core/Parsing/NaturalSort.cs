@@ -34,7 +34,7 @@ public static partial class NaturalSort
         return PyText.CompareCodePoints(la, lb);
     }
 
-    public static IComparer<string> Comparer { get; } = Comparer<string>.Create(Compare);
+    public static IComparer<string?> Comparer { get; } = Comparer<string?>.Create(Compare);
 
     /// <summary>Стабильная сортировка, как sorted(…, key=_natural_key).</summary>
     public static IEnumerable<string> Order(IEnumerable<string> names) => names.OrderBy(n => n, Comparer);

@@ -26,6 +26,7 @@ import contextlib
 import hashlib
 import importlib.util
 import json
+import os
 import platform
 import random
 import signal
@@ -124,14 +125,18 @@ FAKE_SIZES: dict[str, int] = {}
 @contextlib.contextmanager
 def patched(**attrs):
     """Временно подменить глобальные имена в модуле оригинала."""
-    old = {k: getattr(at, k) for k in attrs}
+    missing = object()
+    old = {k: getattr(at, k, missing) for k in attrs}
     for k, v in attrs.items():
         setattr(at, k, v)
     try:
         yield
     finally:
         for k, v in old.items():
-            setattr(at, k, v)
+            if v is missing:
+                delattr(at, k)  # без rich этих имён в модуле нет
+            else:
+                setattr(at, k, v)
 
 
 def fake_subprocess(handler, calls: list):
@@ -694,6 +699,207 @@ def g_list2cmdline():
         ['a\\"b'], ['a\\\\"b c'], ["\\\\server\\share\\x y\\"], ["title=AniLibria.TV x DEEP"], [],
     ]
     return [{"input": args, **call(sp.list2cmdline, args)} for args in inputs]
+
+
+# ─── Сценарии операций: какие команды запускает оригинал ─────────────────────
+
+class _Quiet:
+    """Заглушка объектов rich (Panel, Table, Progress, колонки, box): всё молча принимает."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
+class _ScriptedPrompt:
+    """Prompt.ask по сценарию: ответы по очереди; None — Enter (значение по умолчанию)."""
+
+    answers: list = []
+
+    @classmethod
+    def ask(cls, prompt, *args, choices=None, default=None, **kwargs):
+        if not cls.answers:
+            raise RuntimeError(f"сценарий: нет ответа на вопрос «{prompt}»")
+        answer = cls.answers.pop(0)
+        if answer is None:
+            answer = default if default is not None else ""
+        if choices is not None and answer not in choices:
+            raise RuntimeError(f"сценарий: ответ {answer!r} не из {choices} на «{prompt}»")
+        return answer
+
+
+SCENARIO_OPERATIONS = {
+    "video_only": lambda root: at.keep_video_only(root, os.path.join(root, "Video only")),
+    "audio_extract": lambda root: at.keep_audio_only(root, os.path.join(root, "Audio only")),
+    "audio_mux": lambda root: at.advanced_audio_processing(root, os.path.join(root, "Processed Audio")),
+    "subtitles": lambda root: at.extract_subtitles(root, os.path.join(root, "надписи")),
+    "remux": lambda root: at.convert_mkv_to_mp4(root, os.path.join(root, "converted_mp4")),
+}
+
+F1, F2, F3 = "Test Show - 01.mkv", "Test Show - 02.mkv", "Test_Show_-_03.mp4"
+FMOV, FSIL, FMKA, FEXT = "Resolve Export.mov", "Silent Show - 01.mkv", "Test Show - 01.mka", "1. Test Show - 01.AniLibria.TV.mka"
+
+# files — файлы папки (пустые), existing — уже готовые выходы (не пустые), media — какой фикстурой отвечать
+# на ffmpeg -i / ffprobe / mkvmerge по файлу, answers — ответы на вопросы оригинала по порядку,
+# options — те же решения в виде настроек C# (оригиналу не нужны, по ним строит план C#-тест).
+SCENARIOS = [
+    {"name": "video_only", "operation": "video_only",
+     "files": ["Test Show - 01.mkv", "Test_Show_-_02.mkv", "Test Show - 03.MKV", "notes.txt", "cover.jpg"],
+     "existing": ["Video only/Test Show - 01.mkv"], "media": {}, "answers": [], "options": {}},
+
+    {"name": "audio_one_track", "operation": "audio_extract",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F1},
+     "answers": ["2"], "options": {"tracks": [1]}},
+
+    {"name": "audio_separate_numbered", "operation": "audio_extract",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F1},
+     "existing": ["Audio only/3. DEEP/3. Test Show - 02.DEEP.mka"],
+     "answers": ["1,3", "1", "1"], "options": {"tracks": [0, 2], "mode": "separate", "number": True}},
+
+    {"name": "audio_separate_untitled", "operation": "audio_extract",
+     "files": ["Test_Show_-_02.mkv"], "media": {"Test_Show_-_02.mkv": F2},
+     "answers": ["1-2", "1", "2"], "options": {"tracks": [0, 1], "mode": "separate", "number": False}},
+
+    {"name": "audio_mov_without_titles", "operation": "audio_extract",
+     "files": ["Resolve Export.mov"], "media": {"Resolve Export.mov": FMOV},
+     "answers": ["1,2", "1", "2"], "options": {"tracks": [0, 1], "mode": "separate", "number": False}},
+
+    {"name": "audio_single_mka_titles", "operation": "audio_extract",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv", "Test Show - 03.mkv"],
+     "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F1, "Test Show - 03.mkv": F1},
+     "existing": ["Audio only/Test Show - 02.mka"],
+     "answers": ["3,1", "2", "1", "6", "0", "Своя озвучка", "1", None],
+     "options": {"tracks": [2, 0], "mode": "single", "titles": {"2": "DEEP", "0": "Своя озвучка"}, "language": "rus"}},
+
+    {"name": "audio_single_mka_plain", "operation": "audio_extract",
+     "files": ["Show_-_05.mka"], "media": {"Show_-_05.mka": FMKA},
+     "answers": ["1-2", "2", "2", "2"], "options": {"tracks": [0, 1], "mode": "single", "titles": {}, "language": None}},
+
+    {"name": "mux_internal_only", "operation": "audio_mux",
+     "files": ["Test Show - 01.mkv", "Test_Show_-_02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test_Show_-_02.mkv": F1},
+     "existing": ["Processed Audio/Test Show - 03.mkv"],
+     "answers": ["3,1", "2", "2", "2", "1", None],
+     "options": {"tracks": [2, 0], "external": False, "order": None, "titles": None, "language": "rus"}},
+
+    {"name": "mux_with_external", "operation": "audio_mux",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv", "Test Show - 01.mka", "Test Show - 02.mka",
+               "Audio only/1. AniLibria.TV/1. Test Show - 01.AniLibria.TV.mka",
+               "Audio only/1. AniLibria.TV/1. Test Show - 02.AniLibria.TV.mka",
+               "Audio only/1. AniLibria.TV/1. Test Show - 011.AniLibria.TV.mka",
+               "Processed Audio/old/Test Show - 01.x.mka", ".hidden/Test Show - 01.y.mka"],
+     "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F1, "Test Show - 01.mka": FMKA, "Test Show - 02.mka": FMKA,
+               "Audio only/1. AniLibria.TV/1. Test Show - 01.AniLibria.TV.mka": FEXT,
+               "Audio only/1. AniLibria.TV/1. Test Show - 02.AniLibria.TV.mka": FEXT},
+     "answers": ["1", "1", "1", "4,1,3,2", "1", "1", "0", None, "4", "0", "  ", "1", None],
+     "options": {"tracks": [0], "external": True, "order": [3, 0, 2, 1],
+                 "titles": ["AniLiberty (AniLibria)", "AniLibria.TV", "Оригинальная", "AniLibria.TV"], "language": "rus"}},
+
+    {"name": "mux_external_only_no_lang", "operation": "audio_mux",
+     "files": ["Test Show - 01.mkv", "Audio only/1. AniLibria.TV/1. Test Show - 01.AniLibria.TV.mka"],
+     "media": {"Test Show - 01.mkv": F1, "Audio only/1. AniLibria.TV/1. Test Show - 01.AniLibria.TV.mka": FEXT},
+     "answers": [None, "1", "2", "2"],
+     "options": {"tracks": [], "external": True, "order": None, "titles": None, "language": None}},
+
+    {"name": "subs_by_id", "operation": "subtitles",
+     "files": ["Test Show - 01.mkv", "Test_Show_-_02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test_Show_-_02.mkv": F2},
+     "answers": ["1", "1", "1"], "options": {"mode": "id", "ref": 4, "kind": "signs"}},
+
+    {"name": "subs_by_title", "operation": "subtitles",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F2},
+     "existing": ["сабы/Test Show - 03.сабы.srt"],
+     "answers": ["2", "2", "2"], "options": {"mode": "title", "ref": 5, "kind": "subs"}},
+
+    {"name": "subs_by_language", "operation": "subtitles",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": F2},
+     "answers": ["3", "1", "1"], "options": {"mode": "lang", "ref": 4, "kind": "signs"}},
+
+    {"name": "subs_track_missing", "operation": "subtitles",
+     "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "media": {"Test Show - 01.mkv": F1, "Test Show - 02.mkv": FSIL},
+     "existing": ["надписи/Test Show - 01.надписи.ass"],
+     "answers": ["2", "1", "1"], "options": {"mode": "title", "ref": 4, "kind": "signs"}},
+
+    {"name": "remux_mp4", "operation": "remux",
+     "files": ["Test Show - 01.mkv", "Test_Show_-_03.mp4", "clip.webm", "Silent Show - 01.mkv", "notes.txt"],
+     "existing": ["converted_mp4/clip.mp4"], "media": {}, "answers": [None], "options": {"format": "mp4"}},
+
+    {"name": "remux_mkv_with_subs", "operation": "remux",
+     "files": ["Test Show - 01.mkv", "Test_Show_-_03.mp4"], "media": {}, "answers": ["2", None],
+     "options": {"format": "mkv", "subtitles": True}},
+
+    {"name": "remux_mkv_without_subs", "operation": "remux",
+     "files": ["Test Show - 01.mkv"], "media": {}, "answers": ["2", "2"], "options": {"format": "mkv", "subtitles": False}},
+]
+
+
+def run_scenario(sc: dict) -> dict:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="anitools-scenario-") as td:
+        root = os.path.realpath(td)
+        for rel in sc["files"]:
+            p = Path(root, *rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"")
+        for rel in sc.get("existing", []):
+            p = Path(root, *rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"done")
+
+        def fixture(path: str, suffix: str) -> str:
+            rel = os.path.relpath(path, root).replace(os.sep, "/")
+            if rel not in sc["media"]:
+                raise RuntimeError(f"сценарий {sc['name']}: оригинал читает {rel}, а фикстуры для него нет")
+            return (MEDIA / f"{sc['media'][rel]}.{suffix}").read_text(encoding="utf-8")
+
+        commands = []
+
+        def handler(cmd):
+            cmd = [str(c) for c in cmd]
+            tool, rest = cmd[0], cmd[1:]
+            if tool == "ffmpeg" and len(rest) == 2 and rest[0] == "-i":
+                return "", fixture(rest[1], "ffmpeg_i.txt")
+            if tool == "ffprobe":
+                return fixture(rest[-1], "ffprobe_titles.json"), ""
+            if tool == "mkvmerge" and rest[:1] == ["-J"]:
+                return fixture(rest[1], "mkvmerge.json"), ""
+            if tool in ("mkvmerge", "mkvextract") and rest == ["--version"]:
+                return "", ""
+            # запасные способы найти субтитры (mkvmerge -i, mkvinfo) — зондирование, а не работа
+            if (tool == "mkvmerge" and rest[:1] == ["-i"]) or tool == "mkvinfo":
+                return "", ""
+            commands.append([c.replace(root, "{root}") for c in cmd])
+            return "", ""
+
+        real_listdir = os.listdir
+        os.listdir = lambda p=".": sorted(real_listdir(p), key=str.upper)  # как на NTFS: без учёта регистра
+        _ScriptedPrompt.answers = list(sc["answers"])
+        try:
+            with patched(subprocess=fake_subprocess(handler, []), Prompt=_ScriptedPrompt, Panel=_Quiet, Table=_Quiet,
+                         Progress=_Quiet, SpinnerColumn=_Quiet, TextColumn=_Quiet, BarColumn=_Quiet,
+                         TimeRemainingColumn=_Quiet, box=_Quiet(), clear_screen=lambda: None,
+                         restart_script=lambda: None):
+                SCENARIO_OPERATIONS[sc["operation"]](root)
+        finally:
+            os.listdir = real_listdir
+        if _ScriptedPrompt.answers:
+            raise RuntimeError(f"сценарий {sc['name']}: лишние ответы {_ScriptedPrompt.answers}")
+        return {"commands": commands}
+
+
+@golden("operation_scenarios", "Операции 1–4, 6: команды, которые запускает оригинал для папки и ответов на вопросы")
+def g_operation_scenarios():
+    cases = []
+    for sc in SCENARIOS:
+        inp = {k: sc.get(k, [] if k == "existing" else None) for k in ("name", "operation", "files", "existing", "media", "answers", "options")}
+        cases.append({"input": inp, "output": run_scenario(sc)})
+    return cases
 
 
 # ─── Строки Python ───────────────────────────────────────────────────────────
