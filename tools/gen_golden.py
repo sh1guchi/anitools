@@ -902,6 +902,87 @@ def g_operation_scenarios():
     return cases
 
 
+# ─── Сценарии п.5 «Переименовать файлы» ──────────────────────────────────────
+
+FRIEREN = [
+    "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv",
+    "[SubsPlease] Sousou no Frieren - 02 (1080p) [A1B2C3D4].mkv",
+    "[SubsPlease] Sousou no Frieren - 10 (1080p) [ABCDEF12].mkv",
+]
+
+# answers — ответы оригиналу; options — то же для C#: base (базовое название, как ввели), start, suffix,
+# manual — номера, введённые вручную (файл → текст; null — Enter, то есть предложенный номер)
+RENAME_SCENARIOS = [
+    {"name": "manual_base", "files": [*FRIEREN, "notes.txt", "run.bat", "Cover.jpg"],
+     "answers": ["2", "Sousou no Frieren: Beyond Journey's End", None, "2", "1"],
+     "options": {"base": "Sousou no Frieren: Beyond Journey's End", "start": 1, "suffix": None, "manual": None}},
+    {"name": "offset_and_suffix", "files": ["Title - 12.надписи.ass", "Title - 13.надписи.ass", "Title - 11.надписи.ass"],
+     "answers": ["2", "Overlord IV", "12", "1", ".надписи", "1"],
+     "options": {"base": "Overlord IV", "start": 12, "suffix": ".надписи", "manual": None}},
+    {"name": "shikimori_original_name", "shikimori": "frieren",
+     "files": ["[Erai-raws] Sousou no Frieren - 01 [1080p][Multiple Subtitle][F1E2D3C4].mkv",
+               "[Erai-raws] Sousou no Frieren - 02 [1080p][Multiple Subtitle][0A1B2C3D].mkv", "Fonts.zip"],
+     "answers": ["1", "1", None, None, "2", "1"],
+     "options": {"base": "Sousou no Frieren", "start": 1, "suffix": None, "manual": None}},
+    {"name": "manual_numbers", "files": ["Ep 1.mkv", "Ep 2.mkv", "Bonus.mkv", "Ep 4.надписи.ass"],
+     "answers": ["2", "Show", None, "2", "2", "5", None, "abc", None, "1"],
+     "options": {"base": "Show", "start": 1, "suffix": None,
+                 "manual": {"Bonus.mkv": "5", "Ep 1.mkv": None, "Ep 2.mkv": "abc", "Ep 4.надписи.ass": None}}},
+    {"name": "target_exists", "files": ["A - 01.mkv", "Show - 01.mkv", "b - 02.mkv"],
+     "answers": ["2", "Show", None, "2", "1"],
+     "options": {"base": "Show", "start": 1, "suffix": None, "manual": None}},
+    {"name": "no_numbers_manual", "files": ["Movie.mkv", "Extra.mkv"],
+     "answers": ["2", "Film", None, "2", "1", "2", "1", "1"],
+     "options": {"base": "Film", "start": 1, "suffix": None, "manual": {"Extra.mkv": "2", "Movie.mkv": "1"}}},
+]
+
+
+def run_rename_scenario(sc: dict) -> dict:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="anitools-rename-") as td:
+        root = os.path.realpath(td)
+        for name in sc["files"]:
+            Path(root, name).write_bytes(b"x")
+        renames, paths = [], []
+        real_rename = os.rename
+
+        def rename(src, dst):
+            pair = [os.path.relpath(src, root), os.path.relpath(dst, root)]
+            if pair[0] != pair[1]:
+                renames.append(pair)
+            real_rename(src, dst)
+
+        fixture = SHIKI_FIXTURES.get(sc.get("shikimori", ""), [])
+
+        def shiki_get(path, tries=3):
+            paths.append(path)
+            if path.startswith("animes/"):
+                return next((a for a in fixture if f"animes/{a['id']}" == path), None)
+            return fixture
+
+        os.rename = rename
+        _ScriptedPrompt.answers = list(sc["answers"])
+        try:
+            with patched(Prompt=_ScriptedPrompt, Panel=_Quiet, Table=_Quiet, Progress=_Quiet, SpinnerColumn=_Quiet,
+                         TextColumn=_Quiet, BarColumn=_Quiet, TimeRemainingColumn=_Quiet, box=_Quiet(),
+                         clear_screen=lambda: None, restart_script=lambda: None, _shiki_get=shiki_get):
+                at.rename_files_by_pattern(root)
+        finally:
+            os.rename = real_rename
+        if _ScriptedPrompt.answers:
+            raise RuntimeError(f"сценарий {sc['name']}: лишние ответы {_ScriptedPrompt.answers}")
+        return {"renames": renames, "shikimori_paths": paths}
+
+
+@golden("rename_scenarios", "П.5: какие файлы и как переименовывает оригинал для папки и ответов на вопросы")
+def g_rename_scenarios():
+    cases = []
+    for sc in RENAME_SCENARIOS:
+        inp = {k: sc.get(k) for k in ("name", "files", "shikimori", "answers", "options")}
+        cases.append({"input": inp, "output": run_rename_scenario(sc)})
+    return cases
+
+
 # ─── Строки Python ───────────────────────────────────────────────────────────
 
 @golden("str_casing", "str.lower() и str.casefold() для всех символов, которые они меняют: код → [lower, casefold]")
