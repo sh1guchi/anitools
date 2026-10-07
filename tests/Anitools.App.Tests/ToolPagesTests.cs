@@ -124,6 +124,7 @@ public sealed class ToolPagesTests
         var vm = app.CreateViewModel();
         var fonts = vm.AssFontsPage;
         fonts.CustomDir = Path.Combine(app.Root, "custom-fonts");
+        fonts.SystemDirs = [Path.Combine(app.Root, "system-fonts")];
         fonts.Download = false;
         vm.SelectedNav = fonts;
         await AppFixture.WaitUntilAsync(() => fonts.FontNames.Count == 2, "шрифты из .ass");

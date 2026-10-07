@@ -52,6 +52,9 @@ public sealed partial class AssFontsPageViewModel(IShell shell) : PageViewModel(
     [ObservableProperty]
     public partial string? ZipPath { get; set; }
 
+    /// <summary>Системные папки шрифтов (в тестах — свои, чтобы не читать настоящие C:\Windows\Fonts).</summary>
+    internal IReadOnlyList<string> SystemDirs { get; set; } = FontsCollectOptions.DefaultSystemDirs();
+
     protected override async Task LoadAsync(string folder, CancellationToken cancellationToken)
     {
         var (files, names) = await Task.Run(
@@ -120,7 +123,7 @@ public sealed partial class AssFontsPageViewModel(IShell shell) : PageViewModel(
         }
 
         var files = _assFiles;
-        var options = new FontsCollectOptions { CustomDir = CustomDir.Trim(), Download = Download };
+        var options = new FontsCollectOptions { CustomDir = CustomDir.Trim(), SystemDirs = SystemDirs, Download = Download };
         var collector = new AssFontsCollector(Download ? new FontDownloader(Shell.Services.Http).Sources : null);
         Enqueue("Шрифты для .ass", async context =>
         {
