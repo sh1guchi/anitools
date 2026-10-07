@@ -1,0 +1,55 @@
+{
+  "attachments": [],
+  "chapters": [],
+  "container": {
+    "properties": {
+      "container_type": 25,
+      "is_providing_timestamps": true
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "QuickTime/MP4"
+  },
+  "errors": [],
+  "file_name": "{root}/Resolve Export.mov",
+  "global_tags": [],
+  "identification_format_version": 19,
+  "track_tags": [],
+  "tracks": [
+    {
+      "codec": "MPEG-4p2",
+      "id": 0,
+      "properties": {
+        "enabled_track": true,
+        "number": 1,
+        "pixel_dimensions": "160x90"
+      },
+      "type": "video"
+    },
+    {
+      "codec": "PCM",
+      "id": 1,
+      "properties": {
+        "audio_bits_per_sample": 16,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "enabled_track": true,
+        "number": 2
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "PCM",
+      "id": 2,
+      "properties": {
+        "audio_bits_per_sample": 16,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "enabled_track": false,
+        "number": 3
+      },
+      "type": "audio"
+    }
+  ],
+  "warnings": []
+}

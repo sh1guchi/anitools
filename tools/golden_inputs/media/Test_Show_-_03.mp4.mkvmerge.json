@@ -1,0 +1,60 @@
+{
+  "attachments": [],
+  "chapters": [],
+  "container": {
+    "properties": {
+      "container_type": 25,
+      "is_providing_timestamps": true
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "QuickTime/MP4"
+  },
+  "errors": [],
+  "file_name": "{root}/Test_Show_-_03.mp4",
+  "global_tags": [
+    {
+      "num_entries": 1
+    }
+  ],
+  "identification_format_version": 19,
+  "track_tags": [],
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "enabled_track": true,
+        "language": "und",
+        "number": 1,
+        "packetizer": "mpeg4_p10_video",
+        "pixel_dimensions": "160x90"
+      },
+      "type": "video"
+    },
+    {
+      "codec": "AAC",
+      "id": 1,
+      "properties": {
+        "audio_bits_per_sample": 16,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "enabled_track": true,
+        "language": "rus",
+        "number": 2
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "Timed Text",
+      "id": 2,
+      "properties": {
+        "enabled_track": true,
+        "language": "rus",
+        "number": 3
+      },
+      "type": "subtitles"
+    }
+  ],
+  "warnings": []
+}

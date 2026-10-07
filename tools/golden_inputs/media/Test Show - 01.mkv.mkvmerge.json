@@ -1,0 +1,199 @@
+{
+  "attachments": [],
+  "chapters": [],
+  "container": {
+    "properties": {
+      "container_type": 17,
+      "duration": 3023000000,
+      "is_providing_timestamps": true,
+      "muxing_application": "Lavf60.16.100",
+      "segment_uid": "00000000000000000000000000000000",
+      "timestamp_scale": 1000000,
+      "writing_application": "Lavf60.16.100"
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "Matroska"
+  },
+  "errors": [],
+  "file_name": "{root}/Test Show - 01.mkv",
+  "global_tags": [
+    {
+      "num_entries": 1
+    }
+  ],
+  "identification_format_version": 19,
+  "track_tags": [
+    {
+      "num_entries": 2,
+      "track_id": 0
+    },
+    {
+      "num_entries": 2,
+      "track_id": 1
+    },
+    {
+      "num_entries": 2,
+      "track_id": 2
+    },
+    {
+      "num_entries": 2,
+      "track_id": 3
+    },
+    {
+      "num_entries": 2,
+      "track_id": 4
+    },
+    {
+      "num_entries": 2,
+      "track_id": 5
+    }
+  ],
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "codec_id": "V_MPEG4/ISO/AVC",
+        "codec_private_data": "0142c00affe100186742c00ada0a37e4c044000003000400000300c03c489a8001000468ce0fc8",
+        "codec_private_length": 39,
+        "default_duration": 41666666,
+        "default_track": false,
+        "display_dimensions": "160x90",
+        "display_unit": 0,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "und",
+        "minimum_timestamp": 0,
+        "num_index_entries": 1,
+        "number": 1,
+        "packetizer": "mpeg4_p10_video",
+        "pixel_dimensions": "160x90",
+        "tag_duration": "00:00:03.000000000",
+        "tag_encoder": "Lavc60.31.102 libx264",
+        "uid": 1
+      },
+      "type": "video"
+    },
+    {
+      "codec": "AAC",
+      "id": 1,
+      "properties": {
+        "audio_bits_per_sample": 32,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "codec_delay": 23219955,
+        "codec_id": "A_AAC",
+        "codec_private_data": "120856e500",
+        "codec_private_length": 5,
+        "default_track": true,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "rus",
+        "minimum_timestamp": 0,
+        "num_index_entries": 0,
+        "number": 2,
+        "tag_duration": "00:00:03.023000000",
+        "tag_encoder": "Lavc60.31.102 aac",
+        "track_name": "AniLibria.TV",
+        "uid": 2
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "FLAC",
+      "id": 2,
+      "properties": {
+        "audio_bits_per_sample": 16,
+        "audio_channels": 1,
+        "audio_sampling_frequency": 44100,
+        "codec_id": "A_FLAC",
+        "codec_private_data": "664c614380000022120012000003af0005150ac440f0000204cc1e83aac2839d1f1efb1709ee37902777",
+        "codec_private_length": 42,
+        "default_track": false,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "jpn",
+        "minimum_timestamp": 0,
+        "num_index_entries": 0,
+        "number": 3,
+        "tag_duration": "00:00:03.000000000",
+        "tag_encoder": "Lavc60.31.102 flac",
+        "track_name": "Оригинальная",
+        "uid": 3
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "AC-3",
+      "id": 3,
+      "properties": {
+        "audio_bits_per_sample": 32,
+        "audio_channels": 6,
+        "audio_sampling_frequency": 48000,
+        "codec_delay": 5333333,
+        "codec_id": "A_AC3",
+        "codec_private_length": 0,
+        "default_duration": 32000000,
+        "default_track": false,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "rus",
+        "minimum_timestamp": 0,
+        "num_index_entries": 0,
+        "number": 4,
+        "tag_duration": "00:00:03.000000000",
+        "tag_encoder": "Lavc60.31.102 ac3",
+        "track_name": "DEEP",
+        "uid": 4
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "SubStationAlpha",
+      "id": 4,
+      "properties": {
+        "codec_id": "S_TEXT/ASS",
+        "codec_private_data": "5b53637269707420496e666f5d0a536372697074547970653a2076342e30302b0a506c6179526573583a203136300a506c6179526573593a2039300a0a5b56342b205374796c65735d0a466f726d61743a204e616d652c20466f6e746e616d652c20466f6e7473697a652c205072696d617279436f6c6f75722c205365636f6e64617279436f6c6f75722c204f75746c696e65436f6c6f75722c204261636b436f6c6f75722c20426f6c642c204974616c69632c20556e6465726c696e652c20537472696b654f75742c205363616c65582c205363616c65592c2053706163696e672c20416e676c652c20426f726465725374796c652c204f75746c696e652c20536861646f772c20416c69676e6d656e742c204d617267696e4c2c204d617267696e522c204d617267696e562c20456e636f64696e670a5374796c653a2044656661756c742c417269616c2c32302c264830304646464646462c264830303030303046462c264830303030303030302c264830303030303030302c302c302c302c302c3130302c3130302c302c302c312c312c302c322c31302c31302c31302c310a5374796c653a205369676e732c417269616c2c31362c264830304646464646462c264830303030303046462c264830303030303030302c264830303030303030302c302c302c302c302c3130302c3130302c302c302c312c312c302c382c31302c31302c31302c310a0a5b4576656e74735d0a466f726d61743a204c617965722c2053746172742c20456e642c205374796c652c204e616d652c204d617267696e4c2c204d617267696e522c204d617267696e562c204566666563742c20546578740a",
+        "codec_private_length": 614,
+        "default_track": false,
+        "enabled_track": true,
+        "encoding": "UTF-8",
+        "forced_track": false,
+        "language": "rus",
+        "minimum_timestamp": 500000000,
+        "num_index_entries": 1,
+        "number": 5,
+        "tag_duration": "00:00:02.000000000",
+        "tag_encoder": "Lavc60.31.102 ass",
+        "text_subtitles": true,
+        "track_name": "Надписи",
+        "uid": 5
+      },
+      "type": "subtitles"
+    },
+    {
+      "codec": "SubRip/SRT",
+      "id": 5,
+      "properties": {
+        "codec_id": "S_TEXT/UTF8",
+        "codec_private_length": 0,
+        "default_track": false,
+        "enabled_track": true,
+        "encoding": "UTF-8",
+        "forced_track": false,
+        "language": "eng",
+        "minimum_timestamp": 500000000,
+        "num_index_entries": 1,
+        "number": 6,
+        "tag_duration": "00:00:02.000000000",
+        "tag_encoder": "Lavc60.31.102 srt",
+        "text_subtitles": true,
+        "track_name": "Full",
+        "uid": 6
+      },
+      "type": "subtitles"
+    }
+  ],
+  "warnings": []
+}

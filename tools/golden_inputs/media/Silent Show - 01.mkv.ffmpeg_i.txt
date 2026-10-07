@@ -1,0 +1,9 @@
+Input #0, matroska,webm, from '{root}/Silent Show - 01.mkv':
+  Metadata:
+    ENCODER         : Lavf60.16.100
+  Duration: 00:00:03.00, start: 0.000000, bitrate: 286 kb/s
+  Stream #0:0: Video: h264 (Constrained Baseline), yuv420p(progressive), 160x90 [SAR 1:1 DAR 16:9], 24 fps, 24 tbr, 1k tbn
+    Metadata:
+      ENCODER         : Lavc60.31.102 libx264
+      DURATION        : 00:00:03.000000000
+At least one output file must be specified
