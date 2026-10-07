@@ -362,7 +362,10 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         var runner = new HlsRunner(services.Runner, services.Tools, services.Probe, services.Logs, settings);
         var provider = WorkDirProviders.Create(workDir, services.Runner, services.Imdisk);
         Func<CancellationToken, Task<bool>>? shutdown = Shutdown ? ct => new ShutdownService(services.Runner).ScheduleAsync(ct) : null;
-        Enqueue("HLS", HlsJobs.Run(toRun, runner, provider, calibrates: settings.FixedCq is null, shutdown));
+        Func<CancellationToken, Task<IReadOnlyList<char>>>? cleanup = OperatingSystem.IsWindows()
+            ? ct => ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(services.Runner, services.Imdisk), new RamDiskStateFile(RamDiskStateFile.DefaultPath), ct)
+            : null;
+        Enqueue("HLS", HlsJobs.Run(toRun, runner, provider, calibrates: settings.FixedCq is null, shutdown, cleanup));
     }
 
     private void SetGroups(IReadOnlyList<HlsGroup> groups)

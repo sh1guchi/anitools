@@ -14,12 +14,29 @@ namespace Anitools.Core.Jobs;
 public static class HlsJobs
 {
     /// <param name="shutdown">Выключить компьютер, если всё прошло без отмены; null — не выключать.</param>
+    /// <param name="cleanupOrphans">
+    /// Снять RAM-диски, оставшиеся от аварийно завершённого запуска (как _setup_work_dir оригинала — перед каждым HLS,
+    /// при любом выборе временной папки); возвращает снятые буквы. null — не нужно (не Windows).
+    /// </param>
     public static Func<JobContext, Task<JobOutcome>> Run(
-        HlsPlan plan, HlsRunner runner, IWorkDirProvider workDir, bool calibrates, Func<CancellationToken, Task<bool>>? shutdown = null) => async context =>
+        HlsPlan plan,
+        HlsRunner runner,
+        IWorkDirProvider workDir,
+        bool calibrates,
+        Func<CancellationToken, Task<bool>>? shutdown = null,
+        Func<CancellationToken, Task<IReadOnlyList<char>>>? cleanupOrphans = null) => async context =>
     {
         var ct = context.CancellationToken;
         context.Log($"HLS: {plan.Folder} → {plan.OutputRoot}");
         context.Log($"к выполнению {plan.RunCount}, пропуск {plan.SkipCount}, ошибок в плане {plan.ErrorCount}");
+        if (cleanupOrphans is not null)
+        {
+            foreach (var letter in await cleanupOrphans(ct).ConfigureAwait(false))
+            {
+                context.Log($"Снят незакрытый RAM-диск {letter}: от прошлого запуска.");
+            }
+        }
+
         context.Report(0, "временная папка…");
         WorkDirLease lease;
         try
