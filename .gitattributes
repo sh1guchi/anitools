@@ -1,0 +1,6 @@
+* text=auto
+*.bat text eol=crlf
+*.png binary
+*.mkv binary
+*.mka binary
+*.mp4 binary
