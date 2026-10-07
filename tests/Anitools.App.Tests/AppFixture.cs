@@ -79,10 +79,10 @@ internal sealed class AppFixture : IDisposable
     /// <summary>Выполнить отложенное в UI-потоке (обновления от задач и т.п.).</summary>
     public static void Flush() => Dispatcher.UIThread.RunJobs();
 
-    /// <summary>Ждать условия, прокручивая UI-поток (задачи очереди идут в фоне).</summary>
+    /// <summary>Ждать условия (до 20 с — раннеры Windows медленные), прокручивая UI-поток: задачи очереди идут в фоне.</summary>
     public static async Task WaitUntilAsync(Func<bool> condition, string what)
     {
-        for (var i = 0; i < 500; i++)
+        for (var i = 0; i < 2000; i++)
         {
             Flush();
             if (condition())
