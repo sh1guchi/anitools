@@ -73,7 +73,13 @@ public sealed class HlsRunner(IProcessRunner runner, ToolPaths tools, IMediaProb
     private readonly Func<DateTime> _clock = clock ?? (() => DateTime.Now);
 
     /// <param name="workRoot">Папка для временных файлов (RAM-диск, HDD); null — рядом с выходом, как «как раньше» в оригинале.</param>
-    public async Task<HlsResult> ExecuteAsync(HlsPlan plan, string? workRoot, IProgress<HlsProgress>? progress = null, CancellationToken cancellationToken = default)
+    /// <param name="episodeDone">Итог каждой серии сразу, как она закончилась (для журнала и строки хода).</param>
+    public async Task<HlsResult> ExecuteAsync(
+        HlsPlan plan,
+        string? workRoot,
+        IProgress<HlsProgress>? progress = null,
+        CancellationToken cancellationToken = default,
+        Action<HlsEpisodeResult>? episodeDone = null)
     {
         var started = _clock();
         var processor = new HlsEpisodeProcessor(runner, tools, probe, logs, settings);
@@ -103,6 +109,8 @@ public sealed class HlsRunner(IProcessRunner runner, ToolPaths tools, IMediaProb
             {
                 results.Add(new HlsEpisodeResult(episode, HlsEpisodeOutcome.Failed, ex.Message));
             }
+
+            episodeDone?.Invoke(results[^1]);
         }
 
         return new HlsResult(results, started, _clock());

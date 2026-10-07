@@ -62,6 +62,8 @@ public sealed class AvaloniaDialogService(Window owner) : IDialogService
     public async Task<ShikimoriChoice> PickShikimoriAsync(ShikimoriPickerViewModel picker) =>
         await new ShikimoriDialog(picker).ShowDialog<ShikimoriChoice?>(owner) ?? ShikimoriChoice.Skip;
 
+    public Task<bool> RegroupAsync(RegroupViewModel regroup) => new RegroupDialog(regroup).ShowDialog<bool>(owner);
+
     private async Task<IStorageFolder?> StartAsync(string? start)
     {
         var folder = start is null ? null : Directory.Exists(start) ? start : Path.GetDirectoryName(start);

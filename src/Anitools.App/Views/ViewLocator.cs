@@ -13,6 +13,7 @@ public sealed class ViewLocator : IDataTemplate
     {
         [typeof(VideoOnlyPageViewModel)] = () => new VideoOnlyPageView(),
         [typeof(RemuxPageViewModel)] = () => new RemuxPageView(),
+        [typeof(HlsPageViewModel)] = () => new HlsPageView(),
         [typeof(AudioExtractPageViewModel)] = () => new AudioExtractPageView(),
         [typeof(AudioMuxPageViewModel)] = () => new AudioMuxPageView(),
         [typeof(SubtitlesPageViewModel)] = () => new SubtitlesPageView(),

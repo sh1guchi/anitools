@@ -244,6 +244,59 @@ public sealed class HlsRunnerTests
         Assert.Contains(episode.Notes, n => n.StartsWith("CQ под серию", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task Job_logs_each_episode_shows_results_and_shuts_down_only_after_success()
+    {
+        using var dir = new TempDir();
+        var (plan, probe) = await PlanAsync(dir, 2);
+        var ffmpeg = new FakeFfmpeg();
+        ffmpeg.ExitCodes[2] = 1; // видео второй серии…
+        ffmpeg.ExitCodes[3] = 1; // …и повтор на CPU
+        var shutdowns = 0;
+        var queue = new Anitools.Core.Jobs.JobQueue();
+
+        var job = queue.Enqueue("HLS · Show", dir.Path, Anitools.Core.Jobs.HlsJobs.Run(
+            plan, Runner(ffmpeg, probe, dir), new Anitools.Core.WorkDir.NearOutputWorkDir(), calibrates: false, _ =>
+            {
+                shutdowns++;
+                return Task.FromResult(true);
+            }));
+        await job.Completion.WaitAsync(Ct);
+
+        Assert.Equal(Anitools.Core.Jobs.JobState.Failed, job.State);
+        Assert.Equal("1 готово · 1 ошибка", job.Snapshot.Summary);
+        Assert.Matches(@"^01 ✓ \d+:\d\d · 02 ✗ \d+:\d\d$", job.Snapshot.Detail);
+        Assert.Contains(job.Log, l => l.Contains("Временные файлы: рядом с выходом", StringComparison.Ordinal));
+        Assert.Contains(job.Log, l => l.Contains("✓ Show - 01.mkv", StringComparison.Ordinal));
+        Assert.Contains(job.Log, l => l.Contains("✗ Show - 02.mkv — Ошибка видео", StringComparison.Ordinal));
+        Assert.Contains(job.Log, l => l.Contains("Мбит/с", StringComparison.Ordinal));
+        Assert.Equal(0, shutdowns);
+
+        // Всё готово — повторный запуск пропускает первую серию, вторая проходит, компьютер выключается
+        ffmpeg.ExitCodes.Clear();
+        var (again, _) = await PlanAsync(dir, 2);
+        var second = queue.Enqueue("HLS · Show", dir.Path, Anitools.Core.Jobs.HlsJobs.Run(
+            again, Runner(ffmpeg, probe, dir), new Anitools.Core.WorkDir.NearOutputWorkDir(), calibrates: false, _ =>
+            {
+                shutdowns++;
+                return Task.FromResult(true);
+            }));
+        await second.Completion.WaitAsync(Ct);
+
+        Assert.Equal(Anitools.Core.Jobs.JobState.Done, second.State);
+        Assert.Equal("1 готово · 1 пропуск", second.Snapshot.Summary);
+        Assert.Contains(second.Log, l => l.Contains("· Show - 01.mkv — пропуск: уже готово", StringComparison.Ordinal));
+        Assert.Equal(1, shutdowns);
+    }
+
+    [Theory]
+    [InlineData(HlsStage.Video, 0.5, false, 0.455)]
+    [InlineData(HlsStage.Video, 0.5, true, 0.525)]
+    [InlineData(HlsStage.Calibration, 1.0, true, 0.15)]
+    [InlineData(HlsStage.Moving, 1.0, false, 1.0)]
+    public void Episode_fraction_by_stage(HlsStage stage, double fraction, bool calibrates, double expected) =>
+        Assert.Equal(expected, Anitools.Core.Jobs.HlsJobs.EpisodeFraction(stage, fraction, calibrates), 3);
+
     private static HlsRunner Runner(FakeFfmpeg ffmpeg, IMediaProbe probe, TempDir dir, HlsSettings? settings = null) =>
         new(ffmpeg, Tools, probe, new ErrorLogWriter(dir.Combine("_logs")), settings ?? HlsSettings.Default);
 

@@ -24,4 +24,7 @@ public interface IDialogService
 
     /// <summary>Поиск тайтла на Shikimori (§4.9); закрыли окно — «пропустить».</summary>
     Task<ShikimoriChoice> PickShikimoriAsync(ShikimoriPickerViewModel picker);
+
+    /// <summary>Перегруппировка файлов HLS по тайтлам (§4.9); true — применить.</summary>
+    Task<bool> RegroupAsync(RegroupViewModel regroup);
 }
