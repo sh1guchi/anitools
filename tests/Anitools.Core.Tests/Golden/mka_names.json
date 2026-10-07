@@ -1,0 +1,32 @@
+{
+  "function": "mka_names",
+  "description": "Имена в сборке .mka (mka_muxer.py): префикс «N. », номер серии, база имени выхода, ключ сортировки",
+  "source": "reference/python/extra/mka_muxer.py",
+  "source_sha256": "2a3dd7ca4acda6a861d3d4e83a8e4016341811bb14b630af1245ac3694ab66a1",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "1. Show - 01.AniLibria.TV.mka", "output": {"strip_track_num": "Show - 01.AniLibria.TV.mka", "track_num": 1, "parse_episode": "01", "episode_base": "Show - 01", "natural_key": [1, "1. show - 01.anilibria.tv.mka"]}},
+    {"input": "12. Show - 01.DEEP.mka", "output": {"strip_track_num": "Show - 01.DEEP.mka", "track_num": 12, "parse_episode": "01", "episode_base": "Show - 01", "natural_key": [12, "12. show - 01.deep.mka"]}},
+    {"input": "Show - 01 [AniDUB].mka", "output": {"strip_track_num": "Show - 01 [AniDUB].mka", "track_num": null, "parse_episode": "01", "episode_base": "Show - 01", "natural_key": [null, "show - 01 [anidub].mka"]}},
+    {"input": "Show Name - 05 (JAM).mka", "output": {"strip_track_num": "Show Name - 05 (JAM).mka", "track_num": null, "parse_episode": "05", "episode_base": "Show Name - 05", "natural_key": [null, "show name - 05 (jam).mka"]}},
+    {"input": "[Group] Sousou no Frieren - 01 (1080p).mka", "output": {"strip_track_num": "[Group] Sousou no Frieren - 01 (1080p).mka", "track_num": null, "parse_episode": "01", "episode_base": "Sousou no Frieren - 01", "natural_key": [null, "[group] sousou no frieren - 01 (1080p).mka"]}},
+    {"input": "Sousou no Frieren - 01.AniLiberty (AniLibria).mka", "output": {"strip_track_num": "Sousou no Frieren - 01.AniLiberty (AniLibria).mka", "track_num": null, "parse_episode": "01", "episode_base": "Sousou no Frieren - 01", "natural_key": [null, "sousou no frieren - 01.aniliberty (anilibria).mka"]}},
+    {"input": "Show_12_RUS.ac3", "output": {"strip_track_num": "Show_12_RUS.ac3", "track_num": null, "parse_episode": "12", "episode_base": "Show - 12", "natural_key": [null, "show_12_rus.ac3"]}},
+    {"input": "Show E07.mp3", "output": {"strip_track_num": "Show E07.mp3", "track_num": null, "parse_episode": "07", "episode_base": "Show - 07", "natural_key": [null, "show e07.mp3"]}},
+    {"input": "Movie [AniDUB].mka", "output": {"strip_track_num": "Movie [AniDUB].mka", "track_num": null, "parse_episode": null, "episode_base": "Movie", "natural_key": [null, "movie [anidub].mka"]}},
+    {"input": "Movie.flac", "output": {"strip_track_num": "Movie.flac", "track_num": null, "parse_episode": null, "episode_base": "Movie", "natural_key": [null, "movie.flac"]}},
+    {"input": "1. Movie.flac", "output": {"strip_track_num": "Movie.flac", "track_num": 1, "parse_episode": null, "episode_base": "Movie", "natural_key": [1, "1. movie.flac"]}},
+    {"input": "2.Show - 02.x.mka", "output": {"strip_track_num": "Show - 02.x.mka", "track_num": 2, "parse_episode": "02", "episode_base": "Show - 02", "natural_key": [2, "2.show - 02.x.mka"]}},
+    {"input": "Show - 1001.mka", "output": {"strip_track_num": "Show - 1001.mka", "track_num": null, "parse_episode": "1001", "episode_base": "Show - 1001", "natural_key": [null, "show - 1001.mka"]}},
+    {"input": "Show ep 3.opus", "output": {"strip_track_num": "Show ep 3.opus", "track_num": null, "parse_episode": "03", "episode_base": "Show - 03", "natural_key": [null, "show ep 3.opus"]}},
+    {"input": "Show - 01v2.mka", "output": {"strip_track_num": "Show - 01v2.mka", "track_num": null, "parse_episode": "01", "episode_base": "Show - 01", "natural_key": [null, "show - 01v2.mka"]}},
+    {"input": "Show [03].mka", "output": {"strip_track_num": "Show [03].mka", "track_num": null, "parse_episode": "03", "episode_base": "Show - 03", "natural_key": [null, "show [03].mka"]}},
+    {"input": "Show - 01 - 02.mka", "output": {"strip_track_num": "Show - 01 - 02.mka", "track_num": null, "parse_episode": "02", "episode_base": "Show 01 - 02", "natural_key": [null, "show - 01 - 02.mka"]}},
+    {"input": "Re꞉Zero - 01.mka", "output": {"strip_track_num": "Re꞉Zero - 01.mka", "track_num": null, "parse_episode": "01", "episode_base": "Re꞉Zero - 01", "natural_key": [null, "re꞉zero - 01.mka"]}},
+    {"input": "Show: Part 2 - 03.mka", "output": {"strip_track_num": "Show: Part 2 - 03.mka", "track_num": null, "parse_episode": "03", "episode_base": "Show_ Part 2 - 03", "natural_key": [null, "show: part 2 - 03.mka"]}},
+    {"input": "a<b>c - 01.mka", "output": {"strip_track_num": "a<b>c - 01.mka", "track_num": null, "parse_episode": "01", "episode_base": "a_b_c - 01", "natural_key": [null, "a<b>c - 01.mka"]}},
+    {"input": "Шоу - 01.Студия.mka", "output": {"strip_track_num": "Шоу - 01.Студия.mka", "track_num": null, "parse_episode": "01", "episode_base": "Шоу - 01", "natural_key": [null, "шоу - 01.студия.mka"]}},
+    {"input": "   .mka", "output": {"strip_track_num": "   .mka", "track_num": null, "parse_episode": null, "episode_base": "output", "natural_key": [null, "   .mka"]}},
+    {"input": "10. 10.mka", "output": {"strip_track_num": "10.mka", "track_num": 10, "parse_episode": "10", "episode_base": "10", "natural_key": [10, "10. 10.mka"]}}
+  ]
+}

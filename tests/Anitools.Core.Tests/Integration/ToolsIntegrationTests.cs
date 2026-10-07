@@ -5,6 +5,7 @@ using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Operations.Common;
 using Anitools.Core.Operations.Fonts;
 using Anitools.Core.Operations.Hardsub;
+using Anitools.Core.Operations.MkaMux;
 using Anitools.Core.Operations.Remux;
 using Anitools.Core.Processes;
 using Anitools.Core.Tests.Fixtures;
@@ -124,6 +125,37 @@ public sealed class ToolsIntegrationTests
         using var zip = ZipFile.OpenRead(result.ZipPath!);
         using var reader = new StreamReader(zip.GetEntry("Шрифт.ttf")!.Open());
         Assert.Equal("TTF-данные", await reader.ReadToEndAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Voices_are_muxed_into_one_mka_per_episode()
+    {
+        var (tools, probe) = Tools();
+        using var dir = new TempDir();
+        foreach (var (folder, title, freq) in new[] { ("1. AniLibria.TV", "AniLibria.TV", 440), ("2. Оригинальная", "Japanese", 550) })
+        {
+            foreach (var ep in new[] { "01", "02" })
+            {
+                await MediaFactory.CreateAsync(dir.Combine(folder, $"{folder[..2]} Show - {ep}.{title}.mka"), [.. MediaFactory.Sine(freq), "-c:a", "aac", "-metadata:s:a:0", $"title={title}"]);
+            }
+        }
+
+        var sources = await MkaMuxOperation.InspectAsync(dir.Path, probe, Ct);
+        var groups = MkaMuxOperation.Groups(sources, MkaMuxMode.ByEpisode);
+        Assert.Equal(["AniLibria.TV", "Оригинальная"], MkaMuxOperation.Labels(groups).Select(l => l.Label));
+        var plan = MkaMuxOperation.Plan(dir.Path, groups, new MkaLabelOptions
+        {
+            Order = ["Оригинальная", "AniLibria.TV"],
+            Titles = new Dictionary<string, string> { ["Оригинальная"] = "Оригинал" },
+        });
+
+        var result = await Execute(tools, probe, dir, plan, 1);
+
+        Assert.All(result.Items, i => Assert.Equal(ItemOutcome.Done, i.Outcome));
+        var mka = await probe.ProbeAsync(dir.Combine("MKA", "Show - 02.mka"), Ct);
+        Assert.Equal(["Оригинал", "AniLibria.TV"], mka.AudioStreams.Select(a => a.Title));
+        Assert.Equal(["jpn", "rus"], mka.AudioStreams.Select(a => a.Language));
+        Assert.Equal([true, false], mka.AudioStreams.Select(a => a.IsDefault));
     }
 
     private static (ToolPaths Tools, MediaProbe Probe) Tools()
