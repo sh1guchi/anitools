@@ -1839,6 +1839,394 @@ def g_mka_scenarios():
     return cases
 
 
+# ─── Шрифты для .ass (ass_fonts.py) ──────────────────────────────────────────
+
+ASSFONTS_REL = f"{EXTRA_REL}/ass_fonts.py"
+assfonts = load_extra("ass_fonts.py")
+
+
+def _b64(data: bytes) -> str:
+    import base64
+    return base64.b64encode(data).decode("ascii")
+
+
+def _utf16be(text: str) -> bytes:
+    return text.encode("utf-16-be")
+
+
+def _name_table(records) -> bytes:
+    """Таблица name, формат 0: записи (platform, encoding, language, name_id, байты строки)."""
+    import struct
+    storage, recs = b"", b""
+    for pid, eid, lid, nid, raw in records:
+        recs += struct.pack(">6H", pid, eid, lid, nid, len(raw), len(storage))
+        storage += raw
+    return struct.pack(">HHH", 0, len(records), 6 + 12 * len(records)) + recs + storage
+
+
+def _cmap_table(chars, fmt=4) -> bytes:
+    """Таблица cmap с одной подтаблицей: формат 4 (3,1) или 12 (3,10); символ → глиф по порядку с 1."""
+    import struct
+    chars = sorted(set(chars))
+    if fmt == 12:
+        groups = b"".join(struct.pack(">3L", c, c, i + 1) for i, c in enumerate(chars))
+        sub = struct.pack(">HHLLL", 12, 0, 16 + len(groups), 0, len(chars)) + groups
+        platform, encoding = 3, 10
+    else:
+        segs = [(c, (i + 1 - c) % 0x10000) for i, c in enumerate(chars) if c < 0xFFFF] + [(0xFFFF, 1)]
+        n = len(segs)
+        entry = n.bit_length() - 1
+        search = 2 * (1 << entry)
+        body = (b"".join(struct.pack(">H", c) for c, _ in segs) + b"\x00\x00"
+                + b"".join(struct.pack(">H", c) for c, _ in segs)
+                + b"".join(struct.pack(">H", d) for _, d in segs) + b"\x00\x00" * n)
+        sub = struct.pack(">7H", 4, 14 + len(body), 0, 2 * n, search, entry, 2 * n - search) + body
+        platform, encoding = 3, 1
+    return struct.pack(">HHHHL", 0, 1, platform, encoding, 12) + sub
+
+
+def _sfnt(tables: dict, base: int = 0, magic: bytes = b"\x00\x01\x00\x00") -> bytes:
+    """Шрифт sfnt из таблиц {тег: байты}; смещения таблиц — от начала файла (base — где шрифт лежит в коллекции)."""
+    import struct
+    tags = sorted(tables)
+    n = len(tags)
+    entry = max(n.bit_length() - 1, 0)
+    head = magic + struct.pack(">4H", n, 16 * (1 << entry), entry, 16 * n - 16 * (1 << entry))
+    offset = base + 12 + 16 * n
+    directory, data = b"", b""
+    for tag in tags:
+        t = tables[tag] + b"\x00" * (-len(tables[tag]) % 4)
+        directory += struct.pack(">4sLLL", tag.encode("ascii"), 0, offset + len(data), len(tables[tag]))
+        data += t
+    return head + directory + data
+
+
+def _maxp(glyphs: int) -> bytes:
+    """Таблица maxp версии 0.5 — fontTools без неё не строит таблицу символов."""
+    import struct
+    return struct.pack(">LH", 0x00005000, glyphs)
+
+
+def _font(names, chars=(), fmt=4, magic=b"\x00\x01\x00\x00") -> bytes:
+    tables = {"name": _name_table(names), "maxp": _maxp(len(set(chars)) + 1)}
+    if chars:
+        tables["cmap"] = _cmap_table(chars, fmt)
+    return _sfnt(tables, magic=magic)
+
+
+def _ttc(fonts_tables) -> bytes:
+    """Коллекция .ttc: заголовок ttcf и шрифты подряд."""
+    import struct
+    count = len(fonts_tables)
+    header_len = 12 + 4 * count
+    blobs, offsets, pos = [], [], header_len
+    for tables in fonts_tables:
+        blob = _sfnt(tables, base=pos)
+        offsets.append(pos)
+        blobs.append(blob)
+        pos += len(blob)
+    return b"ttcf" + struct.pack(">LL", 0x00010000, count) + b"".join(struct.pack(">L", o) for o in offsets) + b"".join(blobs)
+
+
+def _win(nid, text, eid=1):
+    return (3, eid, 0x409, nid, _utf16be(text))
+
+
+def _mac(nid, text):
+    return (1, 0, 0, nid, text.encode("mac_roman"))
+
+
+CYR = [ord("A"), ord("a"), 0x0416, 0x0436]
+LATIN = [ord("A"), ord("a")]
+
+FONT_SAMPLES = {
+    "arial_cyr": (".ttf", _font([_win(1, "Arial"), _win(4, "Arial"), _win(6, "ArialMT"), _win(5, "Version 7.00"), _mac(1, "Arial")], CYR)),
+    "arial_old_latin": (".ttf", _font([_win(1, "Arial"), _win(4, "Arial"), _win(6, "ArialMT"), _win(5, "Version 6.90")], LATIN)),
+    "arial_bold": (".ttf", _font([_win(1, "Arial"), _win(2, "Bold"), _win(4, "Arial Bold"), _win(6, "Arial-BoldMT"), _win(5, "Version 7.00")], CYR)),
+    "komika": (".otf", _font([_win(1, "Komika Axis Regular"), _win(16, "Komika Axis"), _win(6, "KomikaAxis")], CYR, fmt=12, magic=b"OTTO")),
+    "family_only": (".ttf", _font([_win(16, "Arial"), _win(4, "Arial Narrow"), _win(6, "ArialNarrow")], LATIN)),
+    "cambria_ttc": (".ttc", _ttc([{"name": _name_table([_win(1, "Cambria"), _win(6, "Cambria"), _win(5, "Version 6.98")]), "cmap": _cmap_table(CYR), "maxp": _maxp(5)},
+                                  {"name": _name_table([_win(1, "Cambria Math"), _win(6, "CambriaMath")]), "cmap": _cmap_table(LATIN), "maxp": _maxp(3)}])),
+    "latin_ttc": (".ttc", _ttc([{"name": _name_table([_win(1, "Duo A")]), "cmap": _cmap_table(LATIN), "maxp": _maxp(3)},
+                                {"name": _name_table([_win(1, "Duo B")]), "cmap": _cmap_table(LATIN, 12), "maxp": _maxp(3)}])),
+    "cyr_format12_only": (".ttf", _font([_win(1, "Twelve")], CYR, fmt=12)),
+    "mac_roman": (".ttf", _font([_mac(1, "Caf\u00e9 Sans"), _mac(4, "Caf\u00e9 Sans Regular"), (1, 1, 0, 6, b"\x82\xa0")], LATIN)),
+    "odd_utf16_and_space": (".ttf", _font([(3, 1, 0x409, 1, _utf16be("Odd") + b"\x00"), _win(4, "   "), (0, 3, 0, 6, _utf16be("Odd-PS")),
+                                           (3, 1, 0x409, 4, b"\xd8\x00" + _utf16be("Lone"))], LATIN)),
+    "true_magic": (".ttf", _font([_win(1, "Old  Mac   Font")], (), magic=b"true")),
+    "woff_magic": (".ttf", b"wOFF" + b"\x00" * 60),
+    "truncated_names": (".ttf", _font([_win(1, "Trunc One"), _win(4, "Trunc Full"), _win(6, "TruncPS")], LATIN)[:-30]),
+    "no_cmap": (".ttf", _font([_win(1, "No Cmap")])),
+    "empty": (".ttf", b""),
+    "version_variants": (".ttf", _font([_win(1, "Ver"), _win(5, "Version 2.010;PS 2.000;hotconv 1.0.88"), _win(5, "1"), _win(5, "v.3"), _win(5, "no digits")], LATIN)),
+}
+
+
+def _has_cyrillic_bytes(ext: str, data: bytes) -> bool:
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        path = Path(td) / f"font{ext}"
+        path.write_bytes(data)
+        return assfonts.has_cyrillic(path)
+
+
+@golden("sfnt_font_names", "Имена и начертание из таблицы name, кириллица в cmap (ass_fonts.py: read_font_names, face_info, has_cyrillic через fontTools); вход — байты в base64", ASSFONTS_REL)
+def g_sfnt_font_names():
+    import io
+    try:
+        import fontTools  # noqa: F401
+    except ImportError:
+        raise SystemExit("Для эталона sfnt_font_names нужен fontTools: pip install fonttools==4.60.1")
+    cases = []
+    for name, (ext, data) in FONT_SAMPLES.items():
+        primary, fallback = assfonts.read_font_names(io.BytesIO(data))
+        face, ver = assfonts.face_info(data)
+        cases.append({"input": {"name": name, "ext": ext, "base64": _b64(data)},
+                      "output": {"primary": sorted(primary), "fallback": sorted(fallback), "face": face, "version": ver,
+                                 "cyrillic": _has_cyrillic_bytes(ext, data)}})
+    return cases
+
+
+@golden("font_keys", "Ключи имён шрифтов (ass_fonts.py: font_key, normalize, slugify, safe_filename)", ASSFONTS_REL)
+def g_font_keys():
+    inputs = ["Arial", "  Times   New\tRoman ", "@MS Gothic", "Straße", "ARIAL", "Komika Axis", "Re:Zero / Font?", "Æon_Flux-Bold",
+              "Шрифт Ж", "a\u00a0b", "", "İstanbul", "Ｆｕｌｌ", "x-y_z w"]
+    return [{"input": x, "output": {"font_key": assfonts.font_key(x), "normalize": assfonts.normalize(x),
+                                    "slug_": assfonts.slugify(x, "_"), "slug-": assfonts.slugify(x, "-"),
+                                    "safe": assfonts.safe_filename(x), "clean": assfonts.clean_font_name(x)}} for x in inputs]
+
+
+ASS_FONT_TEXTS = {
+    "styles_and_fn": ("utf-8",
+        "[Script Info]\nTitle: x\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize\nStyle: Default,Arial,20\n"
+        "Style: Signs,@MS Gothic ,18\nStyle: Bad\n\n[Events]\nFormat: Layer, Start, End, Style, Text\n"
+        "Dialogue: 0,0:00:01.00,0:00:02.00,Default,{\\fnKomika Axis}Текст{\\fn}сброс{\\b1\\fn Times New Roman \\i1}\n"
+        "Comment: 0,0:00:01.00,0:00:02.00,Default,{\\fnNot Used}\n"),
+    "custom_format_bom": ("utf-8-sig",
+        "[V4 Styles]\nFormat: Name, Fontsize, Fontname\nStyle: A,20,Verdana\n[v4+ styles]\nStyle: B,18,Tahoma\n"
+        "[Events]\nDIALOGUE: 0,0:00:01.00,0:00:02.00,A,{\\fnCourier New}x\n"),
+    "utf16": ("utf-16", "[V4+ Styles]\nFormat: Name, Fontname\nStyle: Default,Шрифт Один\n[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,x,{\\fnШрифт Два}\n"),
+    "cp1251": ("cp1251", "[V4+ Styles]\nFormat: Name, Fontname\nStyle: Default,Шрифт Три\n"),
+    "no_fontname_in_format": ("utf-8", "[V4+ Styles]\nFormat: Name, Font\nStyle: Default,Second,Third\n\n[Fonts]\nStyle: X,Y\n"),
+    "crlf_and_spaces": ("utf-8", "  [V4+ Styles]  \r\n  Format : Name , Fontname\r\n Style:Default,  Georgia  \r\n"),
+}
+
+
+@golden("ass_font_names", "Шрифты из .ass: стили и теги \\fn (ass_fonts.py: read_ass + parse_font_names); вход — байты в base64", ASSFONTS_REL)
+def g_ass_font_names():
+    import tempfile
+    cases = []
+    for name, (enc, text) in ASS_FONT_TEXTS.items():
+        data = text.encode(enc)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "x.ass"
+            path.write_bytes(data)
+            cases.append({"input": {"name": name, "base64": _b64(data)}, "output": sorted(assfonts.parse_font_names(path))})
+    return cases
+
+
+def _zip(entries) -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name, data in entries:
+            # Дата записи фиксирована — иначе архив (и эталон) меняется от запуска к запуску
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(info, b"" if name.endswith("/") else data)
+    return buf.getvalue()
+
+
+ZIP_SAMPLES = {
+    "komika_pack": (_zip([("komika/", b""), ("komika/KomikaAxis.otf", FONT_SAMPLES["komika"][1]), ("komika/readme.txt", b"hi"),
+                          ("__MACOSX/komika/._KomikaAxis.otf", FONT_SAMPLES["komika"][1]), ("Other.ttf", FONT_SAMPLES["arial_cyr"][1])]),
+                    ["Komika Axis", "komika axis regular", "KomikaAxis", "Arial", "Missing"]),
+    "dup_names": (_zip([("a/Arial.TTF", FONT_SAMPLES["arial_cyr"][1]), ("b/Arial.TTF", FONT_SAMPLES["arial_old_latin"][1])]), ["ArialMT"]),
+    "not_zip": (b"PK\x03\x04broken", ["Arial"]),
+    "empty_reply": (b"", ["Arial"]),
+}
+
+
+@golden("fonts_from_zip", "Шрифты из архива, чьё внутреннее имя совпадает с искомым (ass_fonts.py: fonts_from_zip)", ASSFONTS_REL)
+def g_fonts_from_zip():
+    import hashlib as h
+    cases = []
+    for name, (data, wanted) in ZIP_SAMPLES.items():
+        for font in wanted:
+            found = assfonts.fonts_from_zip(data, font)
+            cases.append({"input": {"zip": name, "base64": _b64(data), "font": font},
+                          "output": {k: h.sha256(v).hexdigest()[:16] for k, v in found.items()}})
+    return cases
+
+
+GOOGLE_CSS = """/* cyrillic */
+@font-face {
+  font-family: 'Roboto';
+  font-style: italic;
+  font-weight: 700;
+  src: url(https://fonts.gstatic.com/s/roboto/v51/abc.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  src: url('https://fonts.gstatic.com/s/roboto/v51/def.otf?v=2') format('opentype');
+}
+@font-face { font-family: 'Roboto'; font-weight: 400; src: url(https://fonts.gstatic.com/s/roboto/v51/abc.ttf); }
+@font-face { font-family: 'Roboto'; font-weight: 300; src: url(https://fonts.gstatic.com/s/roboto/v51/w.woff2) format('woff2'); }
+@font-face { font-family: 'Roboto'; font-weight: 500; }
+"""
+
+
+@golden("font_downloads", "Скачивание шрифтов (ass_fonts.py: Google Fonts, dafont, 1001fonts): ответы серверов по URL ('*' — любой другой), запросы и итог", ASSFONTS_REL)
+def g_font_downloads():
+    import hashlib as h
+    import urllib.error
+
+    komika_zip = _b64(ZIP_SAMPLES["komika_pack"][0])
+    gurl = "https://fonts.googleapis.com/css?family="
+    variants = [
+        ("google", "Roboto", {gurl + "Roboto:" + assfonts.GOOGLE_STYLES: {"text": GOOGLE_CSS}, "*": {"text": "FONTDATA"}}),
+        ("google", "No Such Font", {"*": {"status": 400}}),
+        ("google", "Roboto Slab", {"*": {"status": 500}}),
+        ("dafont", "Komika Axis", {
+            "https://www.dafont.com/search.php?q=Komika+Axis": {"text": "<a href='//dl.dafont.com/dl/?f=komika_axis'> dl.dafont.com/dl/?f=komika_pack dl.dafont.com/dl/?f=other"},
+            "https://dl.dafont.com/dl/?f=komika_axis": {"text": ""}, "https://dl.dafont.com/dl/?f=komika_pack": {"base64": komika_zip}}),
+        ("dafont", "Zzz Font!", {
+            "https://www.dafont.com/search.php?q=Zzz+Font%21": {"text": "dl.dafont.com/dl/?f=a1 dl.dafont.com/dl/?f=b2 dl.dafont.com/dl/?f=c3 dl.dafont.com/dl/?f=d4"},
+            "*": {"text": ""}}),
+        ("dafont", "Шрифт", {"*": {"status": 503}}),
+        ("1001fonts", "Komika Axis", {"https://www.1001fonts.com/download/komika-axis.zip": {"base64": komika_zip}}),
+        ("1001fonts", "Nope", {"*": {"status": 404}}),
+    ]
+    functions = {"google": assfonts.download_from_google_fonts, "dafont": assfonts.download_from_dafont, "1001fonts": assfonts.download_from_1001fonts}
+    cases = []
+    for source, font, responses in variants:
+        requests = []
+
+        def fetch(url, ua=None, timeout=30, responses=responses, requests=requests):
+            import base64
+            requests.append([url, ua])
+            reply = responses.get(url, responses.get("*"))
+            if reply is None:
+                raise urllib.error.URLError("нет ответа")
+            if "status" in reply:
+                raise urllib.error.HTTPError(url, reply["status"], "err", {}, None)
+            return base64.b64decode(reply["base64"]) if "base64" in reply else reply["text"].encode("utf-8")
+
+        with patched_module(assfonts, fetch=fetch):
+            try:
+                found = functions[source](font)
+                out = {"result": {k: h.sha256(v).hexdigest()[:16] for k, v in found.items()}}
+            except Exception as e:  # noqa: BLE001
+                out = {"error": type(e).__name__}
+        cases.append({"input": {"source": source, "font": font, "responses": responses}, "output": {**out, "requests": requests}})
+    return cases
+
+
+FONT_ROBOTO_OTHER = _font([_win(1, "Not Roboto"), _win(6, "NotRoboto")], LATIN)
+FONT_ROBOTO = _font([_win(1, "Roboto"), _win(6, "Roboto-Regular"), _win(5, "Version 3.0")], CYR)
+FONT_ARIAL_V69_CYR = _font([_win(1, "Arial"), _win(4, "Arial"), _win(6, "ArialMT"), _win(5, "Version 6.90")], CYR)
+
+# files — {путь от корня: имя образца из FONT_SAMPLES / текст .ass}; downloads — {источник: {шрифт: {файл: образец}} | "error"};
+# answers — ответы на вопросы (путь своей папки, Enter в конце)
+FONT_SCENARIOS = [
+    {"name": "local_steps_cyrillic_and_duplicates",
+     "ass": {"work/Ep 01.ass": "[V4+ Styles]\nFormat: Name, Fontname\nStyle: Default,Arial\nStyle: Signs,Cambria\nStyle: B,Arial Bold\n"
+                               "[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,x,{\\fnCafé Sans}{\\fnArial Narrow}\n",
+             "work/ep 02.ass": "[V4+ Styles]\nFormat: Name, Fontname\nStyle: Default,Duo B\nStyle: X,Komika Axis\n"},
+     "fonts": {"custom/arial.ttf": "arial_cyr", "custom/Arial_0.ttf": "arial_old_latin", "custom/sub/ArialV69.ttf": "arial_v69_cyr",
+               "custom/mac/Cafe.ttf": "mac_roman", "sys1/arial.ttf": "arial_bold", "sys1/cambria.ttc": "cambria_ttc",
+               "sys2/ArialN.ttf": "family_only", "sys2/duo.ttc": "latin_ttc", "sys2/KomikaAxis.otf": "komika"},
+     "downloads": {}, "answers": ["", ""]},
+    {"name": "downloads_and_not_found",
+     "ass": {"work/a.ass": "[V4+ Styles]\nFormat: Name, Fontname\nStyle: Default,Roboto\nStyle: K,Komika Axis\nStyle: M,Missing Font\nStyle: A,Arial\n"},
+     "fonts": {"custom/Roboto-400.ttf": "roboto_other", "custom/arial.ttf": "arial_cyr"},
+     "downloads": {"google": {"Roboto": {"Roboto-400.ttf": "roboto", "Roboto-700.ttf": "arial_cyr"}},
+                   "dafont": {"Komika Axis": "error", "Missing Font": {}},
+                   "1001fonts": {"Komika Axis": {"KomikaAxis.otf": "komika"}}},
+     "answers": ["", ""]},
+    {"name": "no_fonts_in_ass", "ass": {"work/x.ass": "[Events]\nDialogue: 0,0:00:01.00,0:00:02.00,x,{\\fn}\n"},
+     "fonts": {}, "downloads": {}, "answers": ["", ""]},
+]
+
+
+def _font_sample(name: str) -> bytes:
+    extra = {"roboto_other": FONT_ROBOTO_OTHER, "roboto": FONT_ROBOTO, "arial_v69_cyr": FONT_ARIAL_V69_CYR}
+    return extra[name] if name in extra else FONT_SAMPLES[name][1]
+
+
+def run_font_scenario(sc: dict) -> dict:
+    import io
+    import tempfile
+    import zipfile
+    import hashlib as h
+
+    with tempfile.TemporaryDirectory(prefix="anitools-fonts-") as td:
+        root = Path(os.path.realpath(td))
+        for rel, text in sc["ass"].items():
+            p = root.joinpath(*rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8")
+        for rel, sample in sc["fonts"].items():
+            p = root.joinpath(*rel.split("/"))
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(_font_sample(sample))
+
+        def source(key):
+            def download(name):
+                reply = sc["downloads"].get(key, {}).get(name, {})
+                if reply == "error":
+                    raise OSError("сервер не ответил")
+                return {fname: _font_sample(sample) for fname, sample in reply.items()}
+            return download
+
+        answers = list(sc["answers"])
+        out = io.StringIO()
+        with patched_module(assfonts, CUSTOM_FONTS_DIR=root / "custom", SYSTEM_FONTS_DIRS=[root / "sys1", root / "sys2"],
+                            FONT_SOURCES=[("Google Fonts", source("google")), ("dafont", source("dafont")), ("1001fonts", source("1001fonts"))],
+                            ask=lambda prompt: answers.pop(0), sorted=_windows_sorted):
+            old_argv = sys.argv
+            sys.argv = ["ass_fonts.py", str(root / "work")]
+            try:
+                with contextlib.redirect_stdout(out):
+                    assfonts.main()
+            finally:
+                sys.argv = old_argv
+        if answers:
+            raise RuntimeError(f"сценарий {sc['name']}: лишние ответы {answers}")
+
+        zip_path = root / "work" / "fonts.zip"
+        entries = []
+        if zip_path.exists():
+            with zipfile.ZipFile(zip_path) as zf:
+                for info in zf.infolist():
+                    entries.append([info.filename, h.sha256(zf.read(info)).hexdigest()[:16], info.external_attr, info.compress_type])
+        custom = sorted((p.relative_to(root / "custom").as_posix(), h.sha256(p.read_bytes()).hexdigest()[:16])
+                        for p in (root / "custom").rglob("*") if p.is_file())
+        lines = out.getvalue().split("\n")
+        not_found = []
+        if any("Не найдено нигде" in line for line in lines):
+            start = next(i for i, line in enumerate(lines) if "Не найдено нигде" in line)
+            not_found = [line.strip()[2:] for line in lines[start:] if line.strip().startswith("• ")]
+        names = [line.strip()[2:] for line in lines if line.startswith("   • ")]
+        return {"zip": entries, "custom": custom, "not_found": not_found, "font_names": names[:len(names) - len(not_found)]}
+
+
+@golden("ass_fonts_scenarios", "Шрифты для .ass → fonts.zip (ass_fonts.py: main) — своя папка, системные, скачивание; эталон снят с fontTools", ASSFONTS_REL)
+def g_ass_fonts_scenarios():
+    try:
+        import fontTools  # noqa: F401
+    except ImportError:
+        raise SystemExit("Для эталона ass_fonts_scenarios нужен fontTools: pip install fonttools==4.60.1")
+    cases = []
+    samples = {name: _b64(_font_sample(name)) for name in sorted({*FONT_SAMPLES, "roboto_other", "roboto", "arial_v69_cyr"})}
+    for sc in FONT_SCENARIOS:
+        inp = {k: sc[k] for k in ("name", "ass", "fonts", "downloads", "answers")}
+        cases.append({"input": inp, "output": run_font_scenario(sc)})
+    return cases, {"fixtures": samples}
+
+
 @contextlib.contextmanager
 def patched_module(mod, **attrs):
     """Временно подменить глобальные имена в модуле соседнего скрипта."""

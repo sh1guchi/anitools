@@ -35,6 +35,7 @@ ANITOOLS_UPDATE_SCREENSHOTS=1 dotnet test tests/Anitools.App.Tests
 Эталоны:
 
 ```bash
+pip install fonttools==4.60.1        # нужен для эталонов шрифтов
 python3 tools/gen_golden.py          # перегенерировать
 python3 tools/gen_golden.py --check  # проверить, что актуальны
 ```
@@ -46,4 +47,5 @@ python3 tools/gen_golden.py --check  # проверить, что актуаль
 - [x] Этап 3 — запуск ffmpeg/MKVToolNix, разбор медиа, операции «Только видео», «Только аудио», «Обработка аудио», «Субтитры», «Ремукс»
 - [x] Этап 4 — переименование по номеру серии, поиск названия на Shikimori, откат переименования
 - [x] Этап 5 — HLS: 360p…4K в zip + озвучки, подбор качества, резюм, RAM-диск ImDisk
-- [ ] Этапы 6–8 — см. [docs/PLAN.md §7](docs/PLAN.md)
+- [x] Этап 6 — доп. инструменты: сборка озвучек в .mka, шрифты для .ass и из видео, хардсаб, сдвиги, чистка .ass, перекодирование аудио
+- [ ] Этапы 7–8 — GUI и проверка на Windows, см. [docs/PLAN.md §7](docs/PLAN.md)

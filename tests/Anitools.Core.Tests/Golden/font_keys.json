@@ -1,0 +1,23 @@
+{
+  "function": "font_keys",
+  "description": "Ключи имён шрифтов (ass_fonts.py: font_key, normalize, slugify, safe_filename)",
+  "source": "reference/python/extra/ass_fonts.py",
+  "source_sha256": "ef2ba8381e6a31c6560f76716cee93cbb1045a7ffc258044adb14d8fa23c11f8",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "Arial", "output": {"font_key": "arial", "normalize": "arial", "slug_": "arial", "slug-": "arial", "safe": "Arial", "clean": "Arial"}},
+    {"input": "  Times   New\tRoman ", "output": {"font_key": "times new roman", "normalize": "timesnewroman", "slug_": "times_new_roman", "slug-": "times-new-roman", "safe": "TimesNewRoman", "clean": "Times   New\tRoman"}},
+    {"input": "@MS Gothic", "output": {"font_key": "@ms gothic", "normalize": "@msgothic", "slug_": "ms_gothic", "slug-": "ms-gothic", "safe": "@MSGothic", "clean": "MS Gothic"}},
+    {"input": "Straße", "output": {"font_key": "strasse", "normalize": "straße", "slug_": "stra_e", "slug-": "stra-e", "safe": "Straße", "clean": "Straße"}},
+    {"input": "ARIAL", "output": {"font_key": "arial", "normalize": "arial", "slug_": "arial", "slug-": "arial", "safe": "ARIAL", "clean": "ARIAL"}},
+    {"input": "Komika Axis", "output": {"font_key": "komika axis", "normalize": "komikaaxis", "slug_": "komika_axis", "slug-": "komika-axis", "safe": "KomikaAxis", "clean": "Komika Axis"}},
+    {"input": "Re:Zero / Font?", "output": {"font_key": "re:zero / font?", "normalize": "re:zero/font?", "slug_": "re_zero_font", "slug-": "re-zero-font", "safe": "ReZeroFont", "clean": "Re:Zero / Font?"}},
+    {"input": "Æon_Flux-Bold", "output": {"font_key": "æon_flux-bold", "normalize": "æonfluxbold", "slug_": "on_flux_bold", "slug-": "on-flux-bold", "safe": "Æon_Flux-Bold", "clean": "Æon_Flux-Bold"}},
+    {"input": "Шрифт Ж", "output": {"font_key": "шрифт ж", "normalize": "шрифтж", "slug_": "", "slug-": "", "safe": "ШрифтЖ", "clean": "Шрифт Ж"}},
+    {"input": "a b", "output": {"font_key": "a b", "normalize": "ab", "slug_": "a_b", "slug-": "a-b", "safe": "ab", "clean": "a b"}},
+    {"input": "", "output": {"font_key": "", "normalize": "", "slug_": "", "slug-": "", "safe": "", "clean": ""}},
+    {"input": "İstanbul", "output": {"font_key": "i̇stanbul", "normalize": "i̇stanbul", "slug_": "i_stanbul", "slug-": "i-stanbul", "safe": "İstanbul", "clean": "İstanbul"}},
+    {"input": "Ｆｕｌｌ", "output": {"font_key": "ｆｕｌｌ", "normalize": "ｆｕｌｌ", "slug_": "", "slug-": "", "safe": "Ｆｕｌｌ", "clean": "Ｆｕｌｌ"}},
+    {"input": "x-y_z w", "output": {"font_key": "x-y_z w", "normalize": "xyzw", "slug_": "x_y_z_w", "slug-": "x-y-z-w", "safe": "x-y_zw", "clean": "x-y_z w"}}
+  ]
+}

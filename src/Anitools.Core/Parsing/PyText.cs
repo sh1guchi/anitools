@@ -34,6 +34,34 @@ internal static partial class PyText
     /// <summary>str.isspace() для одного символа.</summary>
     public static bool IsSpace(char c) => char.IsWhiteSpace(c) || c is >= '\x1c' and <= '\x1f';
 
+    /// <summary>str.splitlines(): границы — \n, \r, \r\n, \v, \f, \x1c–\x1e, \x85, U+2028, U+2029; последний перевод строки не даёт пустой строки.</summary>
+    public static IReadOnlyList<string> SplitLines(string s)
+    {
+        var lines = new List<string>();
+        var start = 0;
+        for (var i = 0; i < s.Length; i++)
+        {
+            var c = s[i];
+            if (c is '\n' or '\r' or '\v' or '\f' or '\x1c' or '\x1d' or '\x1e' or '\x85' or '\u2028' or '\u2029')
+            {
+                lines.Add(s[start..i]);
+                if (c == '\r' && i + 1 < s.Length && s[i + 1] == '\n')
+                {
+                    i++;
+                }
+
+                start = i + 1;
+            }
+        }
+
+        if (start < s.Length)
+        {
+            lines.Add(s[start..]);
+        }
+
+        return lines;
+    }
+
     /// <summary>str.strip() без аргументов.</summary>
     public static string Strip(string s)
     {
