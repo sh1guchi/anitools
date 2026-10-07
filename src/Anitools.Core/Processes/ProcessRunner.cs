@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using Anitools.Core.Platform;
 
 namespace Anitools.Core.Processes;
 
@@ -40,6 +41,8 @@ public sealed class ProcessRunner : IProcessRunner
         using var process = new Process { StartInfo = psi };
         var stopwatch = Stopwatch.StartNew();
         process.Start();
+        // Windows: anitools закрылся или упал — ffmpeg завершится вместе с ним
+        ChildProcessJob.Shared?.Assign(process);
         // Никаких вопросов в консоли: ffmpeg без -nostdin иначе ждёт ввода
         process.StandardInput.Close();
 

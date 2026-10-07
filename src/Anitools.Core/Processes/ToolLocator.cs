@@ -52,6 +52,18 @@ public sealed class ToolLocator(ToolEnvironment environment)
         return null;
     }
 
+    /// <summary>Путь из настроек, если программа по нему есть (файл или папка с ней); иначе null.</summary>
+    public string? ConfiguredPath(Tool tool, string? configured)
+    {
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return null;
+        }
+
+        var path = Directory.Exists(configured) ? Path.Combine(configured, FileName(tool)) : configured;
+        return File.Exists(path) ? path : null;
+    }
+
     private string FileName(Tool tool)
     {
         var name = tool switch
@@ -176,9 +188,12 @@ public sealed class ToolLocator(ToolEnvironment environment)
 /// <summary>Найденные пути программ; null — программы нет.</summary>
 public sealed record ToolPaths(string? Ffmpeg, string? Ffprobe, string? Mkvmerge, string? Mkvextract)
 {
-    public static ToolPaths Find(ToolLocator locator) => new(
-        locator.Find(Tool.Ffmpeg),
-        locator.Find(Tool.Ffprobe),
-        locator.Find(Tool.Mkvmerge),
-        locator.Find(Tool.Mkvextract));
+    public static ToolPaths Find(ToolLocator locator) => Find(locator, _ => null);
+
+    /// <param name="configured">Путь из настроек для программы; пусто или null — искать самим.</param>
+    public static ToolPaths Find(ToolLocator locator, Func<Tool, string?> configured) => new(
+        locator.Find(Tool.Ffmpeg, configured(Tool.Ffmpeg)),
+        locator.Find(Tool.Ffprobe, configured(Tool.Ffprobe)),
+        locator.Find(Tool.Mkvmerge, configured(Tool.Mkvmerge)),
+        locator.Find(Tool.Mkvextract, configured(Tool.Mkvextract)));
 }

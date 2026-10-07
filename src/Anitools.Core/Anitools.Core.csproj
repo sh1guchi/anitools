@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <RootNamespace>Anitools.Core</RootNamespace>
+    <!-- LibraryImport (Job Object на Windows) генерирует unsafe-код -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

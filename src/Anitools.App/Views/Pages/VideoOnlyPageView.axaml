@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             x:Class="Anitools.App.Views.Pages.VideoOnlyPageView"
+             x:DataType="p:VideoOnlyPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <TextBlock DockPanel.Dock="Top" Classes="muted" Text="{Binding Description}" TextWrapping="Wrap" Margin="0,0,0,12" />
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8"
+              Command="{Binding RunCommand}"
+              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
+              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+    </Grid>
+    <c:PlanPreviewView DataContext="{Binding Preview}" />
+  </DockPanel>
+</UserControl>

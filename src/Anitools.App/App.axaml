@@ -1,11 +1,25 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.App"
              RequestedThemeVariant="Dark">
+  <Application.DataTemplates>
+    <!-- страница → её представление -->
+    <views:ViewLocator />
+  </Application.DataTemplates>
   <Application.Resources>
     <SolidColorBrush x:Key="AccentBrush" Color="#FFA855F7" />
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FF1D1726" />
+    <SolidColorBrush x:Key="NavBackgroundBrush" Color="#FF17131E" />
+    <SolidColorBrush x:Key="CardBrush" Color="#FF1E1927" />
     <SolidColorBrush x:Key="DividerBrush" Color="#33A855F7" />
+    <SolidColorBrush x:Key="OkBrush" Color="#FF4ADE80" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FFF87171" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#FFFBBF24" />
+    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#26F87171" />
+    <SolidColorBrush x:Key="NoticeBackgroundBrush" Color="#2234D399" />
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Menlo, monospace</FontFamily>
   </Application.Resources>
   <Application.Styles>
     <FluentTheme>
@@ -15,5 +29,73 @@
         <ColorPaletteResources x:Key="Light" Accent="#FF8B2FD9" />
       </FluentTheme.Palettes>
     </FluentTheme>
+    <mi:MaterialIconStyles />
+
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+    <Style Selector="TextBlock.small">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.navHeader">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="1.5" />
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+    </Style>
+    <Style Selector="TextBlock.skip">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource CardBrush}" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="14,12" />
+    </Style>
+    <Style Selector="Border.message">
+      <Setter Property="Background" Value="{StaticResource MessageBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="Border.notice">
+      <Setter Property="Background" Value="{StaticResource NoticeBackgroundBrush}" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.ok">
+      <Setter Property="Foreground" Value="{StaticResource OkBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.bad">
+      <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.accent">
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.muted">
+      <Setter Property="Opacity" Value="0.55" />
+    </Style>
+    <!-- кнопка-ссылка: без рамки и фона -->
+    <Style Selector="Button.link">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="4,2" />
+    </Style>
+    <Style Selector="Button.icon">
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
   </Application.Styles>
 </Application>
