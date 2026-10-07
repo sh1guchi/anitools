@@ -9,16 +9,29 @@ internal static class TestTools
 
     public static ToolPaths Paths => Found.Value;
 
+    /// <summary>В CI с установленными программами (ANITOOLS_REQUIRE_TOOLS=1) отсутствие программы — ошибка, а не пропуск.</summary>
+    private static bool Required => Environment.GetEnvironmentVariable("ANITOOLS_REQUIRE_TOOLS") == "1";
+
     public static ToolPaths RequireFfmpeg()
     {
-        Assert.SkipUnless(Paths.Ffmpeg is not null && Paths.Ffprobe is not null, "Нет ffmpeg/ffprobe — интеграционный тест пропущен");
+        Require(Paths.Ffmpeg is not null && Paths.Ffprobe is not null, "ffmpeg/ffprobe");
         return Paths;
     }
 
     public static ToolPaths RequireMkvToolNix()
     {
         RequireFfmpeg();
-        Assert.SkipUnless(Paths.Mkvmerge is not null && Paths.Mkvextract is not null, "Нет MKVToolNix — интеграционный тест пропущен");
+        Require(Paths.Mkvmerge is not null && Paths.Mkvextract is not null, "MKVToolNix");
         return Paths;
+    }
+
+    private static void Require(bool found, string what)
+    {
+        if (!found && Required)
+        {
+            Assert.Fail($"ANITOOLS_REQUIRE_TOOLS=1, а {what} не найден");
+        }
+
+        Assert.SkipUnless(found, $"Нет {what} — интеграционный тест пропущен");
     }
 }

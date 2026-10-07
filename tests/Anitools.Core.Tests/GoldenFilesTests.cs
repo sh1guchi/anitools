@@ -19,8 +19,10 @@ public sealed class GoldenFilesTests
         var golden = GoldenFile.Load(name);
 
         Assert.Equal(name, golden.Root.GetProperty("function").GetString());
-        Assert.Equal(GoldenFile.ReferenceSource, golden.Root.GetProperty("source").GetString());
-        Assert.Equal(GoldenFile.ReferenceSha256(), golden.Root.GetProperty("source_sha256").GetString());
+        // Источник — оригинал или соседний скрипт из reference/python/extra
+        var source = golden.Root.GetProperty("source").GetString()!;
+        Assert.True(source == GoldenFile.ReferenceSource || source.StartsWith("reference/python/extra/", StringComparison.Ordinal), source);
+        Assert.Equal(GoldenFile.Sha256Of(source), golden.Root.GetProperty("source_sha256").GetString());
         Assert.NotEmpty(golden.Cases);
         Assert.All(golden.Cases, c =>
         {

@@ -1,0 +1,16 @@
+{
+  "function": "escape_filter",
+  "description": "Путь для фильтра subtitles в хардсабе (hardsub.py: escape_filter)",
+  "source": "reference/python/extra/hardsub.py",
+  "source_sha256": "9d01e2466e64d1f1d0d3c30f94025a5222af18a6e63efd526f25a0ad67ee5b9e",
+  "python": "3.13.16",
+  "cases": [
+    {"input": "Ep 01.ass", "output": "Ep 01.ass"},
+    {"input": "Fonts", "output": "Fonts"},
+    {"input": "C:\\anime\\[Group] Show - 01.ass", "output": "C\\:/anime/\\[Group\\] Show - 01.ass"},
+    {"input": "a'b,c;d[e]f:g.ass", "output": "a\\'b\\,c\\;d\\[e\\]f\\:g.ass"},
+    {"input": "back\\slash", "output": "back/slash"},
+    {"input": "Тайтл, серия 1.ass", "output": "Тайтл\\, серия 1.ass"},
+    {"input": "", "output": ""}
+  ]
+}

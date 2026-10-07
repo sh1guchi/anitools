@@ -50,9 +50,12 @@ internal sealed class GoldenFile
     }
 
     /// <summary>SHA-256 оригинала с переводами строк LF — так же, как считает gen_golden.py.</summary>
-    public static string ReferenceSha256()
+    public static string ReferenceSha256() => Sha256Of(ReferenceSource);
+
+    /// <summary>SHA-256 файла репозитория (путь через «/») с переводами строк LF.</summary>
+    public static string Sha256Of(string relativePath)
     {
-        var bytes = File.ReadAllBytes(RepoRoot.Combine(ReferenceSource.Split('/')));
+        var bytes = File.ReadAllBytes(RepoRoot.Combine(relativePath.Split('/')));
         var lf = new List<byte>(bytes.Length);
         for (var i = 0; i < bytes.Length; i++)
         {
