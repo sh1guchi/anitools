@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.HardsubPageView"
+             x:DataType="p:HardsubPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
+      <StackPanel Spacing="6">
+        <TextBlock Text="Пары «видео + .ass с тем же именем» → папка «Hardsub» с вшитыми субтитрами." TextWrapping="Wrap" />
+        <TextBlock x:Name="FontsInfoText" Text="{Binding FontsInfo}" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap">
+          <Run Text="Кодирование (меняется в настройках):" />
+          <Run Text="{Binding Profile}" FontFamily="{StaticResource MonoFont}" />
+        </TextBlock>
+      </StackPanel>
+    </Border>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
+              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
+              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+    </Grid>
+    <c:PlanPreviewView DataContext="{Binding Preview}" />
+  </DockPanel>
+</UserControl>

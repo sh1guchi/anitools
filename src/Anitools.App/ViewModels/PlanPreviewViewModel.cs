@@ -15,7 +15,10 @@ public sealed partial class PlanRowViewModel : ObservableObject
         Size = size is { } bytes ? RuText.FileSize(bytes) : "";
         Target = item.Status switch
         {
-            PlanItemStatus.Run => "→ " + string.Join(", ", item.Outputs.Select(o => Relative(folder, o))),
+            // Пишется во временный «.part» и переименовывается после успеха — показываем итоговое имя
+            PlanItemStatus.Run when item.RenameOnSuccess is var (_, final) =>
+                "→ " + Relative(folder, final) + (item.Reason is { } note ? $" ({note})" : ""),
+            PlanItemStatus.Run => "→ " + string.Join(", ", item.Outputs.Select(o => Relative(folder, o))) + (item.Reason is { } why ? $" ({why})" : ""),
             PlanItemStatus.Skip => $"{item.Reason ?? "нечего делать"} — пропуск",
             _ => "✗ " + (item.Reason ?? "ошибка"),
         };

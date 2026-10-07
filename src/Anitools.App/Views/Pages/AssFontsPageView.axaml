@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:ot="using:Anitools.Core.Operations.TrackList"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.AssFontsPageView"
+             x:DataType="p:AssFontsPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
+      <StackPanel Spacing="8">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TextBlock Text="Своя папка:" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBox Grid.Column="1" Text="{Binding CustomDir}" />
+          <Button Grid.Column="2" Content="…" Command="{Binding BrowseCustomDirCommand}" Margin="4,0,0,0" />
+        </Grid>
+        <CheckBox Content="скачивать, чего нет (Google Fonts, dafont, 1001fonts) — и сохранять в свою папку" IsChecked="{Binding Download}" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap"
+                   Text="Поиск: своя папка → системные шрифты → скачивание. Без кириллицы шрифт не берётся, если есть кириллический с тем же именем. Архив — fonts.zip рядом с .ass." />
+      </StackPanel>
+    </Border>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <TextBlock Text="{Binding FilesCaption}" Classes="muted" VerticalAlignment="Center" />
+      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}" Content="Собрать fonts.zip"
+              IsEnabled="{Binding FontNames.Count, Converter={x:Static v:Converters.IsPositive}}" />
+    </Grid>
+    <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,12,0,0"
+            IsVisible="{Binding Result, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="6">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock x:Name="ResultText" Text="{Binding Result}" TextWrapping="Wrap" />
+          <Button Grid.Column="1" Content="Открыть папку" Command="{Binding OpenZipFolderCommand}"
+                  IsVisible="{Binding ZipPath, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding NotFound}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="p:MissingFontViewModel">
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
+                <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="16" Height="16" />
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <TextBlock Text="не найден нигде — поискать:" Classes="muted" VerticalAlignment="Center" />
+                <Button Classes="link" Content="fontsquirrel" Command="{Binding OpenFontSquirrelCommand}" />
+                <Button Classes="link" Content="fontsgeek" Command="{Binding OpenFontsGeekCommand}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+    <Border Classes="card">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="FontsList" ItemsSource="{Binding FontNames}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="x:String">
+              <Border Background="{StaticResource DividerBrush}" CornerRadius="4" Padding="8,3" Margin="0,0,6,6">
+                <TextBlock Text="{Binding}" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>

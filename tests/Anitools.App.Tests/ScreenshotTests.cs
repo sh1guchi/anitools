@@ -232,6 +232,132 @@ public sealed class ScreenshotTests
         dialog.Close();
     }
 
+    [AvaloniaFact]
+    public async Task Mka_mux_page()
+    {
+        using var app = new AppFixture().WithFiles(
+        [
+            .. Episodes.Take(6).Select(e => $"1. AniLibria.TV/{Path.GetFileNameWithoutExtension(e)}.mka"),
+            .. Episodes.Take(6).Select(e => $"2. DEEP/{Path.GetFileNameWithoutExtension(e)}.mka"),
+            .. Episodes.Take(6).Select(e => $"3. Original/{Path.GetFileNameWithoutExtension(e)}.mka"),
+        ]);
+        app.Runner.FfprobeJson = _ => """{"streams":[{"index":0,"codec_type":"audio","codec_name":"aac","channels":2}],"format":{}}""";
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.MkaMuxPage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Labels.Count == 3 && page.Preview.Rows.Count == 6, "озвучки");
+        page.Labels[2].Title = "Оригинальная";
+
+        Capture(window, "mka-mux");
+    }
+
+    [AvaloniaFact]
+    public async Task Audio_shift_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(8).Select(e => Path.ChangeExtension(e, ".mka")), "audio_fixed/Sousou no Frieren - 01.mka"]);
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.AudioShiftPage;
+        vm.AudioShiftPage.Seconds = "-1.5";
+        await AppFixture.WaitUntilAsync(() => vm.AudioShiftPage.Preview.Rows.Count == 8, "план");
+
+        Capture(window, "audio-shift");
+    }
+
+    [AvaloniaFact]
+    public async Task Audio_convert_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(6).Select(e => Path.ChangeExtension(e, ".flac")), "OST - 01.wav"]);
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.AudioConvertPage;
+        vm.AudioConvertPage.Format = Anitools.Core.Operations.AudioTools.AudioFormat.Opus;
+        await AppFixture.WaitUntilAsync(() => vm.AudioConvertPage.Preview.Rows.Count == 7, "план");
+
+        Capture(window, "audio-convert");
+    }
+
+    [AvaloniaFact]
+    public async Task Track_list_page()
+    {
+        using var app = new AppFixture().WithFiles("MKA/Sousou no Frieren - 01.mka", "Sousou no Frieren - 01.mka", "Sousou no Frieren - 02.mka");
+        app.Runner.FfprobeJson = _ => PagesTests.ThreeVoices;
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.TrackListPage;
+        await AppFixture.WaitUntilAsync(() => vm.TrackListPage.Rows.Count == 3, "дорожки");
+
+        Capture(window, "track-list");
+    }
+
+    [AvaloniaFact]
+    public async Task Sub_shift_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(6).Select(e => Path.ChangeExtension(e, ".ass")), .. Episodes.Take(3).Select(e => Path.ChangeExtension(e, ".srt"))]);
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.SubShiftPage;
+        await AppFixture.WaitUntilAsync(() => vm.SubShiftPage.Files.Count == 9, "файлы");
+
+        Capture(window, "sub-shift");
+    }
+
+    [AvaloniaFact]
+    public async Task Ass_edit_page()
+    {
+        using var app = new AppFixture();
+        string[] styles = ["Default", "Default - Italic", "Signs", "Signs - Top", "OP Romaji", "OP Russian", "ED Romaji", "ED Russian", "Notes"];
+        for (var i = 1; i <= 6; i++)
+        {
+            var lines = string.Concat(styles.Select((style, n) => $"Dialogue: 0,0:0{n}:01.00,0:0{n}:02.00,{style},,0,0,0,,Строка {n}\n"));
+            File.WriteAllText(Path.Combine(app.Folder, $"Sousou no Frieren - {i:00}.ass"),
+                "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n" + lines);
+        }
+
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.AssEditPage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Values.Count == styles.Length, "стили");
+        foreach (var value in page.Values.Where(v => v.Value.StartsWith("Default", StringComparison.Ordinal) || v.Value.StartsWith("Signs", StringComparison.Ordinal)))
+        {
+            value.IsChecked = true;
+        }
+
+        Capture(window, "ass-edit");
+    }
+
+    [AvaloniaFact]
+    public async Task Ass_fonts_page()
+    {
+        using var app = new AppFixture();
+        string[] fonts = ["Arial", "Times New Roman", "Komika Axis", "Calibri", "Segoe Print", "Trebuchet MS", "Georgia", "Bad Script", "Marck Script", "Ubuntu"];
+        File.WriteAllText(Path.Combine(app.Folder, "Sousou no Frieren - 01.ass"),
+            "[V4+ Styles]\nFormat: Name, Fontname, Fontsize\n" + string.Concat(fonts.Select((f, i) => $"Style: S{i},{f},48\n")));
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.AssFontsPage;
+        await AppFixture.WaitUntilAsync(() => vm.AssFontsPage.FontNames.Count == fonts.Length, "шрифты");
+
+        Capture(window, "ass-fonts");
+    }
+
+    [AvaloniaFact]
+    public async Task Video_fonts_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes]);
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.VideoFontsPage;
+        await AppFixture.WaitUntilAsync(() => vm.VideoFontsPage.Videos.Count == 12, "видео");
+
+        Capture(window, "video-fonts");
+    }
+
+    [AvaloniaFact]
+    public async Task Hardsub_page()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(6), .. Episodes.Take(5).Select(e => Path.ChangeExtension(e, ".ass")), "Fonts/KOMIKAX_.ttf", "Hardsub/Sousou no Frieren - 01.mkv"]);
+        var (vm, window) = await OpenAsync(app);
+        vm.SelectedNav = vm.HardsubPage;
+        await AppFixture.WaitUntilAsync(() => vm.HardsubPage.Preview.Rows.Count == 5, "пары");
+
+        Capture(window, "hardsub");
+    }
+
     private static async Task<(MainWindowViewModel Vm, MainWindow Window)> OpenAsync(AppFixture app)
     {
         var vm = app.CreateViewModel();

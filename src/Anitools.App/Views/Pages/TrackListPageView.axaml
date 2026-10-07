@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:p="using:Anitools.App.ViewModels.Pages"
+             xmlns:ot="using:Anitools.Core.Operations.TrackList"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Pages.TrackListPageView"
+             x:DataType="p:TrackListPageViewModel">
+  <DockPanel Margin="24,18,24,16">
+    <c:PageHeader DockPanel.Dock="Top" />
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,12">
+      <TextBlock Text="Файл:" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <ComboBox x:Name="FileBox" Grid.Column="1" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" HorizontalAlignment="Stretch" />
+    </Grid>
+    <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto" Margin="0,12,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <TextBlock Text="Список для копирования:" VerticalAlignment="Center" />
+        <RadioButton GroupName="copyStyle" Content="• тайтл" IsChecked="{Binding IsBullets}" />
+        <RadioButton x:Name="NumbersRadio" GroupName="copyStyle" Content="1. тайтл" IsChecked="{Binding IsNumbers}" />
+        <RadioButton GroupName="copyStyle" Content="просто текст" IsChecked="{Binding IsPlain}" />
+      </StackPanel>
+      <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+        <TextBox x:Name="CopyBox" Text="{Binding CopyText}" IsReadOnly="True" AcceptsReturn="True" MaxHeight="160" />
+        <Button Grid.Column="1" Classes="accent" Margin="8,0,0,0" VerticalAlignment="Top" Command="{Binding CopyCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <mi:MaterialIcon Kind="ContentCopy" />
+            <TextBlock Text="Копировать" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Grid>
+    <Border Classes="card">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Grid.IsSharedSizeScope="True">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="ot:TrackRow">
+              <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="30" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="T" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="C" />
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="Ch" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Number}" Classes="muted" />
+                <TextBlock Grid.Column="1" Text="{Binding Title, FallbackValue='—', TargetNullValue='—'}" FontWeight="SemiBold" Margin="0,0,18,0" />
+                <TextBlock Grid.Column="2" Text="{Binding Language}" Classes="muted" Margin="0,0,18,0" />
+                <TextBlock Grid.Column="3" Text="{Binding Codec}" Margin="0,0,18,0" />
+                <TextBlock Grid.Column="4" Text="{Binding Channels}" Margin="0,0,18,0" />
+                <TextBlock Grid.Column="5" Text="по умолчанию" Classes="muted small" IsVisible="{Binding IsDefault}" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>
