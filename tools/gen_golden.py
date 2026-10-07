@@ -569,6 +569,21 @@ def g_shiki_original_name():
     return cases
 
 
+# ─── Строки Python ───────────────────────────────────────────────────────────
+
+@golden("str_casing", "str.lower() и str.casefold() для всех символов, которые они меняют: код → [lower, casefold]")
+def g_str_casing():
+    cases = []
+    for cp in range(sys.maxunicode + 1):
+        if 0xD800 <= cp <= 0xDFFF:
+            continue
+        c = chr(cp)
+        lower, folded = c.lower(), c.casefold()
+        if lower != c or folded != c:
+            cases.append({"input": cp, "output": [lower, folded]})
+    return cases
+
+
 # ─── Константы ───────────────────────────────────────────────────────────────
 
 @golden("constants", "Константы оригинала, которые C# должен повторить один в один")

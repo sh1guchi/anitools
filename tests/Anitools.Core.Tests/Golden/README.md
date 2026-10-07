@@ -40,7 +40,8 @@ python3 tools/gen_golden.py --check  # проверить, что эталоны
 - Дробные числа (CQ, битрейты) сравнивать с относительным допуском ~1e-9: `log` в разных
   библиотеках C может отличаться на последний бит. Python 3.12+ суммирует `sum()` с компенсацией
   (алгоритм Ноймайера) — для среднего битрейта повторять так же.
-- `casefold()` в Python ≠ `ToLowerInvariant()` (`ß` → `ss`).
+- `casefold()` в Python ≠ `ToLowerInvariant()` (`ß` → `ss`) — в C# это `PyText.CaseFold`/`PyText.Lower`,
+  сверенные с Python для всех символов (эталон `str_casing`).
 - `\w`, `\s`, `\d` в регулярках Python работают по правилам Python (`\w` = буквы + цифры + `_`,
   без диакритических знаков; `\d` — любые десятичные цифры Unicode, `int("０３") == 3`).
 - `urllib.parse.quote` не кодирует `/` (а `Uri.EscapeDataString` кодирует).
