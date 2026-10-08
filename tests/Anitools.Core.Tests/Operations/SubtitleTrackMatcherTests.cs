@@ -8,7 +8,7 @@ namespace Anitools.Core.Tests.Operations;
 public sealed class SubtitleTrackMatcherTests
 {
     [Fact]
-    public void CodecIdToExtension_matches_original() =>
+    public void CodecIdToExtension_matches_golden() =>
         GoldenAssert.All("codec_id_to_ext", input => SubtitleTrackMatcher.CodecIdToExtension(input.GetString()!));
 
     [Fact]
@@ -22,12 +22,12 @@ public sealed class SubtitleTrackMatcherTests
 
         SubtitleTrack[] tracks = [new(2, "English"), new(3, "Полные"), new(4, "Надписи")];
         Assert.Equal((tracks[2], tracks[1]), SubtitleTrackMatcher.GuessRoles(tracks));
-        // ничего не похоже — первая дорожка в надписи, как раньше
+        // ничего не похоже — первая дорожка в надписи
         Assert.Equal((tracks[0], (SubtitleTrack?)null), SubtitleTrackMatcher.GuessRoles([tracks[0]]));
     }
 
     [Fact]
-    public void FindByTitle_matches_original()
+    public void FindByTitle_matches_golden()
     {
         var fixtures = Fixtures("subtitle_track_by_title");
         GoldenAssert.All("subtitle_track_by_title", input => SubtitleTrackMatcher.FindByTitle(
@@ -36,7 +36,7 @@ public sealed class SubtitleTrackMatcherTests
     }
 
     [Fact]
-    public void FindByLanguage_matches_original()
+    public void FindByLanguage_matches_golden()
     {
         var fixtures = Fixtures("subtitle_track_by_lang");
         GoldenAssert.All("subtitle_track_by_lang", input => SubtitleTrackMatcher.FindByLanguage(
@@ -46,7 +46,7 @@ public sealed class SubtitleTrackMatcherTests
     }
 
     [Fact]
-    public void Languages_match_original() =>
+    public void Languages_match_golden() =>
         GoldenAssert.All("sub_langs", input =>
             SubtitleTrackMatcher.Languages(Track(0, input)).Order(TextUtils.CodePointComparer).ToList());
 

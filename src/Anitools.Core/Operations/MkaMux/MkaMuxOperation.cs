@@ -10,7 +10,7 @@ public sealed record MkaSource(string RelativePath, string FullPath, string? Tit
 {
     public string Name => Path.GetFileName(FullPath);
 
-    /// <summary>Метка озвучки (voice_label): папка «N. Имя» → тайтл дорожки → последний [тег] → остаток имени.</summary>
+    /// <summary>Метка озвучки: папка «N. Имя» → тайтл дорожки → последний [тег] → остаток имени.</summary>
     public string Label => MkaNames.VoiceFolder(RelativePath).Label ?? MkaNames.LabelFromFile(Name, Title, MkaNames.EpisodeBase(Name));
 
     /// <summary>Номер для порядка по умолчанию: «N. » у папки, иначе у файла.</summary>
@@ -46,7 +46,7 @@ public sealed record MkaLabelOptions
 }
 
 /// <summary>
-/// Сборка озвучек в .mka (mka_muxer.py, режим 1): аудиофайлы папки и подпапок (структура п.2 «N. Озвучка\…»)
+/// Сборка озвучек в .mka: аудиофайлы папки и подпапок (структура «Только аудио»: «N. Озвучка\…»)
 /// группируются по номеру серии, на каждую серию — один MKA\&lt;имя&gt;.mka со всеми озвучками дорожками
 /// (без перекодирования). Порядок, тайтлы и язык задаются один раз по меткам озвучек.
 /// </summary>
@@ -187,7 +187,7 @@ public static class MkaMuxOperation
     }
 
     /// <summary>
-    /// ffmpeg (mux_group): все входы, каждая их аудиодорожка — отдельной дорожкой; первая — по умолчанию.
+    /// Команда ffmpeg: все входы, каждая их аудиодорожка — отдельной дорожкой; первая — по умолчанию.
     /// Язык метки уточняется тайтлом самого файла (англ./ориг. дорожка важнее метки).
     /// </summary>
     private static IReadOnlyList<string> Command(IReadOnlyList<MkaSource> files, MkaLabelOptions options, string output)

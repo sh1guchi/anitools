@@ -6,7 +6,7 @@ namespace Anitools.Core.Tests.Processes;
 public sealed class CommandLineAndProgressTests
 {
     [Fact]
-    public void CommandLine_matches_python_list2cmdline() =>
+    public void CommandLine_matches_golden() =>
         GoldenAssert.All("list2cmdline", input => CommandLine.Format(input.EnumerateArray().Select(a => a.GetString()!)));
 
     [Fact]

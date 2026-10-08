@@ -1,6 +1,6 @@
 {
   "function": "detect_lang",
-  "description": "Язык по метке/тайтлу дорожки: jpn/eng/null (py:1754)",
+  "description": "Язык по метке/тайтлу дорожки: jpn/eng/null",
   "cases": [
     {"input": "Оригинальная", "output": "jpn"},
     {"input": "Original", "output": "jpn"},

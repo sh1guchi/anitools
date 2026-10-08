@@ -1,6 +1,6 @@
 {
   "function": "shikimori_original_name",
-  "description": "Оригинальное название по ID (py:651)",
+  "description": "Оригинальное название по ID",
   "cases": [
     {"input": {"id": "52991", "response": {"id": 52991, "name": "Sousou no Frieren", "russian": "Провожающая в последний путь Фрирен"}}, "api_paths": ["animes/52991"], "output": "Sousou no Frieren"},
     {"input": {"id": "1", "response": {"id": 1, "name": "", "russian": "Только русское"}}, "api_paths": ["animes/1"], "output": null},

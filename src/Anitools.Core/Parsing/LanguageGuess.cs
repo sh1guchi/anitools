@@ -9,7 +9,7 @@ public static partial class LanguageGuess
     private static readonly string[] English = ["english", "англ"];
 
     /// <summary>
-    /// _detect_lang (py:1754): «Оригинальная / Original / Japan / JP» → jpn, «ENG / English / Англ» → eng, иначе null.
+    /// Язык по метке: «Оригинальная / Original / Japan / JP» → jpn, «ENG / English / Англ» → eng, иначе null.
     /// </summary>
     public static string? Detect(string? text)
     {

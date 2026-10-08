@@ -15,7 +15,7 @@ public static class HlsJobs
 {
     /// <param name="shutdown">Выключить компьютер, если всё прошло без отмены; null — не выключать.</param>
     /// <param name="cleanupOrphans">
-    /// Снять RAM-диски, оставшиеся от аварийно завершённого запуска (как _setup_work_dir оригинала — перед каждым HLS,
+    /// Снять RAM-диски, оставшиеся от аварийно завершённого запуска (перед каждым HLS,
     /// при любом выборе временной папки); возвращает снятые буквы. null — не нужно (не Windows).
     /// </param>
     public static Func<JobContext, Task<JobOutcome>> Run(

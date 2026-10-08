@@ -1,6 +1,6 @@
 {
   "function": "norm_title",
-  "description": "Нормализация для сравнения названий при ранжировании (py:510)",
+  "description": "Нормализация для сравнения названий при ранжировании",
   "cases": [
     {"input": "Sousou no Frieren", "output": "sousou no frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "sousou no frieren 2nd season"},

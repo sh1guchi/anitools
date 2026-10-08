@@ -6,11 +6,11 @@ namespace Anitools.Core.Tests.Parsing;
 public sealed class AnitomyTests
 {
     [Fact]
-    public void Parse_matches_original() =>
+    public void Parse_matches_golden() =>
         GoldenAssert.All("anitomy_parse", input => Anitomy.Parse(input.GetString()).ToDictionary());
 
     [Fact]
-    public void Keywords_match_original()
+    public void Keywords_match_golden()
     {
         var expected = Constant("_AT_KEYWORDS");
         Assert.Equal(

@@ -7,7 +7,7 @@ using Anitools.Core.Templates;
 
 namespace Anitools.Core.Operations.Rename;
 
-/// <summary>Настройки п.5 — те же вопросы, что в оригинале.</summary>
+/// <summary>Настройки «Переименовать».</summary>
 public sealed record RenameOptions
 {
     /// <summary>Базовое название как ввели или как пришло с Shikimori; к имени файла приводится само («:» → « - » и т.п.).</summary>
@@ -19,7 +19,7 @@ public sealed record RenameOptions
     /// <summary>Приписка через точку: «надписи» → «Тайтл - 01.надписи.ass»; ведущая точка убирается.</summary>
     public string? Suffix { get; init; }
 
-    /// <summary>Шаблон имени без расширения (<see cref="RenameTemplate"/>); null — стандартный, как в оригинале.</summary>
+    /// <summary>Шаблон имени без расширения (<see cref="RenameTemplate"/>); null — стандартный (<see cref="RenameTemplate.Default"/>).</summary>
     public string? Template { get; init; }
 
     /// <summary>Сезон для {сезон}.</summary>
@@ -32,7 +32,7 @@ public sealed record RenameOptions
     public IReadOnlyDictionary<string, MediaInfo>? Media { get; init; }
 
     /// <summary>
-    /// Номера, введённые вручную: файл → текст. Число — номер серии как есть (без сдвига нумерации, как в оригинале);
+    /// Номера, введённые вручную: файл → текст. Число — номер серии как есть (без сдвига нумерации);
     /// пусто или не число — файл пропускается. Файлов нет в словаре — номер, найденный автоматически.
     /// </summary>
     public IReadOnlyDictionary<string, string>? ManualNumbers { get; init; }
@@ -63,8 +63,7 @@ public sealed record RenameRow(string File, string? Episode, string? NewName, Re
 public sealed record RenameResult(IReadOnlyList<(string Old, string New)> Renamed, IReadOnlyList<(string File, string Error)> Failed, string? JournalPath);
 
 /// <summary>
-/// П.5 «Переименовать файлы» (rename_files_by_pattern, py:3199): «Название - 01.ext» по номеру серии;
-/// новое имя — по шаблону (<see cref="RenameTemplate"/>), стандартный даёт то же, что оригинал.
+/// «Переименовать»: «Название - 01.ext» по номеру серии; новое имя — по шаблону (<see cref="RenameTemplate"/>).
 /// </summary>
 public static partial class RenameOperation
 {
@@ -78,7 +77,7 @@ public static partial class RenameOperation
         HintVideoExtensions.Contains(MediaFiles.Suffix(file), StringComparer.OrdinalIgnoreCase)
         || MediaFiles.VideoExtensions.Contains(MediaFiles.Suffix(file), StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Все файлы папки, кроме .bat, по коду символа (как sort() в оригинале).</summary>
+    /// <summary>Все файлы папки, кроме .bat, по коду символа.</summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
         Directory.EnumerateFiles(folder)
             .Select(Path.GetFileName)
@@ -129,7 +128,7 @@ public static partial class RenameOperation
     /// <summary>Номер, найденный автоматически (как в режиме «автоматически»).</summary>
     public static string? AutoEpisode(string file, int numberingStart) => Adjust(EpisodeNumber.Extract(file), numberingStart);
 
-    /// <summary>Номер, который ручной режим оригинала предлагает по Enter: имя без «.надписи.ass».</summary>
+    /// <summary>Подсказка для ручного ввода: номер по имени без «.надписи.ass».</summary>
     public static string? ManualSuggestion(string file, int numberingStart) =>
         Adjust(EpisodeNumber.Extract(file.Replace(".надписи.ass", "", StringComparison.Ordinal)), numberingStart);
 

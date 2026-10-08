@@ -260,7 +260,7 @@
                     <TextBox Text="{Binding AudioShiftBitrate}" Width="70" HorizontalAlignment="Left" />
                     <TextBox Text="{Binding AudioShiftWorkers}" Width="56" HorizontalAlignment="Left" />
                   </StackPanel>
-                  <CheckBox Content="перекодировать в AAC (как в оригинале), а не сдвигать без потерь" IsChecked="{Binding AudioShiftReencode}" />
+                  <CheckBox Content="перекодировать в AAC, а не сдвигать без потерь" IsChecked="{Binding AudioShiftReencode}" />
                 </StackPanel>
               </HeaderedContentControl>
               <HeaderedContentControl Classes="field" Header="Перекодирование аудио: формат · битрейт · каналов · файлов сразу">

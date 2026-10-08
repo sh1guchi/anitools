@@ -1,6 +1,6 @@
 namespace Anitools.Core.WorkDir;
 
-/// <summary>Куда писать временные файлы HLS (выбор §2.5: RAM-диск / папка / «как раньше»).</summary>
+/// <summary>Куда писать временные файлы HLS (выбор §2.5: RAM-диск / папка / рядом с выходом).</summary>
 public enum WorkDirMode
 {
     /// <summary>RAM-диск ImDisk: SSD не изнашивается; создаётся перед работой и снимается после.</summary>
@@ -9,7 +9,7 @@ public enum WorkDirMode
     /// <summary>Обычная папка (HDD/SSD).</summary>
     Folder,
 
-    /// <summary>Рядом с выходом, в hls_multi\&lt;тайтл&gt;\&lt;серия&gt; — «как раньше».</summary>
+    /// <summary>Рядом с выходом, в hls_multi\&lt;тайтл&gt;\&lt;серия&gt;.</summary>
     NearOutput,
 }
 
@@ -74,7 +74,7 @@ public interface IWorkDirProvider
     Task<WorkDirLease> AcquireAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>«Как раньше»: временные файлы рядом с выходом.</summary>
+/// <summary>Временные файлы рядом с выходом (отдельной временной папки нет).</summary>
 public sealed class NearOutputWorkDir : IWorkDirProvider
 {
     public Task<WorkDirLease> AcquireAsync(CancellationToken cancellationToken = default) =>

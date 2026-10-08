@@ -1,6 +1,6 @@
 {
   "function": "mka_strip_trailing_episode",
-  "description": "Хвостовой номер серии в метке озвучки (mka_muxer.py: _strip_trailing_episode)",
+  "description": "Хвостовой номер серии в метке озвучки",
   "cases": [
     {"input": {"label": "AniFilm 01", "ep": "01"}, "output": "AniFilm"},
     {"input": {"label": "AniFilm 01", "ep": "02"}, "output": "AniFilm 01"},

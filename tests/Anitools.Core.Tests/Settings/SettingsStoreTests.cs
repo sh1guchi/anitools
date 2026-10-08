@@ -10,7 +10,7 @@ namespace Anitools.Core.Tests.Settings;
 public sealed class SettingsStoreTests
 {
     [Fact]
-    public void Missing_file_gives_original_defaults()
+    public void Missing_file_gives_defaults()
     {
         using var dir = new TempDir();
         var (settings, error) = new SettingsStore(dir.Combine("anitools", "settings.json")).Load();

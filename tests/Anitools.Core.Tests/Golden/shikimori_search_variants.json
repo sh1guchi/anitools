@@ -1,6 +1,6 @@
 {
   "function": "shikimori_search_variants",
-  "description": "Запасные запросы к Shikimori (py:529): пути API по порядку, если всё пусто",
+  "description": "Запасные запросы к Shikimori: пути API по порядку, если всё пусто",
   "cases": [
     {"input": "Sousou no Frieren", "api_paths": ["animes?search=Sousou%20no%20Frieren&limit=15&order=popularity"], "output": []},
     {"input": "Re:Zero kara Hajimeru Isekai Seikatsu", "api_paths": ["animes?search=Re%3AZero%20kara%20Hajimeru%20Isekai%20Seikatsu&limit=15&order=popularity", "animes?search=Re%20Zero%20kara%20Hajimeru%20Isekai%20Seikatsu&limit=15&order=popularity", "animes?search=Re%20Zero%20kara&limit=15&order=popularity"], "output": []},

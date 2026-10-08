@@ -11,13 +11,13 @@ using Anitools.Core.Tests.Fixtures;
 namespace Anitools.Core.Tests.Operations;
 
 /// <summary>
-/// Сценарии из оригинала (эталон operation_scenarios): для той же папки и тех же ответов на вопросы
-/// C#-план должен выдать те же команды ffmpeg / mkvextract.
+/// Сценарии операций (эталон operation_scenarios): для папки и настроек из эталона план должен выдать
+/// те же команды ffmpeg / mkvextract.
 /// </summary>
 public sealed class OperationScenarioTests
 {
     [Fact]
-    public void Plans_issue_the_same_commands_as_original() =>
+    public void Plans_issue_the_same_commands_as_golden() =>
         GoldenAssert.All("operation_scenarios", input => Run(input).GetAwaiter().GetResult());
 
     private static async Task<object> Run(JsonElement input)
@@ -63,7 +63,7 @@ public sealed class OperationScenarioTests
             if (input.GetProperty("operation").GetString() == "remux")
             {
                 // Намеренное отличие (docs/PLAN.md §2.8 #7): «-map 0:a?» вместо «0:a», чтобы не падать на файлах без звука.
-                // Остальную команду сверяем с оригиналом.
+                // Остальную команду сверяем с эталоном.
                 Assert.Contains("0:a?", args);
                 args = args.Select(a => a == "0:a?" ? "0:a" : a).ToList();
             }

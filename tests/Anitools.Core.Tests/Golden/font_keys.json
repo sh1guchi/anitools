@@ -1,6 +1,6 @@
 {
   "function": "font_keys",
-  "description": "Ключи имён шрифтов (ass_fonts.py: font_key, normalize, slugify, safe_filename)",
+  "description": "Ключи имён шрифтов: ключ, нормализация, slug через «_» и «-», безопасное и очищенное имя",
   "cases": [
     {"input": "Arial", "output": {"font_key": "arial", "normalize": "arial", "slug_": "arial", "slug-": "arial", "safe": "Arial", "clean": "Arial"}},
     {"input": "  Times   New\tRoman ", "output": {"font_key": "times new roman", "normalize": "timesnewroman", "slug_": "times_new_roman", "slug-": "times-new-roman", "safe": "TimesNewRoman", "clean": "Times   New\tRoman"}},

@@ -1,6 +1,6 @@
 {
   "function": "extract_episode_number",
-  "description": "Шаг 4 extract_episode_number_smart, старый список (py:3034)",
+  "description": "Номер серии, простой разбор: список регулярок, затем первое число в имени",
   "cases": [
     {"input": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "output": "01"},
     {"input": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv", "output": "28"},

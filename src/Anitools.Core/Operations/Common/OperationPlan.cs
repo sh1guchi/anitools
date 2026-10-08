@@ -2,7 +2,7 @@ using Anitools.Core.Processes;
 
 namespace Anitools.Core.Operations.Common;
 
-/// <summary>Внешняя команда плана: программа и аргументы — ровно как запускает их оригинал.</summary>
+/// <summary>Внешняя команда плана: программа и аргументы по одному.</summary>
 public sealed record PlannedCommand(Tool Tool, IReadOnlyList<string> Arguments)
 {
     /// <summary>Коды выхода «с предупреждениями»: не ошибка, если все выходные файлы на месте и не пустые (mkvextract: 1).</summary>

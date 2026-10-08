@@ -4,17 +4,17 @@ using Anitools.Core.Parsing;
 
 namespace Anitools.Core.Operations.Fonts;
 
-/// <summary>Имена шрифтов и разбор .ass (ass_fonts.py).</summary>
+/// <summary>Имена шрифтов и разбор .ass.</summary>
 public static partial class FontText
 {
-    /// <summary>Байты 0x80–0xFF в MacRoman — таблица кодека mac_roman Python.</summary>
+    /// <summary>Байты 0x80–0xFF в MacRoman.</summary>
     private const string MacRomanHigh =
         "ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü"
         + "†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø"
         + "¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄€‹›ﬁﬂ"
         + "‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ";
 
-    /// <summary>Байты 0x80–0xFF в cp1251 — таблица кодека Python (0x98 не определён → U+FFFD, как errors="replace").</summary>
+    /// <summary>Байты 0x80–0xFF в cp1251 (0x98 не определён → U+FFFD).</summary>
     private const string Cp1251High =
         "ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—�™љ›њќћџ"
         + " ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕї"
@@ -23,23 +23,23 @@ public static partial class FontText
 
     private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
-    /// <summary>Ключ сравнения имён (font_key): пробелы схлопнуты, casefold — libass сравнивает без учёта регистра.</summary>
+    /// <summary>Ключ сравнения имён: пробелы схлопнуты, свёртка регистра — libass сравнивает без учёта регистра.</summary>
     public static string FontKey(string name) => TextUtils.CaseFold(string.Join(' ', SplitWhitespace(name)));
 
-    /// <summary>Имя файла шрифта для запасного поиска (normalize): без пробелов, «-» и «_», в нижнем регистре.</summary>
+    /// <summary>Имя файла шрифта для запасного поиска: без пробелов, «-» и «_», в нижнем регистре.</summary>
     public static string Normalize(string s) => TextUtils.Lower(NormalizeRegex().Replace(s, ""));
 
-    /// <summary>Слаг для dafont/1001fonts (slugify): всё, кроме a–z и 0–9, → разделитель.</summary>
+    /// <summary>Слаг для dafont/1001fonts: всё, кроме a–z и 0–9, → разделитель.</summary>
     public static string Slugify(string name, char separator) =>
         SlugRegex().Replace(TextUtils.Lower(name), separator.ToString()).Trim(separator);
 
-    /// <summary>Имя файла для скачанного шрифта (safe_filename): без пробелов и недопустимых символов.</summary>
+    /// <summary>Имя файла для скачанного шрифта: без пробелов и недопустимых символов.</summary>
     public static string SafeFileName(string s) => SafeFileNameRegex().Replace(s, "");
 
-    /// <summary>«@» в начале — вертикальный вариант того же шрифта (clean_font_name).</summary>
+    /// <summary>Имя без «@» в начале (вертикальный вариант того же шрифта) и без пробелов по краям.</summary>
     public static string CleanFontName(string name) => TextUtils.Strip(TextUtils.Strip(name).TrimStart('@'));
 
-    /// <summary>Текст .ass (read_ass): BOM UTF-16 → UTF-16, иначе UTF-8 (BOM снимается), не UTF-8 — cp1251.</summary>
+    /// <summary>Текст .ass: BOM UTF-16 → UTF-16, иначе UTF-8 (BOM снимается), не UTF-8 — cp1251.</summary>
     public static string ReadAss(byte[] raw)
     {
         if (raw.Length >= 2 && ((raw[0] == 0xFF && raw[1] == 0xFE) || (raw[0] == 0xFE && raw[1] == 0xFF)))
@@ -60,7 +60,7 @@ public static partial class FontText
     }
 
     /// <summary>
-    /// Шрифты .ass (parse_font_names): поле Fontname стилей [V4+ Styles]/[V4 Styles] (номер — по строке Format, по
+    /// Шрифты .ass: поле Fontname стилей [V4+ Styles]/[V4 Styles] (номер — по строке Format, по
     /// умолчанию 1) и теги \fn в строках Dialogue. Пустой \fn — сброс, не шрифт. Порядок — первого появления.
     /// </summary>
     public static IReadOnlyList<string> ParseFontNames(string text)
@@ -124,7 +124,7 @@ public static partial class FontText
         }
     }
 
-    /// <summary>UTF-16BE с errors="ignore": непарные суррогаты и нечётный последний байт пропускаются.</summary>
+    /// <summary>UTF-16BE без ошибок разбора: непарные суррогаты и нечётный последний байт пропускаются.</summary>
     internal static string DecodeUtf16BeIgnore(ReadOnlySpan<byte> raw)
     {
         var text = new StringBuilder(raw.Length / 2);

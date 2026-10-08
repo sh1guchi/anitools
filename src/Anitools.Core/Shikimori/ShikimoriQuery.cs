@@ -4,12 +4,12 @@ using Anitools.Core.Parsing;
 namespace Anitools.Core.Shikimori;
 
 /// <summary>
-/// Что искать на Shikimori для названия группы (py:566–581): тип (OVA/ONA/Special/Movie → kind), сезон и запрос
+/// Что искать на Shikimori для названия группы: тип (OVA/ONA/Special/Movie → kind), сезон и запрос
 /// без сезона/части. Сезон и тип не ищутся, а учитываются при ранжировании.
 /// </summary>
 public sealed partial record ShikimoriQuery(IReadOnlyList<string> Kinds, string BaseTitle, int Season, string SearchText)
 {
-    /// <summary>Метка группы → kind на Shikimori (_SHIKI_KINDS).</summary>
+    /// <summary>Метка группы → kind на Shikimori.</summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> KindsByLabel { get; } = new Dictionary<string, IReadOnlyList<string>>
     {
         ["OVA"] = ["ova"],
@@ -27,7 +27,7 @@ public sealed partial record ShikimoriQuery(IReadOnlyList<string> Kinds, string 
         return new ShikimoriQuery(kinds, baseTitle, TitleText.Season(baseTitle), clean.Length > 0 ? clean : baseTitle);
     }
 
-    /// <summary>Запасные запросы (_search_shikimori_smart): как есть → без знаков препинания → первые три слова.</summary>
+    /// <summary>Запасные запросы: как есть → без знаков препинания → первые три слова.</summary>
     public static IReadOnlyList<string> SearchVariants(string query)
     {
         var variants = new List<string> { query };
@@ -47,7 +47,7 @@ public sealed partial record ShikimoriQuery(IReadOnlyList<string> Kinds, string 
     }
 
     /// <summary>
-    /// Ранжирование (_rank_shikimori): +4 — нормализованный запрос входит в название, +2 — совпал сезон,
+    /// Ранжирование: +4 — нормализованный запрос входит в название, +2 — совпал сезон,
     /// +1 — подходит тип; при равенстве — исходный порядок (популярность).
     /// </summary>
     public IReadOnlyList<ShikimoriAnime> Rank(IReadOnlyList<ShikimoriAnime> results) => Rank(results, SearchText, Season, Kinds);

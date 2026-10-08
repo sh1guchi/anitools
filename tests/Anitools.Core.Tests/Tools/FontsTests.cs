@@ -9,13 +9,13 @@ using Anitools.Core.Tests.Fixtures;
 
 namespace Anitools.Core.Tests.Tools;
 
-/// <summary>Шрифты для .ass — по эталонам ass_fonts.py (сняты с fontTools: кириллица в cmap — настоящая проверка).</summary>
+/// <summary>Шрифты для .ass — по эталонам (кириллица проверяется по cmap шрифта).</summary>
 public sealed class FontsTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public void Font_names_face_and_cyrillic_match_original() =>
+    public void Font_names_face_and_cyrillic_match_golden() =>
         GoldenAssert.All("sfnt_font_names", input =>
         {
             var data = Convert.FromBase64String(input.GetProperty("base64").GetString()!);
@@ -32,7 +32,7 @@ public sealed class FontsTests
         });
 
     [Fact]
-    public void Font_keys_match_original() =>
+    public void Font_keys_match_golden() =>
         GoldenAssert.All("font_keys", input =>
         {
             var s = input.GetString()!;
@@ -48,18 +48,18 @@ public sealed class FontsTests
         });
 
     [Fact]
-    public void Ass_font_names_match_original() =>
+    public void Ass_font_names_match_golden() =>
         GoldenAssert.All("ass_font_names", input =>
             FontText.ParseFontNames(FontText.ReadAss(Convert.FromBase64String(input.GetProperty("base64").GetString()!))).Order(TextUtils.CodePointComparer));
 
     [Fact]
-    public void Fonts_from_zip_match_original() =>
+    public void Fonts_from_zip_match_golden() =>
         GoldenAssert.All("fonts_from_zip", input =>
             Digests(FontDownloader.FontsFromZip(Convert.FromBase64String(input.GetProperty("base64").GetString()!), input.GetProperty("font").GetString()!)));
 
     /// <summary>Ответы серверов проигрываются по URL; сверяются запросы (адрес и User-Agent) и итог.</summary>
     [Fact]
-    public void Downloads_match_original() =>
+    public void Downloads_match_golden() =>
         GoldenAssert.All("font_downloads", input =>
         {
             var handler = new ReplayHandler(input.GetProperty("responses"));
@@ -85,9 +85,9 @@ public sealed class FontsTests
             return output;
         });
 
-    /// <summary>Сценарии оригинала целиком: свой и системные шрифты, скачивание, архив, сохранение в свою папку.</summary>
+    /// <summary>Сценарии из эталона целиком: свой и системные шрифты, скачивание, архив, сохранение в свою папку.</summary>
     [Fact]
-    public void Scenarios_build_the_same_fonts_zip_as_original()
+    public void Scenarios_build_the_same_fonts_zip_as_golden()
     {
         var samples = GoldenFile.Load("ass_fonts_scenarios").Root.GetProperty("fixtures");
         GoldenAssert.All("ass_fonts_scenarios", input => RunScenarioAsync(input, samples).GetAwaiter().GetResult());

@@ -1,6 +1,6 @@
 {
   "function": "external_audio_matches",
-  "description": "Внешний аудиофайл относится к серии base (py:1707)",
+  "description": "Относится ли внешний аудиофайл к серии base_name",
   "cases": [
     {"input": {"filename": "Title - 05.AniLibria.TV.mka", "base_name": "Title - 05"}, "output": true},
     {"input": {"filename": "Title - 05.mka", "base_name": "Title - 05"}, "output": true},

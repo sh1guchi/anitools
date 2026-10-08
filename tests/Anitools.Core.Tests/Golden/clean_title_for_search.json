@@ -1,6 +1,6 @@
 {
   "function": "clean_title_for_search",
-  "description": "Название без сезона/части для поиска на Shikimori (py:545)",
+  "description": "Название без сезона/части для поиска на Shikimori",
   "cases": [
     {"input": "Sousou no Frieren", "output": "Sousou no Frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "Sousou no Frieren"},

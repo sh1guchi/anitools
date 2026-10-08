@@ -6,14 +6,14 @@ using Anitools.Core.Processes;
 namespace Anitools.Core.Operations.AudioTools;
 
 /// <summary>
-/// Сдвиг аудио: секунды (плюс — звук позже, минус — обрезать начало), перекодировать ли в AAC (как в оригинале;
-/// по умолчанию нет — без потерь), битрейт AAC, сколько файлов сразу.
+/// Сдвиг аудио: секунды (плюс — звук позже, минус — обрезать начало), перекодировать ли в AAC
+/// (по умолчанию нет — без потерь), битрейт AAC, сколько файлов сразу.
 /// </summary>
 public sealed record AudioShiftOptions
 {
     public double Seconds { get; init; } = 1.0;
 
-    /// <summary>false — без перекодирования (mkvmerge --sync), true — в AAC, как delay+1s.py / delay-1s.py.</summary>
+    /// <summary>false — без перекодирования (mkvmerge --sync), true — в AAC (ffmpeg).</summary>
     public bool Reencode { get; init; }
 
     public string Bitrate { get; init; } = "256k";
@@ -22,11 +22,11 @@ public sealed record AudioShiftOptions
 }
 
 /// <summary>
-/// Сдвиг аудио (delay+1s.py / delay-1s.py): файлы папки → audio_fixed\&lt;имя&gt;.mka.
+/// Сдвиг аудио: файлы папки → audio_fixed\&lt;имя&gt;.mka.
 /// По умолчанию без перекодирования: mkvmerge --sync сдвигает метки времени всех дорожек (плюс — звук начинается
 /// позже, минус — начало отбрасывается с точностью до аудиокадра), кодек и качество — как в исходнике.
-/// С перекодированием в AAC — как в оригинале: «+N» — оригинал склеивал тишину стерео 48 кГц фильтром concat
-/// (5.1 и 44,1 кГц при этом приводились к ней), здесь — adelay по всем каналам; «−N» — -ss.
+/// С перекодированием в AAC: «+N» — тишина в начале через adelay по всем каналам (раскладка и частота
+/// не меняются); «−N» — -ss.
 /// </summary>
 public static class AudioShiftOperation
 {
@@ -48,7 +48,7 @@ public static class AudioShiftOperation
         }
 
         var outputFolder = Path.Combine(folder, OutputFolderName);
-        var seconds = TextUtils.FloatStr(Math.Abs(options.Seconds)); // как str() в оригинале: «1.0»
+        var seconds = TextUtils.FloatStr(Math.Abs(options.Seconds)); // «1.0», «0.25» — для -ss и заголовка плана
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
@@ -131,7 +131,7 @@ public sealed record AudioConvertOptions
     public int Workers { get; init; } = 8;
 }
 
-/// <summary>Перекодирование аудио (audio_decod.py): файлы папки → converted\&lt;имя&gt;&lt;расширение формата&gt;.</summary>
+/// <summary>Перекодирование аудио: файлы папки → converted\&lt;имя&gt;&lt;расширение формата&gt;.</summary>
 public static class AudioConvertOperation
 {
     public const string OutputFolderName = "converted";
@@ -142,7 +142,7 @@ public static class AudioConvertOperation
         ".ac3", ".dts", ".amr", ".mka", ".wv", ".tta", ".mpc", ".spx", ".caf", ".dsf", ".dff",
     ];
 
-    /// <summary>Расширение и параметры кодека (CODEC_MAP оригинала).</summary>
+    /// <summary>Расширение и параметры кодека для формата.</summary>
     public static (string Extension, IReadOnlyList<string> CodecArgs) Codec(AudioFormat format, string bitrate) => format switch
     {
         AudioFormat.Mka => (".mka", ["-c:a", "aac", "-profile:a", "aac_low", "-b:a", bitrate]),

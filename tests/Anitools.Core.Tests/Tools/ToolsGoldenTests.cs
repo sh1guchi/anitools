@@ -12,11 +12,11 @@ using Anitools.Core.Tests.Fixtures;
 
 namespace Anitools.Core.Tests.Tools;
 
-/// <summary>Инструменты из reference/python/extra — по эталонам соседних скриптов.</summary>
+/// <summary>Инструменты: сдвиг субтитров, чистка стилей, хардсаб, дорожки файла, шрифты, аудио — по эталонам.</summary>
 public sealed class ToolsGoldenTests
 {
     [Fact]
-    public void Subtitle_time_shift_matches_original() =>
+    public void Subtitle_time_shift_matches_golden() =>
         GoldenAssert.All("sub_shift_times", input =>
         {
             var time = input.GetProperty("time").GetString()!;
@@ -25,16 +25,16 @@ public sealed class ToolsGoldenTests
         });
 
     [Fact]
-    public void Subtitle_file_shift_matches_original() =>
+    public void Subtitle_file_shift_matches_golden() =>
         GoldenAssert.All("sub_shift_text", input =>
         {
-            var text = input.GetProperty("text").GetString()!.TrimStart('﻿'); // utf-8-sig снимает BOM при чтении
+            var text = input.GetProperty("text").GetString()!.TrimStart('﻿'); // BOM снимается ещё при чтении файла
             var shift = input.GetProperty("shift").GetDouble();
             return input.GetProperty("kind").GetString() == "srt" ? SubtitleShift.ShiftSrt(text, shift) : SubtitleShift.ShiftAss(text, shift);
         });
 
     [Fact]
-    public void Ass_cleanup_matches_original() =>
+    public void Ass_cleanup_matches_golden() =>
         GoldenAssert.All("ass_style_values", input =>
         {
             using var dir = new TempDir();
@@ -55,9 +55,9 @@ public sealed class ToolsGoldenTests
             };
         });
 
-    /// <summary>Совпадает с оригиналом, кроме имён с «'» и «:» — там оригинал ошибался (экранировал один уровень).</summary>
+    /// <summary>Совпадает с эталоном, кроме имён с «'» и «:» — в эталоне они экранированы в один уровень, а нужно в два.</summary>
     [Fact]
-    public void Subtitles_filter_escaping_matches_original() =>
+    public void Subtitles_filter_escaping_matches_golden() =>
         GoldenAssert.All(
             "escape_filter",
             input => HardsubOperation.EscapeFilter(input.GetString()!),
@@ -68,7 +68,7 @@ public sealed class ToolsGoldenTests
             });
 
     [Fact]
-    public void Track_rows_and_copy_lists_match_original() =>
+    public void Track_rows_and_copy_lists_match_golden() =>
         GoldenAssert.All("track_rows", input =>
         {
             var json = JsonNode.Parse(input.GetProperty("ffprobe").GetRawText())!;
@@ -86,7 +86,7 @@ public sealed class ToolsGoldenTests
                 }).ToList(),
                 ["copy"] = new Dictionary<string, string>
                 {
-                    // оригинал печатает список между двумя чертами; копируются только строки
+                    // в эталоне список напечатан между двумя чертами; копируются только строки
                     ["1"] = Block(TrackListOperation.CopyList(rows, CopyListStyle.Bullets)),
                     ["2"] = Block(TrackListOperation.CopyList(rows, CopyListStyle.Numbers)),
                     ["3"] = Block(TrackListOperation.CopyList(rows, CopyListStyle.Plain)),
@@ -97,16 +97,19 @@ public sealed class ToolsGoldenTests
         });
 
     [Fact]
-    public void Font_attachment_detection_matches_original() =>
+    public void Font_attachment_detection_matches_golden() =>
         GoldenAssert.All("font_attachments", input => VideoFontsOperation.IsFont(new MkvAttachment(
             0,
             input.TryGetProperty("file_name", out var name) ? name.GetString()! : "",
             input.TryGetProperty("content_type", out var type) ? type.GetString()! : "",
             0)));
 
-    /// <summary>Те же команды, что у audio_decod.py и delay-1s.py; добавлен только «-y» перед выходом (пустой остаток не мешает).</summary>
+    /// <summary>
+    /// Те же команды перекодирования и обрезки начала, что в эталоне; добавлен только «-y» перед выходом
+    /// (пустой остаток не мешает).
+    /// </summary>
     [Fact]
-    public void Audio_tool_commands_match_original() =>
+    public void Audio_tool_commands_match_golden() =>
         GoldenAssert.All("audio_tool_commands", input =>
         {
             using var dir = new TempDir();

@@ -24,16 +24,16 @@ public enum CopyListStyle
     Comma,
 }
 
-/// <summary>«Дорожки файла» (mka_muxer.py, режим 2): таблица аудиодорожек и список тайтлов для копирования.</summary>
+/// <summary>«Дорожки файла»: таблица аудиодорожек и список тайтлов для копирования.</summary>
 public static class TrackListOperation
 {
     public static IReadOnlyList<string> Extensions { get; } = [".mka", ".mkv", ".mp4", ".mov", ".m4a", ".webm"];
 
-    /// <summary>Файлы папки по sorted(os.listdir()) оригинала — по кодам символов.</summary>
+    /// <summary>Файлы папки по имени, по кодам символов.</summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
         [.. MediaFiles.List(folder, Extensions).OrderBy(p => Path.GetFileName(p), TextUtils.CodePointComparer)];
 
-    /// <summary>Аудиодорожки (probe_tracks): каналы — раскладка («5.1(side)»), иначе «N ch».</summary>
+    /// <summary>Аудиодорожки: каналы — раскладка («5.1(side)»), иначе «N ch».</summary>
     public static IReadOnlyList<TrackRow> Rows(MediaInfo info) =>
         [.. info.AudioStreams.Select((s, i) => new TrackRow(
             i + 1,
@@ -43,7 +43,7 @@ public static class TrackListOperation
             NonEmpty(s.ChannelLayout) ?? (s.Channels is > 0 and var ch ? $"{ch} ch" : null),
             s.IsDefault))];
 
-    /// <summary>Список для копирования (print_copy_block): без тайтла — «Дорожка N».</summary>
+    /// <summary>Список для копирования: без тайтла — «Дорожка N».</summary>
     public static string CopyList(IReadOnlyList<TrackRow> rows, CopyListStyle style)
     {
         if (style == CopyListStyle.Comma)

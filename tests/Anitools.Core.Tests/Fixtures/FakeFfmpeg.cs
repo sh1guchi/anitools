@@ -101,7 +101,7 @@ internal sealed class FakeFfmpeg : IProcessRunner
     }
 }
 
-/// <summary>ffprobe из фикстур: файл → имя фикстуры (tools/golden_inputs/media) или готовый MediaInfo.</summary>
+/// <summary>ffprobe из фикстур: файл → имя фикстуры (Fixtures/media) или готовый MediaInfo.</summary>
 internal sealed class NameFixtureProbe(IReadOnlyDictionary<string, string> media, IReadOnlyDictionary<string, MediaInfo>? custom = null) : IMediaProbe
 {
     public Task<MediaInfo> ProbeAsync(string path, CancellationToken cancellationToken = default)

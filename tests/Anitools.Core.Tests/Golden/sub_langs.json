@@ -1,6 +1,6 @@
 {
   "function": "sub_langs",
-  "description": "Языки дорожки субтитров: {language, language_ietf} без und (py:2814), отсортировано",
+  "description": "Языки дорожки субтитров: {language, language_ietf} без und, отсортировано",
   "cases": [
     {"input": {"language": "rus", "language_ietf": "ru"}, "output": ["ru", "rus"]},
     {"input": {"language": "RUS", "language_ietf": "ru-RU"}, "output": ["ru-ru", "rus"]},

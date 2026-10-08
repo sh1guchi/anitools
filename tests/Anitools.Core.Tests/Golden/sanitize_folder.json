@@ -1,6 +1,6 @@
 {
   "function": "sanitize_folder",
-  "description": "Имя папки тайтла/серии/озвучки в п.7 (py:3779)",
+  "description": "Имя папки тайтла/серии/озвучки в HLS",
   "cases": [
     {"input": "Sousou no Frieren", "output": "Sousou no Frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "Sousou no Frieren 2nd Season"},

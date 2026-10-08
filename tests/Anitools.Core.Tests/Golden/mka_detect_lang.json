@@ -1,6 +1,6 @@
 {
   "function": "mka_detect_lang",
-  "description": "Язык по метке/тайтлу в сборке .mka (mka_muxer.py: detect_lang)",
+  "description": "Язык по метке/тайтлу в сборке .mka",
   "cases": [
     {"input": "Оригинальная", "output": "jpn"},
     {"input": "Original JP", "output": "jpn"},

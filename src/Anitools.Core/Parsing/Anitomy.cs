@@ -5,13 +5,13 @@ using System.Text.RegularExpressions;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Разбор имени аниме-файла — порт встроенного anitomy оригинала (py:41–434) один в один.
+/// Разбор имени аниме-файла (по мотивам anitomy): группа, тайтл, сезон, серия, тип релиза и технические теги.
 /// <c>Anitomy.Parse("[Group] Title - 05 [1080p].mkv")</c> → тайтл «Title», серия «5», группа «Group», …
-/// Все значения — строки (номера без ведущих нулей), как в оригинале.
+/// Все значения — строки (номера без ведущих нулей).
 /// </summary>
 public static partial class Anitomy
 {
-    /// <summary>Словари ключевых слов (_AT_KEYWORDS) — в том же порядке, что в оригинале.</summary>
+    /// <summary>Словари ключевых слов: вид токена → слова (сравниваются без учёта регистра).</summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> Keywords { get; } = new Dictionary<string, IReadOnlyList<string>>
     {
         ["anime_type"] =
@@ -111,7 +111,7 @@ public static partial class Anitomy
 
     private static readonly string[] ResolutionWords = ["4K", "UHD", "FHD", "HD", "SD"];
 
-    /// <summary>Разбирает имя файла. Пустая строка → пустой результат (как {} в оригинале).</summary>
+    /// <summary>Разбирает имя файла. Пустая строка → пустой результат.</summary>
     public static AnitomyResult Parse(string? inputName)
     {
         if (string.IsNullOrEmpty(inputName))
@@ -557,7 +557,7 @@ public static partial class Anitomy
 
     private readonly record struct Token(TokenType Type, string Value);
 
-    /// <summary>Разбивает строку на токены по разделителям и скобкам (_at_tokenize).</summary>
+    /// <summary>Разбивает строку на токены по разделителям и скобкам.</summary>
     private static List<Token> Tokenize(string filename)
     {
         var tokens = new List<Token>();
@@ -670,7 +670,7 @@ public static partial class Anitomy
         public string? FileChecksum { get; set; }
     }
 
-    // ── Регулярки оригинала (Python $ = .NET $: конец строки или перед последним \n) ──
+    // ── Регулярки ($ — конец строки или перед последним \n) ──
 
     [GeneratedRegex(@"\.([a-zA-Z0-9]{2,4})$", RegexOptions.CultureInvariant)]
     private static partial Regex ExtensionRegex();
@@ -765,7 +765,7 @@ public sealed record AnitomyResult
 
     public string? FileChecksum { get; init; }
 
-    /// <summary>Словарь с ключами оригинала (file_name, anime_title, …) — только найденные поля.</summary>
+    /// <summary>Словарь с ключами в стиле anitomy (file_name, anime_title, …) — только найденные поля.</summary>
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
         var d = new Dictionary<string, string>();

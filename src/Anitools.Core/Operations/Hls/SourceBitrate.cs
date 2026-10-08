@@ -5,7 +5,7 @@ using Anitools.Core.Processes;
 namespace Anitools.Core.Operations.Hls;
 
 /// <summary>
-/// Битрейт видео исходника по окнам длиной в сегмент (_analyze_source_bitrate, py:4036) — по размерам пакетов,
+/// Битрейт видео исходника по окнам длиной в сегмент — по размерам пакетов,
 /// без декодирования. Нужен для подбора CQ под серию.
 /// </summary>
 /// <param name="Rates">Бит/с по окнам от начала файла; последнее (неполное) окно не берётся.</param>
@@ -84,7 +84,7 @@ public sealed record SourceBitrate(IReadOnlyList<double> Rates, double Average, 
         {
             try
             {
-                value = (long)TextUtils.ParseInt(text); // int() из Python: пробелы, «_» между цифрами
+                value = (long)TextUtils.ParseInt(text); // допускаются пробелы по краям и «_» между цифрами
                 return true;
             }
             catch (Exception ex) when (ex is FormatException or OverflowException)

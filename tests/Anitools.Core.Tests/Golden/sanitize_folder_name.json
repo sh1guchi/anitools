@@ -1,6 +1,6 @@
 {
   "function": "sanitize_folder_name",
-  "description": "Имя папки дорожки в п.2 (py:1188)",
+  "description": "Имя папки дорожки в «Только аудио»",
   "cases": [
     {"input": "Sousou no Frieren", "output": "Sousou no Frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "Sousou no Frieren 2nd Season"},

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Натуральная сортировка (_natural_key, py:1723): сначала по числу из префикса «N. »
+/// Натуральная сортировка: сначала по числу из префикса «N. »
 /// (10 после 9, а не после 1; без префикса — в конец), затем по имени без учёта регистра.
 /// </summary>
 public static partial class NaturalSort
@@ -36,10 +36,10 @@ public static partial class NaturalSort
 
     public static IComparer<string?> Comparer { get; } = Comparer<string?>.Create(Compare);
 
-    /// <summary>Стабильная сортировка, как sorted(…, key=_natural_key).</summary>
+    /// <summary>Стабильная сортировка по <see cref="Compare"/>.</summary>
     public static IEnumerable<string> Order(IEnumerable<string> names) => names.OrderBy(n => n, Comparer);
 
-    /// <summary>Имя без префикса «N. » (_TRACK_NUM_PREFIX_RE.sub(…, count=1)).</summary>
+    /// <summary>Имя без префикса «N. ».</summary>
     public static string StripTrackNumber(string name) => TrackNumberPrefixRegex().Replace(name, "", 1);
 
     // ^\d+\.\s* — префикс номера дорожки, который пишет «Только аудио»: «2. Show - 01.Title.mka»

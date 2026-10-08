@@ -5,12 +5,12 @@ using Anitools.Core.Parsing;
 namespace Anitools.Core.Media;
 
 /// <summary>
-/// Имена аудиодорожек прямо из боксов QuickTime/MP4 (py:1583–1701). Экспорты DaVinci Resolve пишут их
+/// Имена аудиодорожек прямо из боксов QuickTime/MP4. Экспорты DaVinci Resolve пишут их
 /// в moov/trak/udta/name, а ffprobe такие имена не показывает как title. Свой разбор боксов, без библиотек.
 /// </summary>
 public static class MovAtomReader
 {
-    /// <summary>Стандартные имена обработчиков из hdlr — это не тайтлы (_MOV_GENERIC_HANDLERS).</summary>
+    /// <summary>Стандартные имена обработчиков из hdlr — это не тайтлы.</summary>
     public static IReadOnlyList<string> GenericHandlers { get; } =
     [
         "soundhandler", "sound handler", "apple sound media handler", "core media audio",
@@ -60,7 +60,7 @@ public static class MovAtomReader
         return names;
     }
 
-    /// <summary>Боксы [(тип, начало данных, конец)] в диапазоне [start, end) (_mov_boxes).</summary>
+    /// <summary>Боксы [(тип, начало данных, конец)] в диапазоне [start, end).</summary>
     private static List<(string Type, long Start, long End)> Boxes(Stream f, long start, long end)
     {
         var boxes = new List<(string, long, long)>();
@@ -108,7 +108,7 @@ public static class MovAtomReader
         return boxes;
     }
 
-    /// <summary>(это аудио, имя) для одного trak (_mov_track_name): udta/name|©nam|titl, иначе нестандартное имя из hdlr.</summary>
+    /// <summary>(это аудио, имя) для одного trak: udta/name|©nam|titl, иначе нестандартное имя из hdlr.</summary>
     private static (bool IsAudio, string? Name) TrackName(Stream f, long start, long end)
     {
         var isAudio = false;
@@ -158,7 +158,7 @@ public static class MovAtomReader
         return (isAudio, name);
     }
 
-    /// <summary>Текст name/©nam/titl: сначала формат [size:2][lang:2][text], иначе сырой текст (_mov_decode_name).</summary>
+    /// <summary>Текст name/©nam/titl: сначала формат [size:2][lang:2][text], иначе сырой текст.</summary>
     private static string? DecodeName(byte[] data)
     {
         if (data.Length >= 4)
@@ -178,7 +178,7 @@ public static class MovAtomReader
         return raw.Length > 0 ? raw : null;
     }
 
-    /// <summary>Имя из hdlr: Pascal-строка (QuickTime) или C-строка (ISO BMFF) (_mov_decode_hdlr_name).</summary>
+    /// <summary>Имя из hdlr: Pascal-строка (QuickTime) или C-строка (ISO BMFF).</summary>
     private static string? DecodeHandlerName(byte[] data)
     {
         if (data.Length == 0)

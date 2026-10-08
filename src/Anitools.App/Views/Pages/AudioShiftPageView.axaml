@@ -32,7 +32,7 @@
             <Border Classes="seg">
               <StackPanel Orientation="Horizontal">
                 <RadioButton x:Name="LosslessRadio" Classes="seg" GroupName="shiftMode" Content="без перекодирования" IsChecked="{Binding IsLossless}" />
-                <RadioButton x:Name="AacRadio" Classes="seg" GroupName="shiftMode" Content="в AAC, как в оригинале" IsChecked="{Binding Reencode}" />
+                <RadioButton x:Name="AacRadio" Classes="seg" GroupName="shiftMode" Content="с перекодированием в AAC" IsChecked="{Binding Reencode}" />
               </StackPanel>
             </Border>
           </HeaderedContentControl>

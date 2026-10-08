@@ -1,6 +1,6 @@
 {
   "function": "title_season",
-  "description": "Номер сезона по названию (py:496)",
+  "description": "Номер сезона по названию",
   "cases": [
     {"input": "Sousou no Frieren", "output": 1},
     {"input": "Sousou no Frieren 2nd Season", "output": 2},

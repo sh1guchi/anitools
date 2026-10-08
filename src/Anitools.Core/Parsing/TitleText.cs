@@ -3,15 +3,15 @@ using System.Text.RegularExpressions;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Названия тайтлов и имена папок/файлов — порт функций оригинала. Три санитизации разные и
-/// не взаимозаменяемы (docs/PLAN.md §2.4.4): <see cref="SanitizeFolder"/> (п.7),
-/// <see cref="SanitizeTrackFolder"/> (п.2), <see cref="FileNameSafe"/> (п.5).
+/// Названия тайтлов и имена папок/файлов. Три санитизации разные и
+/// не взаимозаменяемы (docs/PLAN.md §2.4.4): <see cref="SanitizeFolder"/> (HLS),
+/// <see cref="SanitizeTrackFolder"/> («Только аудио»), <see cref="FileNameSafe"/> («Переименовать»).
 /// </summary>
 public static partial class TitleText
 {
     private const string S = TextUtils.SpaceChars;
 
-    /// <summary>Тип релиза из anitomy → метка группы (_SPECIAL_LABELS): OVA/ONA/спешлы/фильмы идут отдельным тайтлом.</summary>
+    /// <summary>Тип релиза из anitomy → метка группы: OVA/ONA/спешлы/фильмы идут отдельным тайтлом.</summary>
     public static IReadOnlyDictionary<string, string> SpecialLabels { get; } = new Dictionary<string, string>
     {
         ["ova"] = "OVA",
@@ -25,7 +25,7 @@ public static partial class TitleText
         ["movies"] = "Movie",
     };
 
-    /// <summary>Римский номер сезона в конце названия (_ROMAN_SEASON).</summary>
+    /// <summary>Римский номер сезона в конце названия.</summary>
     public static IReadOnlyDictionary<string, int> RomanSeason { get; } = new Dictionary<string, int>
     {
         ["II"] = 2,
@@ -36,7 +36,7 @@ public static partial class TitleText
     };
 
     /// <summary>
-    /// Название тайтла из имени файла (_parse_anime_title, py:2396): anitomy, иначе всё до « - NN»
+    /// Название тайтла из имени файла: anitomy, иначе всё до « - NN»
     /// или до числа в конце, иначе имя без расширения.
     /// </summary>
     public static string AnimeTitle(string filename)
@@ -58,7 +58,7 @@ public static partial class TitleText
         return m.Success ? TextUtils.Strip(m.Groups[1].Value) : TextUtils.Strip(stem);
     }
 
-    /// <summary>Название группы для HLS (_parse_anime_group, py:2425): тайтл + « OVA» / « Movie» / …, если файл — спешл.</summary>
+    /// <summary>Название группы для HLS: тайтл + « OVA» / « Movie» / …, если файл — спешл.</summary>
     public static string AnimeGroup(string filename)
     {
         var title = AnimeTitle(filename);
@@ -66,7 +66,7 @@ public static partial class TitleText
         return SpecialLabels.TryGetValue(TextUtils.Lower(type), out var kind) && title.Length > 0 ? $"{title} {kind}" : title;
     }
 
-    /// <summary>Номер сезона по названию (_title_season, py:496): «X 2», «X Season 3», «X 2nd Season», «X III»; иначе 1.</summary>
+    /// <summary>Номер сезона по названию: «X 2», «X Season 3», «X 2nd Season», «X III»; иначе 1.</summary>
     public static int Season(string? name)
     {
         var n = (name ?? "").Split(": ")[0];
@@ -93,7 +93,7 @@ public static partial class TitleText
     }
 
     /// <summary>
-    /// Название без сезона/части для поиска на Shikimori (_clean_title_for_search, py:545):
+    /// Название без сезона/части для поиска на Shikimori:
     /// «Enen no Shouboutai 3 pt 1» → «Enen no Shouboutai», «Overlord III» → «Overlord».
     /// </summary>
     public static string CleanForSearch(string title)
@@ -106,10 +106,10 @@ public static partial class TitleText
         return TextUtils.Strip(CleanArabicRegex().Replace(title, ""));
     }
 
-    /// <summary>Нормализация для сравнения названий (_norm_title, py:510): нижний регистр, всё кроме букв и цифр → пробел.</summary>
+    /// <summary>Нормализация для сравнения названий: нижний регистр, всё кроме букв и цифр → пробел.</summary>
     public static string Normalize(string? s) => TextUtils.Strip(NotAlnumRunRegex().Replace(TextUtils.Lower(s ?? ""), " "));
 
-    /// <summary>Название для имени файла Windows (_filename_safe_title, py:657): «X 2: Sub» → «X 2 - Sub», «Re:Zero» → «Re Zero».</summary>
+    /// <summary>Название для имени файла Windows: «X 2: Sub» → «X 2 - Sub», «Re:Zero» → «Re Zero».</summary>
     public static string FileNameSafe(string name)
     {
         name = ColonRegex().Replace(name, " - ");
@@ -117,11 +117,11 @@ public static partial class TitleText
         return SpaceRunRegex().Replace(name, " ").Trim(' ', '.');
     }
 
-    /// <summary>Имя папки тайтла/серии/озвучки в HLS (_sanitize_folder, py:3779): \/:*?"&lt;&gt;| → _, пробелы по краям — прочь.</summary>
+    /// <summary>Имя папки тайтла/серии/озвучки в HLS: \/:*?"&lt;&gt;| → _, пробелы по краям — прочь.</summary>
     public static string SanitizeFolder(string name) => TextUtils.Strip(HlsForbiddenRegex().Replace(name, "_"));
 
     /// <summary>
-    /// Имя папки дорожки в «Только аудио» (sanitize_folder_name, py:1188): запрещённые и управляющие → _,
+    /// Имя папки дорожки в «Только аудио»: запрещённые и управляющие → _,
     /// пробелы и точки по краям — прочь, пусто → «audio_track».
     /// </summary>
     public static string SanitizeTrackFolder(string name)
@@ -130,7 +130,7 @@ public static partial class TitleText
         return clean.Length > 0 ? clean : "audio_track";
     }
 
-    /// <summary>Имя выходного файла в п.1–4 (process_output_filename): «_» → пробел.</summary>
+    /// <summary>Имя выходного файла в «Только видео», «Только аудио», «Сборке аудио» и «Субтитрах»: «_» → пробел.</summary>
     public static string OutputFileName(string file) => file.Replace('_', ' ');
 
     private const RegexOptions I = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
@@ -181,7 +181,7 @@ public static partial class TitleText
     [GeneratedRegex(@"[" + S + @"]+\d{1,2}[" + S + @"]*$", C)]
     private static partial Regex CleanArabicRegex();
 
-    // [\W_]+ в Python = всё, кроме букв и цифр
+    // [\W_]+ — всё, кроме букв и цифр
     [GeneratedRegex(@"[^\p{L}\p{N}]+", C)]
     private static partial Regex NotAlnumRunRegex();
 

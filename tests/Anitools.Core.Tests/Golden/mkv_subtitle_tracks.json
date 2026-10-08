@@ -1,6 +1,6 @@
 {
   "function": "mkv_subtitle_tracks",
-  "description": "Дорожки субтитров из mkvmerge -J (py:2560): [id, {name, codec_id, language, language_ietf}]",
+  "description": "Дорожки субтитров из mkvmerge -J: [id, {name, codec_id, language, language_ietf}]",
   "cases": [
     {"input": "1. Test Show - 01.AniLibria.TV.mka.mkvmerge.json", "output": []},
     {"input": "Resolve Export.mov.mkvmerge.json", "output": []},

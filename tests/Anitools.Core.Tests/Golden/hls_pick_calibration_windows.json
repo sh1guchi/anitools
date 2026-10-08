@@ -1,6 +1,6 @@
 {
   "function": "hls_pick_calibration_windows",
-  "description": "Начала калибровочных окон, сек (py:4077)",
+  "description": "Начала калибровочных окон, сек",
   "cases": [
     {"input": {"rates": [7837151.4], "count": 10}, "output": [0]},
     {"input": {"rates": [4012468.136, 18557437.74], "count": 10}, "output": [0, 6]},

@@ -1,6 +1,6 @@
 {
   "function": "ffprobe_audio_titles",
-  "description": "Тайтлы аудиодорожек (py:1769): '' если нет title",
+  "description": "Тайтлы аудиодорожек: '' если нет title",
   "cases": [
     {"input": "{\n    \"programs\": [],\n    \"streams\": [\n        {\n            \"index\": 1,\n            \"tags\": {\n                \"title\": \"AniLibria.TV\"\n            }\n        },\n        {\n            \"index\": 2,\n            \"tags\": {\n                \"title\": \"  Оригинальная  \"\n            }\n        },\n        {\n            \"index\": 3\n        },\n        {\n            \"index\": 4,\n            \"tags\": null\n        },\n        {\n            \"index\": 5,\n            \"tags\": {\n                \"title\": null\n            }\n        }\n    ]\n}", "commands": [["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index:stream_tags=title", "-of", "json", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": ["AniLibria.TV", "Оригинальная", "", "", ""]},
     {"input": "{\n    \"programs\": [],\n    \"streams\": []\n}", "commands": [["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index:stream_tags=title", "-of", "json", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": []},

@@ -25,7 +25,7 @@ public sealed partial class MkaLabelRowViewModel(MkaLabel label) : ObservableObj
 }
 
 /// <summary>
-/// «Озвучки → .mka» (§4.11, mka_muxer.py): аудио из папок озвучек — в один .mka на серию (или всё в один файл);
+/// «Озвучки → .mka» (§4.11): аудио из папок озвучек — в один .mka на серию (или всё в один файл);
 /// порядок озвучек, тайтлы дорожек и язык — один раз на все серии.
 /// </summary>
 public sealed partial class MkaMuxPageViewModel(IShell shell) : PageViewModel(shell, "Озвучки → .mka", MaterialIconKind.MicrophoneOutline)

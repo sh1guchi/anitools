@@ -3,7 +3,7 @@ using Anitools.Core.Processes;
 namespace Anitools.Core.Platform;
 
 /// <summary>
-/// «Выключить компьютер по завершении» (п.7): shutdown /s /t 60 — минута на отмену (shutdown /a).
+/// «Выключить компьютер по завершении» (HLS): shutdown /s /t 60 — минута на отмену (shutdown /a).
 /// Есть только на Windows.
 /// </summary>
 public sealed class ShutdownService(IProcessRunner runner)

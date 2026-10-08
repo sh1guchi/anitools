@@ -7,7 +7,7 @@ using Material.Icons;
 namespace Anitools.App.ViewModels.Pages;
 
 /// <summary>
-/// «Хардсаб» (§4.11, hardsub.py): пары «видео + .ass с тем же именем» → Hardsub\ с вшитыми субтитрами; шрифты —
+/// «Хардсаб» (§4.11): пары «видео + .ass с тем же именем» → Hardsub\ с вшитыми субтитрами; шрифты —
 /// из папки Fonts рядом, если она есть. Параметры кодирования — в настройках.
 /// </summary>
 public sealed partial class HardsubPageViewModel(IShell shell) : PageViewModel(shell, "Хардсаб", MaterialIconKind.Subtitles)

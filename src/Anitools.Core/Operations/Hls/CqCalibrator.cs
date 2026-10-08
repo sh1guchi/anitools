@@ -9,7 +9,7 @@ namespace Anitools.Core.Operations.Hls;
 public sealed record CalibrationProgress(int Pass, int Window, int WindowCount);
 
 /// <summary>
-/// Подбор CQ под серию (_calibrate_hls_cq, py:4101–4191), когда <see cref="HlsSettings.FixedCq"/> = null:
+/// Подбор CQ под серию, когда <see cref="HlsSettings.FixedCq"/> = null:
 /// окна разной сложности пробно кодируются, CQ каждого разрешения подгоняется, пока средний битрейт серии
 /// не совпадёт с битрейтом из лестницы (± допуск). Повторные проходы — только по разрешениям мимо цели.
 /// </summary>
@@ -48,7 +48,7 @@ public sealed class CqCalibrator
     private HlsSettings Settings => _builder.Settings;
 
     /// <summary>
-    /// Начала калибровочных окон, с (_pick_calibration_windows): окна сортируются по битрейту исходника
+    /// Начала калибровочных окон, с: окна сортируются по битрейту исходника
     /// и делятся на <paramref name="count"/> равных страт, из каждой берётся середина — выборка покрывает
     /// и тихие сцены, и экшен, а простое среднее по окнам оценивает среднее по всей серии.
     /// </summary>
@@ -66,10 +66,10 @@ public sealed class CqCalibrator
     }
 
     /// <summary>
-    /// Следующий CQ по замерам (CQ, битрейт) (_next_hls_cq): линейно по логарифму битрейта. Наклон по двум
+    /// Следующий CQ по замерам (CQ, битрейт): линейно по логарифму битрейта. Наклон по двум
     /// последним замерам (в пределах −0,25…−0,04), иначе «+6 к CQ ≈ битрейт / 2».
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">Битрейт или цель не больше нуля (math domain error в оригинале).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Битрейт или цель не больше нуля (логарифм не определён).</exception>
     public static double NextCq(IReadOnlyList<(double Cq, double Rate)> history, double target, double cqMin, double cqMax)
     {
         var (cq1, rate1) = history[^1];
@@ -158,7 +158,7 @@ public sealed class CqCalibrator
 
     /// <summary>
     /// Кодирует окна для разрешений <paramref name="rungs"/> и возвращает оценку среднего битрейта серии
-    /// по каждому или null, если ffmpeg упал (_hls_calibration_pass).
+    /// по каждому или null, если ffmpeg упал.
     /// </summary>
     private async Task<double[]?> PassAsync(
         string input,

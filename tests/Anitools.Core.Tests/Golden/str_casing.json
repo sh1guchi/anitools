@@ -1,6 +1,6 @@
 {
   "function": "str_casing",
-  "description": "str.lower() и str.casefold() для всех символов, которые они меняют: код → [lower, casefold]",
+  "description": "Нижний регистр (полное отображение Unicode) и casefold для всех символов, которые они меняют: код → [lower, casefold]",
   "cases": [
     {"input": 65, "output": ["a", "a"]},
     {"input": 66, "output": ["b", "b"]},

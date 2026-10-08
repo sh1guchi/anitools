@@ -22,7 +22,7 @@ public sealed class PlanExecutorTests
 
         Assert.Equal([ItemOutcome.Done, ItemOutcome.Skipped, ItemOutcome.Done], result.Items.Select(i => i.Outcome));
         Assert.Equal(2, runner.Specs.Count);
-        // К команде оригинала добавлен только машинный прогресс
+        // К команде из плана добавлен только машинный прогресс
         Assert.Equal(["-progress", "pipe:1", "-nostats", "-nostdin", "-i", dir.Combine("a.mkv"), dir.Combine("out", "a.mka")], runner.Specs[0].Arguments);
         Assert.Equal("/bin/ffmpeg", runner.Specs[0].FileName);
         Assert.Contains(events, e => e.ItemIndex == 2 && e.ItemCount == 2 && e.Fraction == 1);

@@ -1,6 +1,6 @@
 {
   "function": "escape_filter",
-  "description": "Путь для фильтра subtitles в хардсабе (hardsub.py: escape_filter)",
+  "description": "Путь к .ass для фильтра subtitles в хардсабе: экранирование спецсимволов",
   "cases": [
     {"input": "Ep 01.ass", "output": "Ep 01.ass"},
     {"input": "Fonts", "output": "Fonts"},

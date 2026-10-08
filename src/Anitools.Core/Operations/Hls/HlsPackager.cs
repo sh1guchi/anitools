@@ -6,7 +6,7 @@ namespace Anitools.Core.Operations.Hls;
 /// <summary>Что получилось при упаковке: основной архив, отдельный архив верхнего качества (если был нужен) и его вес.</summary>
 public sealed record HlsPackResult(string MainZip, string? TopZip, long TopBytes);
 
-/// <summary>Архивы серии и перенос озвучек (py:4436–4556).</summary>
+/// <summary>Архивы серии и перенос озвучек.</summary>
 public static class HlsPackager
 {
     /// <summary>

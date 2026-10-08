@@ -7,8 +7,8 @@ namespace Anitools.Core.Operations.Hls;
 public sealed record HlsVoice(int TrackIndex, string Folder, string Language);
 
 /// <summary>
-/// Команды ffmpeg для HLS (py:3932–4236) — аргументы без самой программы. Профиль Nvenc повторяет
-/// оригинал до символа; Software — то же на процессоре: scale + libx264 вместо scale_cuda + h264_nvenc.
+/// Команды ffmpeg для HLS — аргументы без самой программы. Профиль Nvenc кодирует на видеокарте;
+/// Software — то же на процессоре: scale + libx264 вместо scale_cuda + h264_nvenc.
 /// </summary>
 public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle = null)
 {
@@ -17,7 +17,7 @@ public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle
     public HlsSettings Settings => settings;
 
     /// <summary>
-    /// Начало команды видео (_hls_video_input_args): декодирование и split → масштаб на каждую ширину.
+    /// Начало команды видео: декодирование и split → масштаб на каждую ширину.
     /// Выходы фильтра — [v0out], [v1out], … по порядку ширин.
     /// </summary>
     /// <param name="cpuDecode">Декодировать на процессоре и загружать кадры на видеокарту (NVDEC не потянет исходник).</param>
@@ -51,7 +51,7 @@ public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle
     }
 
     /// <summary>
-    /// Кодирование одного качества (_hls_video_encode_args): с <paramref name="rateControl"/> — постоянное качество
+    /// Кодирование одного качества: с <paramref name="rateControl"/> — постоянное качество
     /// с потолком битрейта, без него — средний битрейт с потолком 2×.
     /// </summary>
     public IReadOnlyList<string> VideoEncodeArgs(long bitrate, RateControl? rateControl)
@@ -85,7 +85,7 @@ public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle
     public string RungDirectory(string workOut, HlsRung rung) => _paths.Join(workOut, rung.Name);
 
     /// <summary>
-    /// Видео на все качества лестницы одной командой (_build_video_ffmpeg_cmd):
+    /// Видео на все качества лестницы одной командой:
     /// workOut/&lt;качество&gt;/seg%03d.ts + master.m3u8. Папки качеств создаёт тот, кто запускает.
     /// </summary>
     /// <param name="rateControl">По элементу на качество; null — средний битрейт из лестницы.</param>
@@ -113,7 +113,7 @@ public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle
     }
 
     /// <summary>
-    /// Калибровочное окно (_hls_calibration_pass): только качества <paramref name="rungs"/> (индексы в лестнице),
+    /// Калибровочное окно: только качества <paramref name="rungs"/> (индексы в лестнице),
     /// отрезок одного сегмента, выход — calDir/&lt;качество&gt;.ts, как настоящие сегменты.
     /// </summary>
     public IReadOnlyList<string> CalibrationWindow(
@@ -136,7 +136,7 @@ public sealed class HlsCommandBuilder(HlsSettings settings, PathStyle? pathStyle
     public string CalibrationOutput(string calibrationDir, HlsRung rung) => _paths.Join(calibrationDir, rung.Name + ".ts");
 
     /// <summary>
-    /// Все озвучки одной командой (_build_audio_ffmpeg_cmd): workOut/audio/&lt;папка&gt;/&lt;серия&gt;.&lt;папка&gt;.mka.
+    /// Все озвучки одной командой: workOut/audio/&lt;папка&gt;/&lt;серия&gt;.&lt;папка&gt;.mka.
     /// Дорожки копируются как есть, только 5.1 и 7.1 (6 и 8 каналов) сводятся в стерео AAC 192k.
     /// </summary>
     /// <param name="channels">Каналы аудиодорожек по порядку; неизвестно — дорожка копируется.</param>

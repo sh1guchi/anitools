@@ -5,15 +5,15 @@ namespace Anitools.Core.Tests.Parsing;
 public sealed class EpisodeNumberTests
 {
     [Fact]
-    public void Extract_matches_original_smart() =>
+    public void Extract_matches_golden() =>
         GoldenAssert.All("extract_episode_number_smart", input => EpisodeNumber.Extract(input.GetString()!));
 
     [Fact]
-    public void ExtractAdvanced_matches_original() =>
+    public void ExtractAdvanced_matches_golden() =>
         GoldenAssert.All("extract_episode_number_advanced", input => EpisodeNumber.ExtractAdvanced(input.GetString()!));
 
     [Fact]
-    public void ExtractBasic_matches_original() =>
+    public void ExtractBasic_matches_golden() =>
         GoldenAssert.All("extract_episode_number", input => EpisodeNumber.ExtractBasic(input.GetString()!));
 
     [Theory]

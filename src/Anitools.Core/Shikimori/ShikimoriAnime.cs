@@ -1,13 +1,13 @@
 namespace Anitools.Core.Shikimori;
 
-/// <summary>Тайтл из поиска Shikimori (_search_shikimori, py:470).</summary>
+/// <summary>Тайтл из поиска Shikimori.</summary>
 /// <param name="Name">Оригинальное (ромадзи) название.</param>
 /// <param name="Russian">Русское, а если его нет — оригинальное.</param>
 /// <param name="Year">Год выхода или «????».</param>
 /// <param name="Kind">tv, ova, ona, special, tv_special, movie, music, pv, cm.</param>
 public sealed record ShikimoriAnime(long Id, string Name, string Russian, string Year, string Kind, int Episodes)
 {
-    /// <summary>Тип по-русски (_SHIKI_KIND_RU): TV, OVA, ONA, Спешл, Фильм, Клип, PV, CM.</summary>
+    /// <summary>Тип по-русски: TV, OVA, ONA, Спешл, Фильм, Клип, PV, CM.</summary>
     public static IReadOnlyDictionary<string, string> KindNames { get; } = new Dictionary<string, string>
     {
         ["tv"] = "TV",

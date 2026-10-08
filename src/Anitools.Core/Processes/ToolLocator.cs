@@ -93,7 +93,7 @@ public sealed class ToolLocator(ToolEnvironment environment)
         };
         if (variable is not null && environment.GetVariable(variable) is { Length: > 0 } fromEnv)
         {
-            // Как в оригинале: полный путь или просто имя программы из PATH
+            // Полный путь или просто имя программы из PATH
             if (fromEnv.Contains('/', StringComparison.Ordinal) || fromEnv.Contains('\\', StringComparison.Ordinal))
             {
                 yield return fromEnv;

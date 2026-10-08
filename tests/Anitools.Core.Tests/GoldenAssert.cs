@@ -67,7 +67,7 @@ internal static class GoldenAssert
             $"{name}: {failures.Count} расхождений из {golden.Cases.Count}:\n  " + string.Join("\n  ", failures.Take(50)));
     }
 
-    /// <summary>Имя ошибки в эталоне (ValueError…), которому соответствует исключение .NET, или null (тогда тест падает как есть).</summary>
+    /// <summary>Имя ошибки в эталоне (ValueError…) для исключения .NET или null (тогда тест падает как есть).</summary>
     public static string? ErrorName(Exception ex) => ex switch
     {
         FormatException or OverflowException or ArgumentOutOfRangeException => "ValueError",

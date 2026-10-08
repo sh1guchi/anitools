@@ -1,6 +1,6 @@
 {
   "function": "codec_id_to_ext",
-  "description": "Расширение файла субтитров по codec_id mkvmerge (py:2783)",
+  "description": "Расширение файла субтитров по codec_id mkvmerge",
   "cases": [
     {"input": "S_TEXT/ASS", "output": ".ass"},
     {"input": "S_TEXT/SSA", "output": ".ass"},

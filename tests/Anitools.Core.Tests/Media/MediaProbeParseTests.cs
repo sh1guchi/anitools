@@ -8,7 +8,7 @@ namespace Anitools.Core.Tests.Media;
 public sealed partial class MediaProbeParseTests
 {
     [Fact]
-    public void Subtitle_tracks_from_mkvmerge_match_original() =>
+    public void Subtitle_tracks_from_mkvmerge_match_golden() =>
         GoldenAssert.All("mkv_subtitle_tracks", input =>
         {
             var json = input.ValueKind == JsonValueKind.String
@@ -49,7 +49,7 @@ public sealed partial class MediaProbeParseTests
     [Fact]
     public void CodecDescription_matches_ffmpeg_info_line_for_every_fixture()
     {
-        // Оригинал брал имя дорожки без тайтла из строки «Audio: <кодек>,» вывода ffmpeg -i
+        // Имя дорожки без тайтла — как в строке «Audio: <кодек>,» вывода ffmpeg -i
         foreach (var media in MediaFixtures.MediaNames())
         {
             var fromFfmpeg = AudioLineRegex().Matches(MediaFixtures.FfmpegInfo(media)).Select(m => m.Groups[1].Value).ToList();

@@ -1,7 +1,7 @@
 namespace Anitools.Core.Platform;
 
 /// <summary>
-/// Склейка путей для аргументов команд по правилам Windows или POSIX — как pathlib в оригинале.
+/// Склейка путей для аргументов команд по правилам Windows или POSIX.
 /// Для работы всегда <see cref="Current"/>; другая нужна тестам, чтобы сверять команды с эталонами обеих ОС.
 /// </summary>
 public sealed class PathStyle
@@ -28,7 +28,7 @@ public sealed class PathStyle
         return path;
     }
 
-    /// <summary>Path.as_posix(): у Windows обратные слеши → прямые, у POSIX — как есть.</summary>
+    /// <summary>Путь с прямыми слешами: у Windows обратные слеши → прямые, у POSIX — как есть.</summary>
     public string AsPosix(string path) => Separator == '\\' ? path.Replace('\\', '/') : path;
 
     private bool IsSeparator(char c) => c == '/' || (Separator == '\\' && c == '\\');

@@ -1,6 +1,6 @@
 {
   "function": "audio_channels",
-  "description": "Каналы аудиодорожек (py:4194): ffprobe stream=channels -of csv=p=0",
+  "description": "Каналы аудиодорожек по выводу ffprobe stream=channels -of csv=p=0",
   "cases": [
     {"input": "2\n6\n", "commands": [["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=channels", "-of", "csv=p=0", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": [2, 6]},
     {"input": "2,\n6,\n8,\n", "commands": [["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=channels", "-of", "csv=p=0", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": [2, 6, 8]},

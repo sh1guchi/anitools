@@ -1,6 +1,6 @@
 {
   "function": "anitomy_parse",
-  "description": "Встроенный anitomy (py:187): имя файла → словарь строк",
+  "description": "Встроенный Anitomy: имя файла → словарь строк",
   "cases": [
     {"input": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "output": {"file_name": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4]", "file_extension": "mkv", "release_group": "SubsPlease", "anime_title": "Sousou no Frieren", "episode_number": "1", "video_resolution": "1080p", "file_checksum": "F02B9CB4"}},
     {"input": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv", "output": {"file_name": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4]", "file_extension": "mkv", "release_group": "SubsPlease", "anime_title": "Sousou no Frieren", "episode_number": "28", "video_resolution": "1080p", "file_checksum": "A1B2C3D4"}},

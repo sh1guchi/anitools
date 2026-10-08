@@ -1,6 +1,6 @@
 {
   "function": "mka_voice_folder",
-  "description": "Папка озвучки относительно корня (mka_muxer.py: voice_folder): [метка, номер]",
+  "description": "Папка озвучки относительно корня: [метка, номер]",
   "cases": [
     {"input": "1. AniDUB/1. Show - 01.AniDUB.mka", "output": ["AniDUB", 1]},
     {"input": "AniDUB/Show - 01.mka", "output": ["AniDUB", null]},

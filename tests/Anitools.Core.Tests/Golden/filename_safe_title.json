@@ -1,6 +1,6 @@
 {
   "function": "filename_safe_title",
-  "description": "Название для имени файла в п.5 (py:657)",
+  "description": "Название для имени файла при переименовании",
   "cases": [
     {"input": "Sousou no Frieren", "output": "Sousou no Frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "Sousou no Frieren 2nd Season"},

@@ -4,7 +4,7 @@ using Anitools.Core.Parsing;
 namespace Anitools.Core.Operations.Subtitles;
 
 /// <summary>
-/// Выбор дорожки субтитров в каждой серии по эталонной дорожке первого файла (п.4):
+/// Выбор дорожки субтитров в каждой серии по эталонной дорожке первого файла («Субтитры»):
 /// по тайтлу или по языку. Результат — ID дорожки и расширение файла субтитров.
 /// </summary>
 public static class SubtitleTrackMatcher
@@ -32,7 +32,7 @@ public static class SubtitleTrackMatcher
         return signs is null && subs is null ? (tracks.FirstOrDefault(), null) : (signs, subs);
     }
 
-    /// <summary>Расширение по codec_id mkvmerge (codec_id_to_ext, py:2783): ASS/SSA → .ass, UTF8/ASCII → .srt, PGS → .sup, VobSub → .sub.</summary>
+    /// <summary>Расширение по codec_id mkvmerge: ASS/SSA → .ass, UTF8/ASCII → .srt, PGS → .sup, VobSub → .sub.</summary>
     public static string CodecIdToExtension(string codecId)
     {
         var c = codecId.ToUpperInvariant();
@@ -55,7 +55,7 @@ public static class SubtitleTrackMatcher
         return c.Contains("VOBSUB", StringComparison.Ordinal) ? ".sub" : ".ass";
     }
 
-    /// <summary>Все обозначения языка дорожки без «und» ({«rus», «ru»}); пусто — язык не указан (_sub_langs, py:2814).</summary>
+    /// <summary>Все обозначения языка дорожки без «und» ({«rus», «ru»}); пусто — язык не указан.</summary>
     public static IReadOnlySet<string> Languages(SubtitleTrack track)
     {
         var set = new HashSet<string>(StringComparer.Ordinal);
@@ -72,7 +72,7 @@ public static class SubtitleTrackMatcher
     }
 
     /// <summary>
-    /// Дорожка с тем же тайтлом (_find_subtitle_track_by_title, py:2798): точное совпадение без учёта регистра
+    /// Дорожка с тем же тайтлом: точное совпадение без учёта регистра
     /// и пробелов по краям, если оно одно; иначе единственное вхождение подстроки; иначе null.
     /// </summary>
     public static (int Id, string Extension)? FindByTitle(IReadOnlyList<SubtitleTrack> tracks, string refTitle)
@@ -92,7 +92,7 @@ public static class SubtitleTrackMatcher
     }
 
     /// <summary>
-    /// Дорожка на том же языке, что эталон (_find_subtitle_track_by_lang, py:2819). Если таких несколько
+    /// Дорожка на том же языке, что эталон. Если таких несколько
     /// (русские надписи и полные) — та, у которой совпал и тайтл, иначе та, что стоит на месте
     /// <paramref name="refPosition"/> среди дорожек этого языка.
     /// </summary>

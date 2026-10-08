@@ -9,9 +9,8 @@ namespace Anitools.Core.Operations.Fonts;
 public sealed record FontNameSet(IReadOnlySet<string> Primary, IReadOnlySet<string> Fallback);
 
 /// <summary>
-/// Чтение шрифтов без внешних библиотек (ass_fonts.py): таблица name (sfnt и коллекции .ttc) и наличие кириллицы
-/// в cmap (оригинал проверял через fontTools — здесь те же правила: лучшая таблица символов, форматы 0, 4, 6, 12).
-/// Обрыв данных обрабатывается как у оригинала: всё, что прочитано до обрыва, остаётся.
+/// Чтение шрифтов без внешних библиотек: таблица name (sfnt и коллекции .ttc) и наличие кириллицы
+/// в cmap (лучшая таблица символов, форматы 0, 4, 6, 12). При обрыве данных всё, что прочитано до обрыва, остаётся.
 /// </summary>
 public static partial class SfntReader
 {
@@ -19,10 +18,10 @@ public static partial class SfntReader
 
     public static IReadOnlyList<int> FallbackNameIds { get; } = [16];
 
-    /// <summary>Предпочтения таблиц символов (getBestCmap в fontTools).</summary>
+    /// <summary>Порядок выбора таблицы символов (платформа, кодировка): сначала полный Unicode, затем BMP и старые версии Unicode.</summary>
     private static readonly (int Platform, int Encoding)[] CmapPreferences = [(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)];
 
-    /// <summary>Записи name с заданными ID по всем шрифтам файла (_read_names); значения — ключи <see cref="FontText.FontKey"/>.</summary>
+    /// <summary>Записи name с заданными ID по всем шрифтам файла; значения — ключи <see cref="FontText.FontKey"/>.</summary>
     public static IReadOnlyDictionary<int, HashSet<string>> ReadNames(byte[] data, IEnumerable<int> ids)
     {
         var names = ids.Distinct().ToDictionary(i => i, _ => new HashSet<string>(StringComparer.Ordinal));
@@ -35,13 +34,13 @@ public static partial class SfntReader
         }
         catch (TruncatedFontException)
         {
-            // как struct.error в оригинале: прочитанное до обрыва остаётся
+            // данные оборвались: прочитанное до обрыва остаётся
         }
 
         return names;
     }
 
-    /// <summary>Основные и запасные имена (read_font_names).</summary>
+    /// <summary>Основные и запасные имена.</summary>
     public static FontNameSet ReadFontNames(byte[] data)
     {
         var names = ReadNames(data, [.. PrimaryNameIds, .. FallbackNameIds]);
@@ -51,7 +50,7 @@ public static partial class SfntReader
     }
 
     /// <summary>
-    /// Начертание и версия (face_info): начертание — PostScript-имена (ID 6), иначе полные (ID 4), через «|»;
+    /// Начертание и версия: начертание — PostScript-имена (ID 6), иначе полные (ID 4), через «|»;
     /// версия — наибольшее число из ID 5. Файлы с одним начертанием — копии одного шрифта.
     /// </summary>
     public static (string Face, double Version) FaceInfo(byte[] data)
@@ -64,7 +63,7 @@ public static partial class SfntReader
     }
 
     /// <summary>
-    /// Есть ли «Ж» (U+0416) хотя бы в одном шрифте файла. Коллекция — по расширению .ttc/.otc, как у оригинала.
+    /// Есть ли «Ж» (U+0416) хотя бы в одном шрифте файла. Коллекция — по расширению .ttc/.otc.
     /// Не разобрать файл (нет cmap/maxp, обрыв, неизвестный формат) — считаем, что кириллица есть.
     /// </summary>
     public static bool HasCyrillic(byte[] data, string extension)
@@ -74,7 +73,7 @@ public static partial class SfntReader
             var collection = extension.Equals(".ttc", StringComparison.OrdinalIgnoreCase) || extension.Equals(".otc", StringComparison.OrdinalIgnoreCase);
             if (collection != data.AsSpan().StartsWith("ttcf"u8))
             {
-                return true; // TTFont не открывает коллекцию без номера шрифта, TTCollection — не коллекцию
+                return true; // расширение не совпадает с содержимым — файл не разобрать
             }
 
             foreach (var offset in FontOffsets(data))
@@ -194,7 +193,7 @@ public static partial class SfntReader
             throw new NotSupportedException("не sfnt");
         }
 
-        // fontTools берёт число глифов из maxp, прежде чем строить таблицу символов
+        // Без maxp (числа глифов) шрифт не разбирается, как и без cmap
         _ = FindTable(data, offset, "maxp") ?? throw new NotSupportedException("нет maxp");
         var cmap = FindTable(data, offset, "cmap") ?? throw new NotSupportedException("нет cmap");
         var table = Slice(data, cmap.Offset, cmap.Length);
@@ -278,14 +277,14 @@ public static partial class SfntReader
         }
     }
 
-    /// <summary>float() в Python понимает цифры любого письма — приводим к ASCII.</summary>
+    /// <summary>Цифры любого письма → ASCII, чтобы номер версии разобрался как число.</summary>
     private static string AsciiDigits(string s) =>
         new([.. s.Select(c => char.IsDigit(c) ? (char)('0' + (int)char.GetNumericValue(c)) : c)]);
 
     private static bool IsSfntMagic(ReadOnlySpan<byte> magic) =>
         magic.SequenceEqual((byte[])[0, 1, 0, 0]) || magic.SequenceEqual("OTTO"u8) || magic.SequenceEqual("true"u8);
 
-    /// <summary>fh.seek + fh.read: за концом файла — меньше байт (или ни одного), без ошибки.</summary>
+    /// <summary>Кусок данных: за концом файла — меньше байт (или ни одного), без ошибки.</summary>
     private static ReadOnlySpan<byte> Slice(byte[] data, long offset, long length) => Clamp(data, offset, length);
 
     private static ReadOnlySpan<byte> Clamp(ReadOnlySpan<byte> data, long offset, long length)
@@ -307,6 +306,6 @@ public static partial class SfntReader
     [GeneratedRegex(@"(\d+(?:\.\d+)?)")]
     private static partial Regex VersionRegex();
 
-    /// <summary>Данные оборвались (struct.error в оригинале).</summary>
+    /// <summary>Данные оборвались.</summary>
     private sealed class TruncatedFontException : Exception;
 }

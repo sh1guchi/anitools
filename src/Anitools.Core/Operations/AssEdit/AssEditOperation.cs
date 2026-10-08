@@ -28,8 +28,8 @@ public sealed record AssEditResult(IReadOnlyList<(string File, int Removed)> Fil
 }
 
 /// <summary>
-/// Чистка .ass по стилю или актёру (edit_styles.py): оставить выбранные значения или удалить выбранные. Строки Dialogue
-/// делятся по запятой, как в оригинале. Файлы правятся на месте (UTF-8 с BOM), но сначала оригиналы копируются
+/// Чистка .ass по стилю или актёру: оставить выбранные значения или удалить выбранные. Строки Dialogue
+/// делятся просто по запятой. Файлы правятся на месте (UTF-8 с BOM), но сначала оригиналы копируются
 /// в ass_backup_&lt;дата&gt;; переводы строк сохраняются как в файле.
 /// </summary>
 public static class AssEditOperation
@@ -168,7 +168,7 @@ public static class AssEditOperation
     {
         try
         {
-            // utf-8-sig, как в оригинале: BOM UTF-8 снимается, остальное — строго UTF-8 (UTF-16 и cp1251 не трогаем)
+            // UTF-8 с необязательным BOM: BOM снимается, остальное — строго UTF-8 (UTF-16 и cp1251 не трогаем)
             var bytes = File.ReadAllBytes(file);
             var start = bytes.AsSpan().StartsWith((ReadOnlySpan<byte>)[0xEF, 0xBB, 0xBF]) ? 3 : 0;
             text = StrictUtf8.GetString(bytes, start, bytes.Length - start);

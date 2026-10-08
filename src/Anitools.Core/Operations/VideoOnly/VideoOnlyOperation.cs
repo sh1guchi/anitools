@@ -4,7 +4,7 @@ using Anitools.Core.Processes;
 
 namespace Anitools.Core.Operations.VideoOnly;
 
-/// <summary>П.1 «Оставить только видео» (keep_video_only, py:1116): первая видеодорожка без звука, субтитров и вложений.</summary>
+/// <summary>«Только видео»: первая видеодорожка без звука, субтитров и вложений.</summary>
 public static class VideoOnlyOperation
 {
     public const string OutputFolderName = "Video only";

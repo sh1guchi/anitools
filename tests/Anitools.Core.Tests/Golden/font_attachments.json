@@ -1,6 +1,6 @@
 {
   "function": "font_attachments",
-  "description": "Шрифт ли вложение mkvmerge (extract_fonts.py: is_font)",
+  "description": "Шрифт ли вложение mkvmerge — по имени файла и типу содержимого",
   "cases": [
     {"input": {"file_name": "Arial.TTF", "content_type": "application/x-truetype-font"}, "output": true},
     {"input": {"file_name": "a.otf", "content_type": "application/vnd.ms-opentype"}, "output": true},

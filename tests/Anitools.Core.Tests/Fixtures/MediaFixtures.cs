@@ -2,7 +2,7 @@ using Anitools.Tests.Shared;
 
 namespace Anitools.Core.Tests.Fixtures;
 
-/// <summary>Реальный вывод ffprobe / ffmpeg / mkvmerge из tools/golden_inputs/media (tools/capture_media_fixtures.py).</summary>
+/// <summary>Реальный вывод ffprobe / ffmpeg / mkvmerge для тестовых файлов (Fixtures/media, версии — в VERSIONS.txt).</summary>
 internal static class MediaFixtures
 {
     public static string DirectoryPath => RepoRoot.Combine("tests", "Anitools.Core.Tests", "Fixtures", "media");

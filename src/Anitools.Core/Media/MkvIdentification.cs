@@ -44,7 +44,7 @@ public sealed record MkvIdentification(IReadOnlyList<MkvTrack> Tracks, IReadOnly
     public bool IsMatroska => ContainerType is { } t && t.StartsWith("Matroska", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Дорожки субтитров как в оригинале (list_subtitle_tracks, py:2560): имя — track_name → тег name/title →
+    /// Дорожки субтитров: имя — track_name → тег name/title →
     /// «Язык: xxx» → «Субтитры N»; codec_id при отсутствии угадывается по названию кодека.
     /// </summary>
     public IReadOnlyList<SubtitleTrack> SubtitleTracks()

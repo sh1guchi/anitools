@@ -15,7 +15,7 @@ public sealed record VideoFontsResult(
     IReadOnlyList<(string Video, string Error)> Errors);
 
 /// <summary>
-/// Шрифты из видео → fonts.zip (extract_fonts.py): вложения-шрифты всех видео папки (mkvmerge -J →
+/// Шрифты из видео → fonts.zip: вложения-шрифты всех видео папки (mkvmerge -J →
 /// mkvextract attachments), одинаковые имена — один раз (берётся из первого видео), архив Deflate в папке.
 /// </summary>
 public sealed class VideoFontsOperation(IProcessRunner runner, ToolPaths tools, IMediaProbe probe, ErrorLogWriter logs)
@@ -31,7 +31,7 @@ public sealed class VideoFontsOperation(IProcessRunner runner, ToolPaths tools, 
         TextUtils.Lower(attachment.ContentType).Contains("font", StringComparison.Ordinal)
         || FontExtensions.Contains(MediaFiles.Suffix(TextUtils.Lower(attachment.FileName)), StringComparer.Ordinal);
 
-    /// <summary>Видео папки — по порядку sorted(Path) оригинала (имена в нижнем регистре по кодам символов).</summary>
+    /// <summary>Видео папки — по именам в нижнем регистре, по кодам символов.</summary>
     public static IReadOnlyList<string> ListVideos(string folder) =>
         [.. MediaFiles.List(folder, VideoExtensions).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 

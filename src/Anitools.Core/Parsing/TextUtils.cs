@@ -5,25 +5,24 @@ using System.Text;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Строки и регулярки «как в Python» — чтобы порт вёл себя как оригинал
-/// (reference/python/anitools.py) на любых именах: пробелы, регистр, int(),
-/// splitext/stem, порядок сортировки. Проверено на всём диапазоне Unicode (Python 3.13):
-/// \w = [\p{L}\p{N}_], \d = \p{Nd}, isalnum() = буква или цифра любого вида.
+/// Строки и регулярки по одним правилам для любых имён: пробелы, регистр, разбор целых чисел,
+/// расширение и имя без него, порядок сортировки. Правила — для всего диапазона Unicode:
+/// \w = [\p{L}\p{N}_], \d = \p{Nd}, <see cref="IsAlnum"/> — буква или цифра любого вида.
 /// </summary>
 internal static partial class TextUtils
 {
     // ── Фрагменты для регулярок .NET ──
-    // \w в Python: буква или цифра любого вида (L*, N*) или '_'.
-    // В .NET \w другой: в нём есть диакритика (Mn) и все Pc, но нет Nl/No («²», «Ⅻ»).
+    // \w: буква или цифра любого вида (L*, N*) или '_'.
+    // Встроенный \w в .NET другой: в нём есть диакритика (Mn) и все Pc, но нет Nl/No («²», «Ⅻ»).
     public const string Word = @"[\p{L}\p{N}_]";
 
-    // \W в Python
+    // \W — всё, кроме \w
     public const string NotWord = @"[^\p{L}\p{N}_]";
 
-    // Содержимое \s для вставки внутрь [...]: .NET \s плюс разделители \x1c–\x1f (str.isspace())
+    // Содержимое \s для вставки внутрь [...]: .NET \s плюс разделители \x1c–\x1f (как IsSpace)
     public const string SpaceChars = @"\s\x1c-\x1f";
 
-    // \s в Python
+    // \s — пробельный символ (IsSpace)
     public const string Space = "[" + SpaceChars + "]";
 
     // \b перед словом и после слова
@@ -31,10 +30,10 @@ internal static partial class TextUtils
 
     public const string WordEnd = @"(?![\p{L}\p{N}_])";
 
-    /// <summary>str.isspace() для одного символа.</summary>
+    /// <summary>Пробельный символ: char.IsWhiteSpace или разделители \x1c–\x1f.</summary>
     public static bool IsSpace(char c) => char.IsWhiteSpace(c) || c is >= '\x1c' and <= '\x1f';
 
-    /// <summary>str.splitlines(): границы — \n, \r, \r\n, \v, \f, \x1c–\x1e, \x85, U+2028, U+2029; последний перевод строки не даёт пустой строки.</summary>
+    /// <summary>Деление на строки: границы — \n, \r, \r\n, \v, \f, \x1c–\x1e, \x85, U+2028, U+2029; последний перевод строки не даёт пустой строки.</summary>
     public static IReadOnlyList<string> SplitLines(string s)
     {
         var lines = new List<string>();
@@ -62,7 +61,7 @@ internal static partial class TextUtils
         return lines;
     }
 
-    /// <summary>str.strip() без аргументов.</summary>
+    /// <summary>Без пробельных символов (<see cref="IsSpace"/>) по краям.</summary>
     public static string Strip(string s)
     {
         var start = 0;
@@ -80,13 +79,13 @@ internal static partial class TextUtils
         return s[start..end];
     }
 
-    /// <summary>str.lower(): ToLowerInvariant, но İ → i̇ (полное отображение Unicode, как в Python).</summary>
-    /// <remarks>Греческую Σ в конце слова Python превращает в ς, здесь будет σ — в именах файлов не встречается.</remarks>
+    /// <summary>Нижний регистр: ToLowerInvariant, но İ → i̇ (полное отображение Unicode).</summary>
+    /// <remarks>Конечная сигма не учитывается: Σ в конце слова → σ, а не ς — в именах файлов не встречается.</remarks>
     public static string Lower(string s) =>
         (s.Contains('İ', StringComparison.Ordinal) ? s.Replace("İ", "i̇", StringComparison.Ordinal) : s)
         .ToLowerInvariant();
 
-    /// <summary>str.casefold(): регистронезависимое сравнение (ß → ss, ſ → s, …).</summary>
+    /// <summary>Свёртка регистра Unicode (C+F) для сравнения без учёта регистра: ß → ss, ſ → s, …</summary>
     public static string CaseFold(string s)
     {
         var sb = new StringBuilder(s.Length);
@@ -109,10 +108,10 @@ internal static partial class TextUtils
         return sb.ToString();
     }
 
-    /// <summary>str.isalnum() для одного символа: буква или цифра любого вида.</summary>
+    /// <summary>Буква или цифра любого вида.</summary>
     public static bool IsAlnum(Rune rune) => Rune.IsLetter(rune) || Rune.IsNumber(rune);
 
-    /// <summary>Длина строки в символах Unicode, как len() в Python (а не в UTF-16).</summary>
+    /// <summary>Длина строки в символах Unicode (кодовых точках), а не в единицах UTF-16.</summary>
     public static int Len(string s)
     {
         var n = 0;
@@ -125,10 +124,10 @@ internal static partial class TextUtils
     }
 
     /// <summary>
-    /// int(str) из Python: пробелы по краям, знак, десятичные цифры любого письма («０３», «٢»),
-    /// одиночные '_' между цифрами. Иначе — <see cref="FormatException"/> (в Python — ValueError).
+    /// Целое из строки: пробелы по краям, знак, десятичные цифры любого письма («０３», «٢»),
+    /// одиночные '_' между цифрами. Иначе — <see cref="FormatException"/>.
     /// </summary>
-    /// <remarks>Пробелы здесь — как char.IsWhiteSpace: int() в отличие от strip() не срезает \x1c–\x1f.</remarks>
+    /// <remarks>Пробелы здесь — как char.IsWhiteSpace: в отличие от <see cref="Strip"/>, \x1c–\x1f не срезаются.</remarks>
     public static BigInteger ParseInt(string s)
     {
         var t = s.Trim();
@@ -156,7 +155,7 @@ internal static partial class TextUtils
             var digit = DecimalDigitValue(rune);
             if (digit < 0)
             {
-                throw new FormatException($"invalid literal for int(): '{s}'");
+                throw new FormatException($"Не целое число: {s}");
             }
 
             value = (value * 10) + digit;
@@ -167,7 +166,7 @@ internal static partial class TextUtils
 
         if (digits == 0 || !afterDigit)
         {
-            throw new FormatException($"invalid literal for int(): '{s}'");
+            throw new FormatException($"Не целое число: {s}");
         }
 
         return negative ? -value : value;
@@ -177,13 +176,13 @@ internal static partial class TextUtils
     public static int DecimalDigitValue(Rune rune) =>
         Rune.GetUnicodeCategory(rune) == UnicodeCategory.DecimalDigitNumber ? (int)Rune.GetNumericValue(rune) : -1;
 
-    /// <summary>str(int(s)) для строки цифр: «007» → «7».</summary>
+    /// <summary>Строка цифр как число без ведущих нулей: «007» → «7».</summary>
     public static string IntString(string s) => ParseInt(s).ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>f"{n:02d}".</summary>
+    /// <summary>Число не меньше чем из двух цифр: 5 → «05», 128 → «128».</summary>
     public static string Pad2(BigInteger n) => n.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0');
 
-    /// <summary>os.path.splitext с разделителями Windows (/ и \): «a.b.» → («a.b», «.»), «.mkv» → («.mkv», «»).</summary>
+    /// <summary>Путь → (без расширения, расширение), разделители Windows (/ и \): «a.b.» → («a.b», «.»), «.mkv» → («.mkv», «»).</summary>
     public static (string Root, string Ext) SplitExt(string p)
     {
         var sepIndex = Math.Max(p.LastIndexOf('/'), p.LastIndexOf('\\'));
@@ -203,7 +202,7 @@ internal static partial class TextUtils
         return (p, string.Empty);
     }
 
-    /// <summary>PurePath(p).stem: имя без последнего суффикса («a..b» → «a.», «.mkv» → «.mkv», «x.» → «x.»).</summary>
+    /// <summary>Имя файла из пути без последнего суффикса («a..b» → «a.», «.mkv» → «.mkv», «x.» → «x.»).</summary>
     public static string Stem(string p)
     {
         var path = p.TrimEnd('/', '\\');
@@ -212,7 +211,7 @@ internal static partial class TextUtils
         return i > 0 && i < name.Length - 1 ? name[..i] : name;
     }
 
-    /// <summary>Сравнение строк как в Python — по кодовым точкам, а не по единицам UTF-16.</summary>
+    /// <summary>Сравнение строк по кодовым точкам, а не по единицам UTF-16.</summary>
     public static int CompareCodePoints(string? a, string? b)
     {
         if (a is null || b is null)
@@ -235,7 +234,7 @@ internal static partial class TextUtils
         static int Fixup(char c) => c < 0xD800 ? c : c < 0xE000 ? c + 0x2000 : c - 0x800;
     }
 
-    /// <summary>Сравнение строк по кодовым точкам — для сортировок «как sorted() в Python».</summary>
+    /// <summary>Сравнение строк по кодовым точкам — для сортировок по коду символа.</summary>
     public static IComparer<string?> CodePointComparer { get; } = Comparer<string?>.Create(CompareCodePoints);
 
     private static void AppendRune(StringBuilder sb, Rune rune)

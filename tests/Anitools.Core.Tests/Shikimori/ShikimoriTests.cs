@@ -8,7 +8,7 @@ namespace Anitools.Core.Tests.Shikimori;
 public sealed class ShikimoriTests
 {
     [Fact]
-    public void Search_parses_like_original_and_requests_same_path() =>
+    public void Search_parses_like_golden_and_requests_same_path() =>
         GoldenAssert.All("shikimori_search", input =>
         {
             var api = FakeApi.Returning(Fixture("shikimori_search", input.GetProperty("response").GetString()!));
@@ -31,7 +31,7 @@ public sealed class ShikimoriTests
         });
 
     [Fact]
-    public void Ranking_matches_original() =>
+    public void Ranking_matches_golden() =>
         GoldenAssert.All("shikimori_rank", input =>
         {
             var query = ShikimoriQuery.FromTitle(input.GetProperty("title").GetString()!);
@@ -57,7 +57,7 @@ public sealed class ShikimoriTests
         });
 
     [Fact]
-    public void Kind_names_match_original()
+    public void Kind_names_match_golden()
     {
         var expected = Parsing.AnitomyTests.Constant("_SHIKI_KIND_RU").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetString()!);
         Assert.Equal(expected, ShikimoriAnime.KindNames);

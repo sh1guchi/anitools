@@ -6,7 +6,7 @@ public sealed record HlsRung(string Name, int Width, int Height, long Bitrate);
 /// <summary>Чем кодировать видео.</summary>
 public enum EncoderProfile
 {
-    /// <summary>Видеокарта NVIDIA: NVDEC → scale_cuda → h264_nvenc, как в оригинале.</summary>
+    /// <summary>Видеокарта NVIDIA: NVDEC → scale_cuda → h264_nvenc.</summary>
     Nvenc,
 
     /// <summary>Процессор: scale → libx264. Для тестов и компьютеров без NVIDIA.</summary>
@@ -16,10 +16,10 @@ public enum EncoderProfile
 /// <summary>Постоянное качество (CQ) с потолком битрейта для одного разрешения.</summary>
 public sealed record RateControl(double Cq, long MaxRate);
 
-/// <summary>Параметры п.7; значения по умолчанию — константы оригинала (py:3697–3751).</summary>
+/// <summary>Параметры HLS и их значения по умолчанию.</summary>
 public sealed record HlsSettings
 {
-    /// <summary>Лестница качеств (_HLS_RESOLUTIONS): всегда все шесть, верхнее — 4K.</summary>
+    /// <summary>Лестница качеств: всегда все шесть, верхнее — 4K.</summary>
     public static IReadOnlyList<HlsRung> DefaultLadder { get; } =
     [
         new("360p", 640, 360, 800_000),
