@@ -85,6 +85,36 @@ public sealed class ToolsIntegrationTests
     }
 
     [Fact]
+    public async Task Audio_convert_to_mov_keeps_only_audio()
+    {
+        var (tools, probe) = Tools();
+        using var dir = new TempDir();
+        // mp3 с обложкой: в m4a обложка переносится, в .mov — нет, там только звук
+        await MediaFactory.CreateAsync(dir.Combine("C.mp3"),
+        [
+            .. MediaFactory.Sine(440), "-f", "lavfi", "-i", "color=c=red:s=64x64:d=1",
+            "-map", "0:a", "-map", "1:v", "-c:a", "libmp3lame", "-c:v", "png", "-frames:v", "1", "-disposition:v:0", "attached_pic",
+        ]);
+        Assert.Single((await probe.ProbeAsync(dir.Combine("C.mp3"), Ct)).VideoStreams);
+
+        var mov = await Execute(tools, probe, dir, AudioConvertOperation.Plan(dir.Path, new AudioConvertOptions { Format = AudioFormat.Mov }), 8);
+
+        var item = Assert.Single(mov.Items);
+        Assert.True(item.Outcome == ItemOutcome.Done, $"{item.Message} {item.LogPath}");
+        var info = await probe.ProbeAsync(dir.Combine("converted", "C.mov"), Ct);
+        Assert.Empty(info.VideoStreams);
+        Assert.Equal(("aac", 2), (Assert.Single(info.AudioStreams).CodecName, info.AudioStreams[0].Channels));
+        // именно QuickTime: в ftyp основной бренд «qt  », а не mp4/m4a
+        var head = new byte[12];
+        await using (var file = File.OpenRead(dir.Combine("converted", "C.mov")))
+        {
+            await file.ReadExactlyAsync(head, Ct);
+        }
+
+        Assert.Equal("ftypqt  ", System.Text.Encoding.ASCII.GetString(head, 4, 8));
+    }
+
+    [Fact]
     public async Task Hardsub_burns_subtitles_into_part_file_then_renames()
     {
         var (tools, probe) = Tools();

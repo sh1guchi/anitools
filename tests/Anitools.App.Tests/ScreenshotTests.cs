@@ -325,7 +325,7 @@ public sealed class ScreenshotTests
         using var app = new AppFixture().WithFiles([.. Episodes.Take(6).Select(e => Path.ChangeExtension(e, ".flac")), "OST - 01.wav"]);
         var (vm, window) = await OpenAsync(app);
         vm.SelectedNav = vm.AudioConvertPage;
-        vm.AudioConvertPage.Format = Anitools.Core.Operations.AudioTools.AudioFormat.Opus;
+        vm.AudioConvertPage.Format = Anitools.Core.Operations.AudioTools.AudioFormat.Mov;
         await AppFixture.WaitUntilAsync(() => vm.AudioConvertPage.Preview.Rows.Count == 7, "план");
 
         Capture(window, "audio-convert");

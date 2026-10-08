@@ -68,6 +68,14 @@ public sealed class ToolPagesTests
         Assert.Equal("→ " + Path.Combine("converted", "Show - 01.flac"), convert.Preview.Rows[0].Target);
         convert.Channels = "";
         Assert.DoesNotContain("-ac", convert.Preview.Plan!.Items[0].Command!.Arguments);
+
+        // MOV — AAC в QuickTime, только звук: обложка (attached_pic) не переносится
+        convert.Format = AudioFormat.Mov;
+        Assert.True(convert.HasBitrate);
+        Assert.Equal("→ " + Path.Combine("converted", "Show - 01.mov"), convert.Preview.Rows[0].Target);
+        Assert.DoesNotContain("attached_pic", convert.Preview.Plan!.Items[0].Command!.Arguments);
+        Assert.Equal("MOV · AAC, только звук", Views.Converters.AudioFormatLabel.Convert(AudioFormat.Mov, typeof(string), null, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal("FLAC", Views.Converters.AudioFormatLabel.Convert("Flac", typeof(string), null, System.Globalization.CultureInfo.InvariantCulture));
     }
 
     [AvaloniaFact]

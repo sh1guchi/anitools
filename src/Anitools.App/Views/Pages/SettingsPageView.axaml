@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Anitools.App.ViewModels"
              xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:v="using:Anitools.App.Views"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.SettingsPageView"
              x:DataType="vm:SettingsPageViewModel">
@@ -265,7 +266,13 @@
               <HeaderedContentControl Classes="field" Header="Перекодирование аудио: формат · битрейт · каналов · файлов сразу">
                 <StackPanel Spacing="8">
                   <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ComboBox ItemsSource="{Binding AudioFormats}" SelectedItem="{Binding AudioConvertFormat}" Width="96" HorizontalAlignment="Left" />
+                    <ComboBox ItemsSource="{Binding AudioFormats}" SelectedItem="{Binding AudioConvertFormat}" Width="240" HorizontalAlignment="Left">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding Converter={x:Static v:Converters.AudioFormatLabel}}" />
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <TextBox Text="{Binding AudioConvertBitrate}" Width="70" HorizontalAlignment="Left" />
                     <TextBox Text="{Binding AudioConvertChannels}" Width="80" PlaceholderText="как есть" HorizontalAlignment="Left" />
                     <TextBox Text="{Binding AudioConvertWorkers}" Width="56" HorizontalAlignment="Left" />

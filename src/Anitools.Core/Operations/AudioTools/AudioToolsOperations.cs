@@ -111,6 +111,9 @@ public enum AudioFormat
 
     /// <summary>PCM 16 бит, без потерь.</summary>
     Wav,
+
+    /// <summary>AAC LC в QuickTime (.mov) — только аудио, без обложки (для монтажных программ).</summary>
+    Mov,
 }
 
 public sealed record AudioConvertOptions
@@ -149,6 +152,7 @@ public static class AudioConvertOperation
         AudioFormat.Ogg => (".ogg", ["-c:a", "libvorbis", "-b:a", bitrate]),
         AudioFormat.Flac => (".flac", ["-c:a", "flac"]),
         AudioFormat.Wav => (".wav", ["-c:a", "pcm_s16le"]),
+        AudioFormat.Mov => (".mov", ["-c:a", "aac", "-profile:a", "aac_low", "-b:a", bitrate]),
         _ => throw new ArgumentOutOfRangeException(nameof(format)),
     };
 
@@ -183,9 +187,9 @@ public static class AudioConvertOperation
             }
 
             args.AddRange(["-map_metadata", "0"]);
-            if (ext != ".mka")
+            if (ext is not (".mka" or ".mov"))
             {
-                // Обложку как attached_pic понимают mp4/m4a/mp3 и т.п., но не Matroska
+                // Обложку как attached_pic понимают mp4/m4a/mp3 и т.п., но не Matroska; в .mov — только аудио
                 args.AddRange(["-map", "0:v?", "-c:v", "copy", "-disposition:v", "attached_pic"]);
             }
 
