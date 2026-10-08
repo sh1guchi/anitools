@@ -18,11 +18,12 @@ public sealed record ToolChip(string Name, string? Version, bool Ok, string Tip)
 }
 
 /// <summary>
-/// Главное окно (§4.2): рабочая папка сверху, навигация по инструментам слева, страница справа,
-/// внизу — найденные программы и текущая задача.
+/// Главное окно (§4.2) в оформлении Anime Uploader: слева — меню по разделам и рабочая папка, сверху — название
+/// страницы, текущая задача и найденные программы, справа сверху — всплывающие уведомления.
 /// </summary>
 public sealed partial class MainWindowViewModel : ObservableObject, IShell
 {
+    private const int MaxToasts = 5;
     private readonly List<PageViewModel> _pages = [];
     private INavItem? _lastPage;
 
@@ -78,6 +79,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
             SettingsPage,
         ];
         _pages.AddRange(Navigation.OfType<PageViewModel>());
+        BottomNavigation = [JobsPage, SettingsPage];
+        ToolNavigation = [.. Navigation.Where(n => n is not NavSeparator && !BottomNavigation.Contains(n))];
 
         RecentFolders = new ObservableCollection<string>(services.Settings.RecentFolders);
         FolderMessage = startup?.Error ?? services.SettingsError;
@@ -98,6 +101,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         services.Jobs.JobFinished += job => Dispatcher.UIThread.Post(() =>
         {
             UpdateCurrentJob();
+            ToastFinished(job);
             // в папке задачи что-то появилось — «уже готово» и т.п. надо пересчитать
             foreach (var page in _pages.Where(p => p.UsesFolder && SamePath(p.Folder, job.Folder)))
             {
@@ -115,6 +119,38 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     public Func<string, long?> FileSize { get; }
 
     public IReadOnlyList<INavItem> Navigation { get; }
+
+    /// <summary>Инструменты по разделам — меню слева.</summary>
+    public IReadOnlyList<INavItem> ToolNavigation { get; }
+
+    /// <summary>«Задачи» и «Настройки» — внизу меню, всегда на виду.</summary>
+    public IReadOnlyList<INavItem> BottomNavigation { get; }
+
+    /// <summary>Выбранное в верхнем меню (null — выбрано в нижнем).</summary>
+    public INavItem? SelectedTool
+    {
+        get => SelectedNav is { } nav && ToolNavigation.Contains(nav) ? nav : null;
+        set
+        {
+            if (value is not null)
+            {
+                SelectedNav = value;
+            }
+        }
+    }
+
+    /// <summary>Выбранное в нижнем меню (null — выбрано в верхнем).</summary>
+    public INavItem? SelectedBottom
+    {
+        get => SelectedNav is { } nav && BottomNavigation.Contains(nav) ? nav : null;
+        set
+        {
+            if (value is not null)
+            {
+                SelectedNav = value;
+            }
+        }
+    }
 
     public JobsPageViewModel JobsPage { get; }
 
@@ -154,6 +190,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
     public string Version { get; } = $"{AppInfo.Name} {AppInfo.Version}";
 
+    /// <summary>Под названием слева сверху: «0.1.0 · by shiguchi».</summary>
+    public string BrandSubtitle { get; } = $"{AppInfo.Version} · by shiguchi";
+
+    /// <summary>Всплывающие уведомления, новые снизу (не больше пяти).</summary>
+    public ObservableCollection<ToastViewModel> Toasts { get; } = [];
+
     /// <summary>Рабочая папка; пусто — не выбрана.</summary>
     [ObservableProperty]
     public partial string Folder { get; set; } = "";
@@ -174,12 +216,31 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
     public ObservableCollection<ToolChip> ToolChips { get; } = [];
 
+    /// <summary>Одна плашка вместо всех в узком окне: «программы» или чего нет — «ffmpeg, NVENC».</summary>
+    [ObservableProperty]
+    public partial string ToolsSummary { get; set; } = "";
+
+    [ObservableProperty]
+    public partial bool ToolsOk { get; set; } = true;
+
+    [ObservableProperty]
+    public partial string ToolsSummaryTip { get; set; } = "";
+
     [ObservableProperty]
     public partial JobViewModel? CurrentJob { get; set; }
 
     public bool HasFolder => Folder.Length > 0;
 
     public string FolderDisplay => HasFolder ? Folder : "Папка не выбрана — «Обзор…» или перетащите папку на окно";
+
+    /// <summary>Имя рабочей папки для карточки слева внизу.</summary>
+    public string FolderName => HasFolder ? Path.GetFileName(Folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is { Length: > 0 } name ? name : Folder : "Папка не выбрана";
+
+    /// <summary>Где она лежит; без папки — подсказка.</summary>
+    public string FolderParent => HasFolder ? Path.GetDirectoryName(Folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) ?? "" : "«Обзор…» или перетащите на окно";
+
+    /// <summary>Строка рядом с названием страницы: рабочая папка или пояснение страницы без папки.</summary>
+    public string TopSubtitle => CurrentPage is { UsesFolder: false } page ? page.Subtitle ?? "" : FolderDisplay;
 
     /// <summary>Открыть папку (Обзор, недавние, перетаскивание, вторая копия приложения); нет такой — сообщение.</summary>
     public bool OpenFolder(string path)
@@ -222,6 +283,24 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     [RelayCommand]
     public void ShowJobs() => SelectedNav = JobsPage;
 
+    /// <summary>Уведомление справа сверху; такое же только что было — не повторять.</summary>
+    public void Toast(string text, ToastKind kind = ToastKind.Info)
+    {
+        if (Toasts.Any(t => t.Text == text && !t.IsLeaving))
+        {
+            return;
+        }
+
+        var toast = new ToastViewModel(text, kind, CloseToast);
+        Toasts.Add(toast);
+        while (Toasts.Count > MaxToasts)
+        {
+            Toasts.RemoveAt(0);
+        }
+
+        DispatcherTimer.RunOnce(() => CloseToast(toast), ToastViewModel.DefaultDuration(kind));
+    }
+
     public async Task CheckToolsAsync()
     {
         var status = await Task.Run(() => Services.CheckToolsAsync());
@@ -239,12 +318,19 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
         ToolChips.Add(new ToolChip("NVENC", null, status.Nvenc == true,
             status.Nvenc == true ? "h264_nvenc и scale_cuda есть" : "в ffmpeg нет h264_nvenc/scale_cuda — HLS только на процессоре"));
+        var missing = ToolChips.Where(c => !c.Ok).Select(c => c.Name).ToList();
+        ToolsOk = missing.Count == 0;
+        ToolsSummary = ToolsOk ? "программы" : string.Join(", ", missing);
+        ToolsSummaryTip = string.Join("\n", ToolChips.Select(c => $"{(c.Ok ? "✓" : "!")} {c.Text} — {c.Tip}"));
     }
 
     partial void OnFolderChanged(string value)
     {
         OnPropertyChanged(nameof(HasFolder));
         OnPropertyChanged(nameof(FolderDisplay));
+        OnPropertyChanged(nameof(FolderName));
+        OnPropertyChanged(nameof(FolderParent));
+        OnPropertyChanged(nameof(TopSubtitle));
         foreach (var page in _pages)
         {
             page.SetFolder(value);
@@ -253,6 +339,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
     partial void OnSelectedNavChanged(INavItem? value)
     {
+        OnPropertyChanged(nameof(SelectedTool));
+        OnPropertyChanged(nameof(SelectedBottom));
         if (value is PageViewModel page)
         {
             _lastPage = page;
@@ -269,6 +357,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
     {
         oldValue?.Deactivate();
         newValue?.Activate();
+        OnPropertyChanged(nameof(TopSubtitle));
     }
 
     [RelayCommand]
@@ -303,6 +392,36 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
             OnPropertyChanged(nameof(HasRecentFolders));
         }
+    }
+
+    /// <summary>Итог задачи — уведомлением: видно, даже если открыта другая страница.</summary>
+    private void ToastFinished(Job job)
+    {
+        var snapshot = job.Snapshot;
+        switch (snapshot.State)
+        {
+            case JobState.Done:
+                Toast($"{job.Title} — {(string.IsNullOrEmpty(snapshot.Summary) ? "готово" : snapshot.Summary)}", ToastKind.Ok);
+                break;
+            case JobState.Failed:
+                Toast($"{job.Title} — {(string.IsNullOrEmpty(snapshot.Summary) ? "ошибка" : snapshot.Summary)}", ToastKind.Error);
+                break;
+            case JobState.Cancelled:
+                Toast($"{job.Title} — отменено", ToastKind.Warn);
+                break;
+        }
+    }
+
+    /// <summary>Погасить и убрать.</summary>
+    private void CloseToast(ToastViewModel toast)
+    {
+        if (toast.IsLeaving || !Toasts.Contains(toast))
+        {
+            return;
+        }
+
+        toast.IsLeaving = true;
+        DispatcherTimer.RunOnce(() => Toasts.Remove(toast), TimeSpan.FromMilliseconds(180));
     }
 
     private void UpdateCurrentJob()

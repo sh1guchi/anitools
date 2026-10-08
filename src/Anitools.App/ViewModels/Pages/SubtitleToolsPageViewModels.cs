@@ -52,7 +52,9 @@ public sealed partial class SubShiftPageViewModel(IShell shell) : PageViewModel(
         var results = await Task.Run(() => SubtitleShift.Execute(folder, seconds));
         var failed = results.Where(r => r.Error is not null).ToList();
         Message = failed.Count > 0 ? "Не вышло: " + string.Join("; ", failed.Select(f => $"{Path.GetFileName(f.Source)} — {f.Error}")) : null;
-        Notice = $"Сдвинуто на {seconds.ToString("+0.###;−0.###", CultureInfo.InvariantCulture)} с: {results.Count - failed.Count} из {results.Count} → {SubtitleShift.OutputFolderName}";
+        Shell.Toast(
+            $"Сдвинуто на {seconds.ToString("+0.###;−0.###", CultureInfo.InvariantCulture)} с: {results.Count - failed.Count} из {results.Count} → {SubtitleShift.OutputFolderName}",
+            failed.Count > 0 ? ToastKind.Warn : ToastKind.Ok);
     }
 }
 
@@ -198,8 +200,10 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
         }
 
         var result = await Task.Run(() => AssEditOperation.Execute(inspection, remove));
-        Notice = $"Удалено строк: {result.TotalRemoved} · оригиналы — в {Path.GetFileName(result.BackupFolder)}"
-            + (result.Failed.Count > 0 ? " · не вышло: " + string.Join("; ", result.Failed.Select(f => $"{Path.GetFileName(f.File)} — {f.Error}")) : "");
+        Shell.Toast(
+            $"Удалено строк: {result.TotalRemoved} · оригиналы — в {Path.GetFileName(result.BackupFolder)}"
+                + (result.Failed.Count > 0 ? " · не вышло: " + string.Join("; ", result.Failed.Select(f => $"{Path.GetFileName(f.File)} — {f.Error}")) : ""),
+            result.Failed.Count > 0 ? ToastKind.Warn : ToastKind.Ok);
         await RefreshAsync();
     }
 

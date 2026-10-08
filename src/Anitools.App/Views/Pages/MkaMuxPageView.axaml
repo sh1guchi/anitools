@@ -6,55 +6,90 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.MkaMuxPageView"
              x:DataType="p:MkaMuxPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
-              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
-    </Grid>
-    <ScrollViewer DockPanel.Dock="Top" MaxHeight="420" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,12">
-      <Border Classes="card" Margin="0,0,12,0">
-        <StackPanel Spacing="8">
-          <WrapPanel Orientation="Horizontal">
-            <TextBlock Text="Режим:" VerticalAlignment="Center" Margin="0,0,12,0" />
-            <RadioButton GroupName="mkaMode" Content="по сериям" IsChecked="{Binding IsByEpisode}" Margin="0,0,16,0" />
-            <RadioButton x:Name="SingleRadio" GroupName="mkaMode" Content="всё в один:" IsChecked="{Binding IsSingleFile}" Margin="0,0,6,0" />
-            <TextBox Text="{Binding SingleName}" Width="240" IsEnabled="{Binding IsSingleFile}" />
-            <TextBlock Text="{Binding FilesCaption}" Classes="muted" VerticalAlignment="Center" Margin="16,0,0,0" />
-          </WrapPanel>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Озвучки папки и подпапок («N. Озвучка\…») → папка «MKA»: на каждую серию один .mka со всеми озвучками, без перекодирования." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <CheckBox Content="язык дорожек по умолчанию" IsChecked="{Binding SetLanguage}" />
-            <TextBox Text="{Binding Language}" Width="70" IsEnabled="{Binding SetLanguage}" />
-            <TextBlock Text="оригинальная и английская озвучки определяются сами" Classes="muted small" VerticalAlignment="Center" />
+            <mi:MaterialIcon Kind="Play" />
+            <TextBlock x:Name="RunText" Text="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
           </StackPanel>
-          <TextBlock Classes="h2" Text="Озвучки — по порядку дорожек; первая станет дорожкой по умолчанию" Margin="0,4,0,0" />
-          <ItemsControl x:Name="LabelsList" ItemsSource="{Binding Labels}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="p:MkaLabelRowViewModel">
-                <Grid ColumnDefinitions="28,200,*,240,Auto" Margin="0,2">
-                  <TextBlock Text="{Binding Position}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                  <TextBlock Grid.Column="1" Text="{Binding Label}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
-                  <TextBlock Grid.Column="2" Text="{Binding Example}" Classes="muted small" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
-                  <ComboBox Grid.Column="3" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Title}"
-                            ItemsSource="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).Voices}" />
-                  <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="6,0,0,0">
-                    <Button Classes="icon" ToolTip.Tip="Выше" CommandParameter="{Binding}"
-                            Command="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).MoveUpCommand}">
-                      <mi:MaterialIcon Kind="ArrowUp" />
-                    </Button>
-                    <Button Classes="icon" ToolTip.Tip="Ниже" CommandParameter="{Binding}"
-                            Command="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).MoveDownCommand}">
-                      <mi:MaterialIcon Kind="ArrowDown" />
-                    </Button>
-                  </StackPanel>
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
-    </ScrollViewer>
-    <c:PlanPreviewView DataContext="{Binding Preview}" />
+        </Button>
+      </Grid>
+    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <ScrollViewer DockPanel.Dock="Top" MaxHeight="430" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,14">
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <WrapPanel Orientation="Horizontal" ItemSpacing="28" LineSpacing="12">
+              <HeaderedContentControl Classes="field" Header="Режим">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Classes="seg">
+                    <StackPanel Orientation="Horizontal">
+                      <RadioButton Classes="seg" GroupName="mkaMode" Content="по сериям" IsChecked="{Binding IsByEpisode}" />
+                      <RadioButton x:Name="SingleRadio" Classes="seg" GroupName="mkaMode" Content="всё в один файл" IsChecked="{Binding IsSingleFile}" />
+                    </StackPanel>
+                  </Border>
+                  <TextBox Text="{Binding SingleName}" Width="240" IsVisible="{Binding IsSingleFile}" PlaceholderText="имя файла" HorizontalAlignment="Left" />
+                </StackPanel>
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Язык дорожек">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <CheckBox Content="по умолчанию" IsChecked="{Binding SetLanguage}" MinHeight="34" />
+                  <TextBox Text="{Binding Language}" Width="70" IsEnabled="{Binding SetLanguage}" HorizontalAlignment="Left" />
+                </StackPanel>
+              </HeaderedContentControl>
+            </WrapPanel>
+            <StackPanel Spacing="8">
+              <c:CardHead Icon="AccountVoice" Title="Озвучки" Caption="{Binding FilesCaption}" Margin="0" />
+              <Grid Classes="hint">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <mi:MaterialIcon Kind="InformationOutline" />
+                <TextBlock Grid.Column="1" Text="По порядку дорожек: первая станет дорожкой по умолчанию. Оригинальная и английская озвучки определяются сами." />
+              </Grid>
+              <ItemsControl x:Name="LabelsList" ItemsSource="{Binding Labels}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="5" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="p:MkaLabelRowViewModel">
+                    <Border Classes="box" Padding="8,5">
+                      <Grid ColumnDefinitions="28,200,*,240,Auto">
+                        <TextBlock Text="{Binding Position}" Classes="cyan b" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding Label}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="4,0,8,0" />
+                        <TextBlock Grid.Column="2" Text="{Binding Example}" Classes="dim sm" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                        <ComboBox Grid.Column="3" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Title}"
+                                  ItemsSource="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).Voices}" />
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="6,0,0,0">
+                          <Button Classes="icon" ToolTip.Tip="Выше" CommandParameter="{Binding}"
+                                  Command="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).MoveUpCommand}">
+                            <mi:MaterialIcon Kind="ArrowUp" />
+                          </Button>
+                          <Button Classes="icon" ToolTip.Tip="Ниже" CommandParameter="{Binding}"
+                                  Command="{Binding $parent[UserControl].((p:MkaMuxPageViewModel)DataContext).MoveDownCommand}">
+                            <mi:MaterialIcon Kind="ArrowDown" />
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+      <c:PlanPreviewView DataContext="{Binding Preview}" />
+    </DockPanel>
   </DockPanel>
 </UserControl>

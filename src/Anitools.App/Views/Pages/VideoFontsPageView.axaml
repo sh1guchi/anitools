@@ -1,38 +1,58 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:p="using:Anitools.App.ViewModels.Pages"
-             xmlns:ot="using:Anitools.Core.Operations.TrackList"
              xmlns:c="using:Anitools.App.Views.Controls"
              xmlns:v="using:Anitools.App.Views"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.VideoFontsPageView"
              x:DataType="p:VideoFontsPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <TextBlock DockPanel.Dock="Top" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,12"
-               Text="Вложенные шрифты всех видео папки (MKV) → fonts.zip; одинаковые имена — один раз, из первого видео." />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}" Content="Собрать fonts.zip"
-              IsEnabled="{Binding Videos.Count, Converter={x:Static v:Converters.IsPositive}}" />
-    </Grid>
-    <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,12,0,0"
-            IsVisible="{Binding Result, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock x:Name="ResultText" Text="{Binding Result}" TextWrapping="Wrap" VerticalAlignment="Center" />
-        <Button Grid.Column="1" Content="Открыть папку" Command="{Binding OpenZipFolderCommand}"
-                IsVisible="{Binding ZipPath, Converter={x:Static ObjectConverters.IsNotNull}}" />
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Вложенные шрифты всех видео папки (MKV) → fonts.zip; одинаковые имена — один раз, из первого видео." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Videos.Count, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="FolderZipOutline" />
+            <TextBlock Text="Собрать fonts.zip" />
+          </StackPanel>
+        </Button>
       </Grid>
     </Border>
-    <Border Classes="card">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="VideosList" ItemsSource="{Binding Videos}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="x:String">
-              <TextBlock Text="{Binding}" Margin="0,2" TextTrimming="CharacterEllipsis" />
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,14,0,0"
+              IsVisible="{Binding Result, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <mi:MaterialIcon Kind="CheckCircleOutline" Classes="ok" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <TextBlock x:Name="ResultText" Grid.Column="1" Text="{Binding Result}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="2" Classes="sm" Command="{Binding OpenZipFolderCommand}"
+                  IsVisible="{Binding ZipPath, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <mi:MaterialIcon Kind="FolderOpenOutline" />
+              <TextBlock Text="Открыть папку" />
+            </StackPanel>
+          </Button>
+        </Grid>
+      </Border>
+      <Border Classes="card" Padding="0,14,0,6" VerticalAlignment="Top" IsVisible="{Binding Videos.Count, Converter={x:Static v:Converters.IsPositive}}">
+        <DockPanel>
+          <c:CardHead DockPanel.Dock="Top" Icon="FilmstripBoxMultiple" Title="Видео" Caption="{Binding Videos.Count}" Margin="18,0,18,8" />
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="VideosList" ItemsSource="{Binding Videos}" Margin="10,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="x:String">
+                  <Border Classes="tblRow" Padding="8,7">
+                    <TextBlock Text="{Binding}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </DockPanel>
   </DockPanel>
 </UserControl>

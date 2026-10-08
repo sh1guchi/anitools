@@ -6,142 +6,329 @@
         x:Class="Anitools.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="anitools"
-        Width="1280" Height="800"
-        MinWidth="900" MinHeight="600"
+        Width="1280" Height="880"
+        MinWidth="980" MinHeight="600"
+        Background="{StaticResource BgBrush}"
         DragDrop.AllowDrop="True">
-  <Grid RowDefinitions="Auto,Auto,*,Auto">
+  <Window.Styles>
+    <!-- заголовки разделов в меню не выбираются -->
+    <Style Selector="ListBox.nav ListBoxItem" x:DataType="vm:INavItem">
+      <Setter Property="IsEnabled" Value="{Binding IsPage}" />
+    </Style>
+    <!-- карточка рабочей папки слева внизу (.conn-badge) -->
+    <Style Selector="Button.folderBadge">
+      <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="11,9" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.folderBadge:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.folderBadge:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+    </Style>
+    <Style Selector="Border.dot">
+      <Setter Property="Width" Value="9" />
+      <Setter Property="Height" Value="9" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Background" Value="{StaticResource FaintBrush}" />
+    </Style>
+    <Style Selector="Border.dot.ok">
+      <Setter Property="Background" Value="{StaticResource GreenBrush}" />
+      <Setter Property="BoxShadow" Value="0 0 0 3 #1F50D787" />
+    </Style>
 
-    <!-- Шапка: ▌ ANITOOLS by shiguchi + рабочая папка -->
-    <Border Grid.Row="0"
-            Padding="16,10"
-            Background="{StaticResource HeaderBackgroundBrush}"
-            BorderBrush="{StaticResource DividerBrush}"
-            BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,28,*,Auto">
-        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <Border Width="5" Height="26" CornerRadius="1" Background="{StaticResource AccentBrush}" />
-          <TextBlock Text="ANITOOLS" FontSize="20" FontWeight="Bold" LetterSpacing="2" VerticalAlignment="Center" />
-          <TextBlock Text="by shiguchi" Opacity="0.55" VerticalAlignment="Center" Margin="0,4,0,0" />
-        </StackPanel>
-        <Button Grid.Column="2" Classes="link" HorizontalAlignment="Left" VerticalAlignment="Center"
-                Command="{Binding OpenFolderInExplorerCommand}"
-                ToolTip.Tip="Рабочая папка — открыть в проводнике. Сменить: «Обзор», «Недавние» или перетащить папку на окно.">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <mi:MaterialIcon Kind="FolderOpen" Classes="accent" Width="20" Height="20" />
-            <TextBlock x:Name="FolderText" Text="{Binding FolderDisplay}" FontWeight="SemiBold"
-                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-          </StackPanel>
-        </Button>
-        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-          <Button x:Name="BrowseButton" Command="{Binding BrowseCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <mi:MaterialIcon Kind="FolderSearchOutline" />
-              <TextBlock Text="Обзор…" />
-            </StackPanel>
-          </Button>
-          <Button x:Name="RecentButton" IsEnabled="{Binding HasRecentFolders}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <mi:MaterialIcon Kind="History" />
-              <TextBlock Text="Недавние" />
-              <mi:MaterialIcon Kind="ChevronDown" />
-            </StackPanel>
-            <Button.Flyout>
-              <MenuFlyout Placement="BottomEdgeAlignedRight" />
-            </Button.Flyout>
-          </Button>
-        </StackPanel>
-      </Grid>
-    </Border>
+    <!-- мини-ход задачи в шапке (.job-pill) -->
+    <Style Selector="Button.jobPill">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="CornerRadius" Value="20" />
+      <Setter Property="Padding" Value="10,4,12,4" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.jobPill:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.jobPill:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#389B73FF" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    </Style>
+    <Style Selector="ProgressBar.mini">
+      <Setter Property="Width" Value="70" />
+      <Setter Property="Height" Value="5" />
+      <Setter Property="MinHeight" Value="5" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Background" Value="{StaticResource Line2Brush}" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    </Style>
 
-    <!-- Предупреждение: папка не найдена, настройки не прочитались -->
-    <Border Grid.Row="1" Classes="message" Margin="16,8,16,0"
-            IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <mi:MaterialIcon Kind="AlertCircleOutline" Classes="bad" VerticalAlignment="Center" Margin="0,0,8,0" />
-        <SelectableTextBlock x:Name="FolderMessageText" Grid.Column="1" Text="{Binding FolderMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
-        <Button Grid.Column="2" Classes="icon" Command="{Binding DismissFolderMessageCommand}" ToolTip.Tip="Скрыть">
-          <mi:MaterialIcon Kind="Close" />
-        </Button>
-      </Grid>
-    </Border>
+    <!-- программы в шапке (.tool) -->
+    <Style Selector="Border.tool">
+      <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="6,2,8,2" />
+    </Style>
+    <Style Selector="Border.tool TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    </Style>
+    <Style Selector="Border.tool mi|MaterialIcon">
+      <Setter Property="Width" Value="13" />
+      <Setter Property="Height" Value="13" />
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.tool.bad">
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource YellowLineBrush}" />
+    </Style>
+    <Style Selector="Border.tool.bad TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.tool.bad mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
 
-    <!-- Навигация по инструментам и страница -->
-    <Grid Grid.Row="2" ColumnDefinitions="232,*">
-      <Border Background="{StaticResource NavBackgroundBrush}"
-              BorderBrush="{StaticResource DividerBrush}"
-              BorderThickness="0,0,1,0">
-        <ListBox x:Name="NavList"
-                 ItemsSource="{Binding Navigation}"
-                 SelectedItem="{Binding SelectedNav}"
-                 Background="Transparent"
-                 Padding="6,4">
-          <ListBox.Styles>
-            <Style Selector="ListBoxItem" x:DataType="vm:INavItem">
-              <Setter Property="IsEnabled" Value="{Binding IsPage}" />
-              <Setter Property="Padding" Value="10,5" />
-              <Setter Property="MinHeight" Value="0" />
-              <Setter Property="CornerRadius" Value="4" />
-            </Style>
-          </ListBox.Styles>
-          <ListBox.DataTemplates>
-            <DataTemplate DataType="vm:NavHeader">
-              <TextBlock Classes="navHeader" Text="{Binding Title}" Margin="0,10,0,0" />
-            </DataTemplate>
-            <DataTemplate DataType="vm:NavSeparator">
-              <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,6" />
-            </DataTemplate>
-            <DataTemplate DataType="vm:PageViewModel">
-              <Grid ColumnDefinitions="Auto,*,Auto">
-                <mi:MaterialIcon Kind="{Binding Icon}" Width="18" Height="18" Margin="0,0,10,0" Opacity="0.85" />
-                <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" />
-                <Border Grid.Column="2" Background="{StaticResource AccentBrush}" CornerRadius="8" Padding="6,0" MinWidth="18"
-                        IsVisible="{Binding Badge, Converter={x:Static ObjectConverters.IsNotNull}}">
-                  <TextBlock Text="{Binding Badge}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+    <!-- узкое окно: программы одной плашкой (как .tools-sum у Anime Uploader) -->
+    <Style Selector="Border#ToolsSummaryChip">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <ContainerQuery Name="top" Query="max-width:1000">
+      <Style Selector="ItemsControl#ToolChipsList">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="Border#ToolsSummaryChip">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+    </ContainerQuery>
+
+    <!-- полоса под шапкой (.banner) -->
+    <Style Selector="Border.banner">
+      <Setter Property="Padding" Value="22,9,16,9" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+    </Style>
+    <Style Selector="Border.banner > Grid > mi|MaterialIcon">
+      <Setter Property="Width" Value="20" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+
+    <!-- уведомление (.toast): цветная полоса слева по виду -->
+    <Style Selector="Border.toastStrip">
+      <Setter Property="Background" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <Style Selector="Border.toast mi|MaterialIcon.toastIcon">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <Style Selector="Border.toast.ok Border.toastStrip">
+      <Setter Property="Background" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.toast.ok mi|MaterialIcon.toastIcon">
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.toast.warn Border.toastStrip">
+      <Setter Property="Background" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.toast.warn mi|MaterialIcon.toastIcon">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.toast.err Border.toastStrip">
+      <Setter Property="Background" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Border.toast.err mi|MaterialIcon.toastIcon">
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="224,*">
+
+    <!-- ── Слева: значок, меню по разделам, рабочая папка ── -->
+    <Border Background="{StaticResource Bg2Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0"
+            Padding="0,14,0,10">
+      <DockPanel>
+        <DockPanel.DataTemplates>
+          <DataTemplate DataType="vm:NavHeader">
+            <TextBlock Classes="navHeader" Text="{Binding Title}" />
+          </DataTemplate>
+          <DataTemplate DataType="vm:PageViewModel">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <mi:MaterialIcon Classes="navIcon" Kind="{Binding Icon}" Width="18" Height="18" Margin="0,0,11,0" />
+              <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <!-- идёт задача: пульсирующая точка -->
+                <Panel Width="8" Height="8" IsVisible="{Binding IsLive}">
+                  <Ellipse Classes="pulse" />
+                  <Ellipse Fill="{StaticResource AccentBrush}" />
+                </Panel>
+                <Border Classes="badge accent" Padding="7,0" IsVisible="{Binding Badge, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <TextBlock Text="{Binding Badge}" />
                 </Border>
-              </Grid>
-            </DataTemplate>
-          </ListBox.DataTemplates>
-        </ListBox>
-      </Border>
-      <ContentControl x:Name="PageHost" Grid.Column="1" Content="{Binding CurrentPage}" />
-    </Grid>
-
-    <!-- Строка состояния: программы и текущая задача -->
-    <Border Grid.Row="3"
-            Padding="12,4"
-            BorderBrush="{StaticResource DividerBrush}"
-            BorderThickness="0,1,0,0">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <ItemsControl x:Name="ToolChipsList" ItemsSource="{Binding ToolChips}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="14" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="vm:ToolChip">
-              <StackPanel Orientation="Horizontal" Spacing="4" Background="Transparent" ToolTip.Tip="{Binding Tip}">
-                <TextBlock Text="{Binding Text}" FontSize="12" Opacity="0.8" VerticalAlignment="Center" />
-                <mi:MaterialIcon Kind="CheckCircle" Classes="ok" Width="14" Height="14" IsVisible="{Binding Ok}" />
-                <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="14" Height="14" IsVisible="{Binding !Ok}" />
               </StackPanel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <Button Grid.Column="2" Classes="link" Command="{Binding ShowJobsCommand}"
-                IsVisible="{Binding CurrentJob, Converter={x:Static ObjectConverters.IsNotNull}}">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <ProgressBar Width="120" MinWidth="0" Maximum="100" VerticalAlignment="Center"
-                         Value="{Binding CurrentJob.Progress, FallbackValue=0}"
-                         IsIndeterminate="{Binding CurrentJob.IsIndeterminate, FallbackValue=False}" />
-            <TextBlock x:Name="CurrentJobText" Text="{Binding CurrentJob.Short, FallbackValue=''}" FontSize="12"
-                       MaxWidth="560" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </Grid>
+          </DataTemplate>
+        </DockPanel.DataTemplates>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="18,4,18,10">
+          <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource BrandBrush}" BoxShadow="0 4 14 0 #597B4FF2">
+            <TextBlock Text="A" FontSize="18" FontWeight="Bold" Foreground="White"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,1" />
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="anitools" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock x:Name="VersionText" Text="{Binding BrandSubtitle}" FontSize="11.5" Foreground="{StaticResource FaintBrush}" />
           </StackPanel>
-        </Button>
-        <TextBlock x:Name="VersionText" Grid.Column="2" Text="{Binding Version}" FontSize="12" Opacity="0.55" VerticalAlignment="Center"
-                   IsVisible="{Binding CurrentJob, Converter={x:Static ObjectConverters.IsNull}}" />
-      </Grid>
+        </StackPanel>
+
+        <!-- рабочая папка (.conn-badge): клик — выбрать другую; справа — недавние и «открыть в проводнике» -->
+        <Grid DockPanel.Dock="Bottom" Margin="10,8,10,0">
+          <Button x:Name="BrowseButton" Classes="folderBadge" Command="{Binding BrowseCommand}"
+                  ToolTip.Tip="Рабочая папка — выбрать другую. Можно и перетащить папку на окно или набрать ani в консоли.">
+            <Grid ColumnDefinitions="Auto,*" Margin="0,0,52,0">
+              <Border Classes="dot" Classes.ok="{Binding HasFolder}" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <StackPanel Grid.Column="1">
+                <TextBlock x:Name="FolderNameText" Text="{Binding FolderName}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding FolderParent}" FontSize="12" Foreground="{StaticResource DimBrush}" TextTrimming="LeadingCharacterEllipsis" />
+              </StackPanel>
+            </Grid>
+          </Button>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0">
+            <Button x:Name="RecentButton" Classes="icon sm" IsEnabled="{Binding HasRecentFolders}" ToolTip.Tip="Недавние папки">
+              <mi:MaterialIcon Kind="History" />
+              <Button.Flyout>
+                <MenuFlyout Placement="RightEdgeAlignedBottom" />
+              </Button.Flyout>
+            </Button>
+            <Button Classes="icon sm" Command="{Binding OpenFolderInExplorerCommand}" IsEnabled="{Binding HasFolder}"
+                    ToolTip.Tip="Открыть рабочую папку в проводнике">
+              <mi:MaterialIcon Kind="FolderOpenOutline" />
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <!-- «Задачи» и «Настройки» — всегда на виду -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,5,0,0" Margin="0,4,0,0">
+          <ListBox x:Name="BottomNavList" Classes="nav" ItemsSource="{Binding BottomNavigation}" SelectedItem="{Binding SelectedBottom}"
+                   ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+        </Border>
+
+        <ListBox x:Name="NavList" Classes="nav"
+                 ItemsSource="{Binding ToolNavigation}"
+                 SelectedItem="{Binding SelectedTool}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+      </DockPanel>
     </Border>
 
+    <!-- ── Справа: шапка, предупреждение, страница; уведомления поверх ── -->
+    <Grid Grid.Column="1" RowDefinitions="58,Auto,*">
+      <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="22,0"
+              Container.Name="top" Container.Sizing="Width">
+        <DockPanel VerticalAlignment="Center">
+          <Border x:Name="ToolsSummaryChip" DockPanel.Dock="Right" Classes="tool" Classes.bad="{Binding !ToolsOk}" Margin="12,0,0,0"
+                  VerticalAlignment="Center" ToolTip.Tip="{Binding ToolsSummaryTip}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <mi:MaterialIcon Kind="Check" IsVisible="{Binding ToolsOk}" VerticalAlignment="Center" />
+              <mi:MaterialIcon Kind="AlertCircleOutline" IsVisible="{Binding !ToolsOk}" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding ToolsSummary}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+          <ItemsControl x:Name="ToolChipsList" DockPanel.Dock="Right" ItemsSource="{Binding ToolChips}" VerticalAlignment="Center" Margin="12,0,0,0">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="5" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:ToolChip">
+                <Border Classes="tool" Classes.bad="{Binding !Ok}" ToolTip.Tip="{Binding Tip}">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <mi:MaterialIcon Kind="Check" IsVisible="{Binding Ok}" VerticalAlignment="Center" />
+                    <mi:MaterialIcon Kind="AlertCircleOutline" IsVisible="{Binding !Ok}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Button x:Name="JobPill" DockPanel.Dock="Right" Classes="jobPill" Command="{Binding ShowJobsCommand}" Margin="12,0,0,0"
+                  IsVisible="{Binding CurrentJob, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  ToolTip.Tip="{Binding CurrentJob.Short, FallbackValue=''}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Panel Width="13" Height="13" VerticalAlignment="Center">
+                <Ellipse Classes="spinTrack" />
+                <Arc Classes="spin" />
+              </Panel>
+              <TextBlock x:Name="CurrentJobText" Text="{Binding CurrentJob.Title, FallbackValue=''}" MaxWidth="240"
+                         TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              <ProgressBar Classes="mini" Maximum="100" VerticalAlignment="Center"
+                           Value="{Binding CurrentJob.Progress, FallbackValue=0}"
+                           IsIndeterminate="{Binding CurrentJob.IsIndeterminate, FallbackValue=False}" />
+              <TextBlock Classes="dim" Text="{Binding CurrentJob.PercentText, FallbackValue=''}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="10,0,0,0">
+            <Panel Width="16" Height="16" IsVisible="{Binding CurrentPage.IsLoading, FallbackValue=False}" VerticalAlignment="Center">
+              <Ellipse Classes="spinTrack" />
+              <Arc Classes="spin" />
+            </Panel>
+            <Button x:Name="RefreshButton" Classes="icon" Command="{Binding CurrentPage.RefreshCommand, FallbackValue={x:Null}}"
+                    IsVisible="{Binding CurrentPage.UsesFolder, FallbackValue=False}" ToolTip.Tip="Перечитать папку">
+              <mi:MaterialIcon Kind="Refresh" />
+            </Button>
+          </StackPanel>
+
+          <TextBlock Classes="h1" DockPanel.Dock="Left" Text="{Binding CurrentPage.Title, FallbackValue=''}" VerticalAlignment="Center" />
+          <TextBlock x:Name="FolderText" Text="{Binding TopSubtitle}" FontSize="13" Foreground="{StaticResource DimBrush}"
+                     VerticalAlignment="Center" Margin="12,3,0,0" TextTrimming="PathSegmentEllipsis" ToolTip.Tip="{Binding TopSubtitle}" />
+        </DockPanel>
+      </Border>
+
+      <!-- Предупреждение: папка не найдена, настройки не прочитались -->
+      <Border Grid.Row="1" Classes="banner" IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <mi:MaterialIcon Kind="AlertOutline" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <SelectableTextBlock x:Name="FolderMessageText" Grid.Column="1" Text="{Binding FolderMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="2" Classes="icon sm" Command="{Binding DismissFolderMessageCommand}" ToolTip.Tip="Скрыть" Margin="8,0,0,0">
+            <mi:MaterialIcon Kind="Close" />
+          </Button>
+        </Grid>
+      </Border>
+
+      <ContentControl x:Name="PageHost" Grid.Row="2" Content="{Binding CurrentPage}" />
+
+      <!-- Уведомления: справа сверху, новые снизу -->
+      <ItemsControl x:Name="ToastsList" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding Toasts}" ZIndex="10"
+                    Width="400" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,18,0">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="8" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="vm:ToastViewModel">
+            <Border Classes="toast" Classes.ok="{Binding IsOk}" Classes.warn="{Binding IsWarn}" Classes.err="{Binding IsError}"
+                    Classes.out="{Binding IsLeaving}" BorderThickness="0,1,1,1">
+              <Border CornerRadius="10,9,9,10" ClipToBounds="True">
+                <Grid ColumnDefinitions="3,Auto,*,Auto">
+                  <Border Classes="toastStrip" />
+                  <mi:MaterialIcon Grid.Column="1" Classes="toastIcon" Kind="{Binding Icon}" Width="17" Height="17"
+                                   VerticalAlignment="Top" Margin="10,11,10,0" />
+                  <SelectableTextBlock Grid.Column="2" Text="{Binding Text}" FontSize="13.5" TextWrapping="Wrap" Margin="0,10,0,11" />
+                  <Button Grid.Column="3" Classes="icon sm" Command="{Binding CloseCommand}" ToolTip.Tip="Закрыть"
+                          VerticalAlignment="Top" Margin="6,6,7,0">
+                    <mi:MaterialIcon Kind="Close" />
+                  </Button>
+                </Grid>
+              </Border>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Grid>
   </Grid>
 </Window>

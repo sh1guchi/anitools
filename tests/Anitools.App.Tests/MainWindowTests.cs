@@ -2,6 +2,7 @@ using Anitools.App.ViewModels;
 using Anitools.App.ViewModels.Pages;
 using Anitools.App.Views;
 using Anitools.Core.Jobs;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -21,7 +22,7 @@ public sealed class MainWindowTests
         AppFixture.Flush();
 
         Assert.Equal(app.Folder, window.FindControl<TextBlock>("FolderText")?.Text);
-        Assert.StartsWith("anitools ", window.FindControl<TextBlock>("VersionText")?.Text);
+        Assert.StartsWith(Anitools.Core.AppInfo.Version + " · ", window.FindControl<TextBlock>("VersionText")?.Text);
         Assert.Same(vm.VideoOnlyPage, vm.CurrentPage);
         Assert.Equal(["ffmpeg 7.1.1", "mkvmerge 82.0", "NVENC"], vm.ToolChips.Where(c => c.Name != "ImDisk").Select(c => c.Text));
         Assert.All(vm.ToolChips.Where(c => c.Name != "ImDisk"), c => Assert.True(c.Ok, c.Text));
@@ -29,6 +30,25 @@ public sealed class MainWindowTests
         Assert.Equal(["ВИДЕО", "АУДИО", "СУБТИТРЫ", "ШРИФТЫ", "ФАЙЛЫ"], vm.Navigation.OfType<NavHeader>().Select(h => h.Title));
         Assert.Same(vm.SettingsPage, vm.Navigation[^1]);
         Assert.Equal(18, vm.Navigation.OfType<PageViewModel>().Count());
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Whole_menu_fits_without_scrolling_in_default_window()
+    {
+        using var app = new AppFixture();
+        var vm = app.CreateViewModel();
+        var window = new MainWindow { DataContext = vm };
+        window.Show();
+        AppFixture.Flush();
+
+        // последний инструмент («Переименовать») целиком виден без прокрутки — и в Inter, и в Segoe UI на Windows
+        var list = window.FindControl<ListBox>("NavList")!;
+        var scroll = list.GetVisualDescendants().OfType<ScrollViewer>().First();
+        var last = list.ContainerFromIndex(list.ItemCount - 1);
+        Assert.NotNull(last);
+        var bottom = last.TranslatePoint(new Point(0, last.Bounds.Height), scroll)!.Value.Y;
+        Assert.True(bottom <= scroll.Viewport.Height + 0.5, $"меню не помещается: низ «{(vm.ToolNavigation[^1] as PageViewModel)?.Title}» {bottom:0} > {scroll.Viewport.Height:0}");
         window.Close();
     }
 
@@ -127,9 +147,11 @@ public sealed class MainWindowTests
         page.Preview.Rows[1].IsChecked = false;
         Assert.Equal(1, page.Preview.CheckedCount);
         Assert.Null(page.Preview.AllChecked);
-        Assert.Equal("Запустить (1)", window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "RunButton").Content);
+        Assert.Equal("Запустить (1)", window.GetVisualDescendants().OfType<TextBlock>().Single(b => b.Name == "RunText").Text);
 
         page.RunCommand.Execute(null);
+        // надпись «запущено» — всплывающим уведомлением, которое исчезает само
+        Assert.Equal("Запущено — ход работы в «Задачах» и в полосе сверху.", Assert.Single(vm.Toasts).Text);
         var job = Assert.Single(app.Services.Jobs.Jobs);
         await job.Completion.WaitAsync(TestContext.Current.CancellationToken);
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count(r => r.CanRun) == 1, "перестроенный план");
@@ -141,8 +163,58 @@ public sealed class MainWindowTests
         Assert.Contains(Path.Combine(app.Folder, "Frieren - 01.mkv"), ffmpeg.Arguments);
         // после задачи «01» стала «уже готово», а снятая «02» снова к запуску
         Assert.Equal([false, true, false], page.Preview.Rows.Select(r => r.CanRun));
-        Assert.Equal("Запущено — ход работы в «Задачах» и внизу окна.", page.Notice);
+        // итог задачи — тоже уведомлением
+        Assert.Contains(vm.Toasts, t => t.Text == $"{job.Title} — 1 готово · 2 пропуска" && t.Kind == ToastKind.Ok);
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task Toasts_disappear_by_themselves_and_do_not_pile_up()
+    {
+        using var app = new AppFixture();
+        var vm = app.CreateViewModel();
+
+        vm.Toast("Скопировано");
+        vm.Toast("Скопировано");
+        Assert.Single(vm.Toasts);
+        for (var i = 1; i <= 7; i++)
+        {
+            vm.Toast($"уведомление {i}", ToastKind.Warn);
+        }
+
+        Assert.Equal(5, vm.Toasts.Count);
+        Assert.Equal("уведомление 7", vm.Toasts[^1].Text);
+        var closed = vm.Toasts[^1];
+        closed.CloseCommand.Execute(null);
+        Assert.True(closed.IsLeaving);
+        await AppFixture.WaitUntilAsync(() => !vm.Toasts.Contains(closed), "закрытое уведомление убрано");
+        await AppFixture.WaitUntilAsync(() => vm.Toasts.Count == 0, "уведомления исчезли сами");
+    }
+
+    [AvaloniaFact]
+    public async Task Pinned_jobs_and_settings_keep_one_selection_with_tools()
+    {
+        using var app = new AppFixture();
+        var vm = app.CreateViewModel();
+
+        Assert.Equal([vm.JobsPage, vm.SettingsPage], vm.BottomNavigation);
+        Assert.DoesNotContain(vm.JobsPage, vm.ToolNavigation);
+        Assert.Same(vm.VideoOnlyPage, vm.SelectedTool);
+        Assert.Null(vm.SelectedBottom);
+
+        vm.SelectedBottom = vm.JobsPage;
+        Assert.Same(vm.JobsPage, vm.CurrentPage);
+        Assert.Null(vm.SelectedTool);
+        vm.SelectedTool = null; // так делает список, у которого выбор пропал, — не сбрасывает страницу
+        Assert.Same(vm.JobsPage, vm.CurrentPage);
+
+        vm.SelectedTool = vm.RemuxPage;
+        Assert.Same(vm.RemuxPage, vm.CurrentPage);
+        Assert.Null(vm.SelectedBottom);
+        await AppFixture.WaitUntilAsync(() => !vm.RemuxPage.IsLoading, "страница открылась");
+        Assert.Equal(app.Folder, vm.TopSubtitle);
+        vm.ShowJobs();
+        Assert.Equal(vm.JobsPage.Subtitle, vm.TopSubtitle);
     }
 
     [AvaloniaFact]
@@ -154,10 +226,13 @@ public sealed class MainWindowTests
         vm.SelectedNav = page;
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 3, "план MP4");
 
-        page.IsAviToMkv = true;
-        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 1, "план AVI → MKV");
-        Assert.Equal("Old - 01.avi", page.Preview.Rows[0].Label);
-        Assert.Equal("→ Old - 01.mkv", page.Preview.Rows[0].Target);
+        // AVI — обычный вход, с флагами меток времени
+        Assert.Contains("+genpts", page.Preview.Plan!.Items.Single(i => i.Label == "Old - 01.avi").Command!.Arguments);
+
+        page.IsM2tsToMkv = true;
+        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 1, "план M2TS → MKV");
+        Assert.Equal("Disc.m2ts", page.Preview.Rows[0].Label);
+        Assert.Equal("→ Disc.mkv", page.Preview.Rows[0].Target);
 
         page.IsMkv = true;
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 3, "план MKV");

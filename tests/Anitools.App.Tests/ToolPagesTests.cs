@@ -1,3 +1,4 @@
+using Anitools.App.ViewModels;
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Jobs;
 using Avalonia.Headless.XUnit;
@@ -96,7 +97,7 @@ public sealed class ToolPagesTests
         shift.Seconds = "2";
         await shift.RunCommand.ExecuteAsync(null);
         Assert.Contains("00:00:03,000 --> 00:00:04,000", File.ReadAllText(Path.Combine(app.Folder, "subs_fixed", "Show - 01.srt")));
-        Assert.StartsWith("Сдвинуто на +2 с: 2 из 2", shift.Notice);
+        Assert.Contains(vm.Toasts, t => t.Text.StartsWith("Сдвинуто на +2 с: 2 из 2", StringComparison.Ordinal) && t.Kind == ToastKind.Ok);
 
         var clean = vm.AssEditPage;
         vm.SelectedNav = clean;

@@ -14,14 +14,11 @@ public enum RemuxProfile
     /// <summary>П.6: в MKV (папка та же — converted_mp4, как в оригинале).</summary>
     Mkv,
 
-    /// <summary>avi_to_mkv.bat: AVI → MKV рядом с исходником.</summary>
-    AviToMkv,
-
     /// <summary>m2ts.bat: Blu-ray M2TS → MKV рядом с исходником, PCM → FLAC.</summary>
     M2tsToMkv,
 }
 
-/// <summary>П.6 «Ремукс» (§4.3) и профили из bat-файлов (§2.9.10): смена контейнера без перекодирования видео.</summary>
+/// <summary>П.6 «Ремукс» (§4.3) и профиль из m2ts.bat (§2.9.10): смена контейнера без перекодирования видео.</summary>
 public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(shell, "Ремукс", MaterialIconKind.FileSwapOutline)
 {
     public PlanPreviewViewModel Preview { get; } = new();
@@ -45,23 +42,21 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
         set => Select(value, RemuxProfile.Mkv);
     }
 
-    public bool IsAviToMkv
-    {
-        get => Profile == RemuxProfile.AviToMkv;
-        set => Select(value, RemuxProfile.AviToMkv);
-    }
-
     public bool IsM2tsToMkv
     {
         get => Profile == RemuxProfile.M2tsToMkv;
         set => Select(value, RemuxProfile.M2tsToMkv);
     }
 
+    /// <summary>Какие файлы берутся: «MKV», «MP4», «AVI»… (у профиля Blu-ray — только M2TS).</summary>
+    public IReadOnlyList<string> InputFormats => Profile == RemuxProfile.M2tsToMkv
+        ? ["M2TS"]
+        : [.. RemuxOperation.Extensions.Select(e => e.TrimStart('.').ToUpperInvariant())];
+
     public string Description => Profile switch
     {
         RemuxProfile.Mp4 => "Видео и все аудиодорожки — в MP4, без перекодирования. Выход: папка «converted_mp4».",
         RemuxProfile.Mkv => "Видео, аудио и (по желанию) субтитры — в MKV, без перекодирования. Выход: папка «converted_mp4», как в оригинале.",
-        RemuxProfile.AviToMkv => "AVI → MKV: копия потоков, недостающие метки времени генерируются. Выход — рядом с исходником.",
         _ => "Blu-ray M2TS → MKV: видео и звук копируются, PCM сжимается в FLAC без потерь. Выход — рядом с исходником.",
     };
 
@@ -74,7 +69,6 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
             {
                 RemuxProfile.Mp4 => RemuxOperation.Plan(folder, new RemuxOptions(RemuxFormat.Mp4)),
                 RemuxProfile.Mkv => RemuxOperation.Plan(folder, new RemuxOptions(RemuxFormat.Mkv, subtitles)),
-                RemuxProfile.AviToMkv => RemuxPresets.AviToMkv(folder),
                 _ => RemuxPresets.M2tsToMkv(folder),
             },
             cancellationToken);
@@ -87,9 +81,9 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
     {
         OnPropertyChanged(nameof(IsMp4));
         OnPropertyChanged(nameof(IsMkv));
-        OnPropertyChanged(nameof(IsAviToMkv));
         OnPropertyChanged(nameof(IsM2tsToMkv));
         OnPropertyChanged(nameof(Description));
+        OnPropertyChanged(nameof(InputFormats));
         Invalidate();
     }
 

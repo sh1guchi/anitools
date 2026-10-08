@@ -166,7 +166,7 @@ public sealed class ToolsTests
     }
 
     [Fact]
-    public void Remux_presets_put_mkv_next_to_source_and_skip_done()
+    public void Remux_preset_puts_mkv_next_to_source_and_skips_done()
     {
         using var dir = new TempDir();
         dir.File("a.AVI");
@@ -174,11 +174,26 @@ public sealed class ToolsTests
         dir.File("c.M2TS");
         dir.File("c.mkv", "готово");
 
-        var avi = Assert.Single(RemuxPresets.AviToMkv(dir.Path).Items);
-        Assert.Equal(["-nostdin", "-fflags", "+genpts", "-i", dir.Combine("a.AVI"), "-c", "copy", "-avoid_negative_ts", "make_zero", dir.Combine("a.mkv"), "-y", "-loglevel", "warning"], avi.Command!.Arguments);
         var m2ts = RemuxPresets.M2tsToMkv(dir.Path).Items;
         Assert.Equal([PlanItemStatus.Run, PlanItemStatus.Skip], m2ts.Select(i => i.Status));
         Assert.Contains("flac", m2ts[0].Command!.Arguments);
+    }
+
+    [Fact]
+    public void Remux_fixes_avi_timestamps_like_the_bat()
+    {
+        using var dir = new TempDir();
+        dir.File("a.AVI");
+        dir.File("b.mkv");
+
+        var items = RemuxOperation.Plan(dir.Path, new RemuxOptions(RemuxFormat.Mkv)).Items;
+
+        Assert.Equal(
+            ["-nostdin", "-fflags", "+genpts", "-i", dir.Combine("a.AVI"), "-map", "0:v:0", "-map", "0:a?", "-map", "0:s?",
+                "-c", "copy", "-avoid_negative_ts", "make_zero", "-y", dir.Combine("converted_mp4", "a.mkv")],
+            items[0].Command!.Arguments);
+        Assert.DoesNotContain("+genpts", items[1].Command!.Arguments);
+        Assert.DoesNotContain("-avoid_negative_ts", items[1].Command!.Arguments);
     }
 
     private static void InterlockedMax(ref int target, int value)

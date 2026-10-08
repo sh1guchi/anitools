@@ -90,7 +90,14 @@ public sealed partial class JobViewModel : ObservableObject
 
     public bool IsMuted => State is JobState.Queued or JobState.Cancelled;
 
-    /// <summary>Строка для статус-строки окна: «HLS · Frieren: серия 3/12 · видео 41% · x2.3».</summary>
+    public bool IsQueued => State == JobState.Queued;
+
+    public bool IsCancelled => State == JobState.Cancelled;
+
+    /// <summary>«41%» у идущей задачи с известной долей.</summary>
+    public string PercentText => State == JobState.Running && !IsIndeterminate ? $"{Math.Floor(Progress):0}%" : "";
+
+    /// <summary>Подсказка к мини-ходу в шапке окна: «HLS · Frieren: серия 3/12 · видео 41% · x2.3».</summary>
     public string Short => $"{Title}: {Status}";
 
     public void Refresh()
@@ -115,6 +122,9 @@ public sealed partial class JobViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDone));
         OnPropertyChanged(nameof(IsFailed));
         OnPropertyChanged(nameof(IsMuted));
+        OnPropertyChanged(nameof(IsQueued));
+        OnPropertyChanged(nameof(IsCancelled));
+        OnPropertyChanged(nameof(PercentText));
         OnPropertyChanged(nameof(Short));
     }
 
@@ -166,6 +176,7 @@ public sealed partial class JobsPageViewModel : PageViewModel
 
             UpdateBadge();
         });
+        queue.JobStarted += _ => Dispatcher.UIThread.Post(UpdateBadge);
         queue.JobFinished += _ => Dispatcher.UIThread.Post(UpdateBadge);
         // время «идёт 12:03» и ETA тикают и без событий от задачи
         Timer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
@@ -181,6 +192,8 @@ public sealed partial class JobsPageViewModel : PageViewModel
     public ObservableCollection<JobViewModel> Jobs { get; } = [];
 
     public override bool UsesFolder => false;
+
+    public override string Subtitle => "выполняются по одной, по порядку";
 
     public bool IsEmpty => Jobs.Count == 0;
 
@@ -206,6 +219,7 @@ public sealed partial class JobsPageViewModel : PageViewModel
     {
         var active = Jobs.Count(j => !j.Job.IsFinished);
         Badge = active > 0 ? active.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+        IsLive = Jobs.Any(j => j.Job.Snapshot.State == JobState.Running);
         OnPropertyChanged(nameof(IsEmpty));
     }
 

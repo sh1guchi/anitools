@@ -222,11 +222,11 @@ public sealed partial class RenamePageViewModel(IShell shell) : PageViewModel(sh
         if (original is { Length: > 0 })
         {
             BaseName = TitleText.FileNameSafe(original);
-            Notice = $"Оригинальное название с Shikimori: {original}";
+            Shell.Toast($"Оригинальное название с Shikimori: {original}");
         }
         else if (!choice.IsSkip)
         {
-            Notice = "Не удалось получить название с Shikimori — введите вручную.";
+            Shell.Toast("Не удалось получить название с Shikimori — введите вручную.", ToastKind.Warn);
         }
     }
 
@@ -250,7 +250,7 @@ public sealed partial class RenamePageViewModel(IShell shell) : PageViewModel(sh
         }
 
         var result = await Task.Run(() => RenameOperation.Execute(Folder, rows, JournalDirectory));
-        Notice = Describe(result, "Переименовано");
+        Toast(result, "Переименовано");
         await RefreshAsync();
     }
 
@@ -263,7 +263,7 @@ public sealed partial class RenamePageViewModel(IShell shell) : PageViewModel(sh
         }
 
         var result = await Task.Run(() => RenameJournal.Undo(journal));
-        Notice = Describe(result, "Возвращено старое имя");
+        Toast(result, "Возвращено старое имя");
         await RefreshAsync();
     }
 
@@ -379,7 +379,7 @@ public sealed partial class RenamePageViewModel(IShell shell) : PageViewModel(sh
             : null;
     }
 
-    private static string Describe(RenameResult result, string what)
+    private void Toast(RenameResult result, string what)
     {
         var text = $"{what}: {result.Renamed.Count}.";
         if (result.Failed.Count > 0)
@@ -387,7 +387,7 @@ public sealed partial class RenamePageViewModel(IShell shell) : PageViewModel(sh
             text += " Не вышло: " + string.Join("; ", result.Failed.Select(f => $"{f.File} — {f.Error}"));
         }
 
-        return text;
+        Shell.Toast(text, result.Failed.Count > 0 ? ToastKind.Warn : ToastKind.Ok);
     }
 
     private static bool SamePath(string a, string b) =>

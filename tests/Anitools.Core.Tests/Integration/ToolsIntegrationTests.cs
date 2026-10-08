@@ -76,21 +76,36 @@ public sealed class ToolsIntegrationTests
     }
 
     [Fact]
-    public async Task Remux_presets_avi_and_bluray_m2ts()
+    public async Task Remux_avi_to_mp4_and_mkv()
     {
         var (tools, probe) = Tools();
         using var dir = new TempDir();
         await MediaFactory.CreateAsync(dir.Combine("Old.avi"), [.. MediaFactory.Video, .. MediaFactory.Sine(440), "-c:v", "mpeg4", "-c:a", "mp3"]);
+
+        var mp4 = await Execute(tools, probe, dir, RemuxOperation.Plan(dir.Path, new RemuxOptions(RemuxFormat.Mp4)), 1);
+        var mkv = await Execute(tools, probe, dir, RemuxOperation.Plan(dir.Path, new RemuxOptions(RemuxFormat.Mkv)), 1);
+
+        Assert.Equal(ItemOutcome.Done, Assert.Single(mp4.Items).Outcome);
+        Assert.Equal(ItemOutcome.Done, Assert.Single(mkv.Items).Outcome);
+        foreach (var output in new[] { "Old.mp4", "Old.mkv" })
+        {
+            var info = await probe.ProbeAsync(dir.Combine("converted_mp4", output), Ct);
+            Assert.Equal(("mpeg4", "mp3"), (info.VideoStreams[0].CodecName, info.AudioStreams[0].CodecName));
+        }
+    }
+
+    [Fact]
+    public async Task Remux_preset_bluray_m2ts()
+    {
+        var (tools, probe) = Tools();
+        using var dir = new TempDir();
         await MediaFactory.CreateAsync(dir.Combine("Disc.m2ts"), [
             .. MediaFactory.Video, .. MediaFactory.Sine(440), "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "pcm_bluray",
             "-f", "mpegts", "-mpegts_m2ts_mode", "1"]);
 
-        var avi = await Execute(tools, probe, dir, RemuxPresets.AviToMkv(dir.Path), 1);
         var m2ts = await Execute(tools, probe, dir, RemuxPresets.M2tsToMkv(dir.Path), 1);
 
-        Assert.Equal(ItemOutcome.Done, Assert.Single(avi.Items).Outcome);
         Assert.Equal(ItemOutcome.Done, Assert.Single(m2ts.Items).Outcome);
-        Assert.Equal("mpeg4", (await probe.ProbeAsync(dir.Combine("Old.mkv"), Ct)).VideoStreams[0].CodecName);
         var disc = await probe.ProbeAsync(dir.Combine("Disc.mkv"), Ct);
         Assert.Equal(("h264", "flac"), (disc.VideoStreams[0].CodecName, disc.AudioStreams[0].CodecName));
     }

@@ -7,54 +7,70 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.TrackListPageView"
              x:DataType="p:TrackListPageViewModel">
-  <DockPanel Margin="24,18,24,16">
+  <DockPanel Margin="22,18,22,18">
     <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,12">
-      <TextBlock Text="Файл:" VerticalAlignment="Center" Margin="0,0,8,0" />
-      <ComboBox x:Name="FileBox" Grid.Column="1" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" HorizontalAlignment="Stretch" />
-    </Grid>
-    <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto" Margin="0,12,0,0">
-      <StackPanel Orientation="Horizontal" Spacing="16">
-        <TextBlock Text="Список для копирования:" VerticalAlignment="Center" />
-        <RadioButton GroupName="copyStyle" Content="• тайтл" IsChecked="{Binding IsBullets}" />
-        <RadioButton x:Name="NumbersRadio" GroupName="copyStyle" Content="1. тайтл" IsChecked="{Binding IsNumbers}" />
-        <RadioButton GroupName="copyStyle" Content="просто текст" IsChecked="{Binding IsPlain}" />
-      </StackPanel>
-      <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-        <TextBox x:Name="CopyBox" Text="{Binding CopyText}" IsReadOnly="True" AcceptsReturn="True" MaxHeight="160" />
-        <Button Grid.Column="1" Classes="accent" Margin="8,0,0,0" VerticalAlignment="Top" Command="{Binding CopyCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <mi:MaterialIcon Kind="ContentCopy" />
-            <TextBlock Text="Копировать" />
-          </StackPanel>
-        </Button>
-      </Grid>
-    </Grid>
-    <Border Classes="card">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Grid.IsSharedSizeScope="True">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="ot:TrackRow">
-              <Grid Margin="0,3">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="30" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="T" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="C" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="Ch" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Number}" Classes="muted" />
-                <TextBlock Grid.Column="1" Text="{Binding Title, FallbackValue='—', TargetNullValue='—'}" FontWeight="SemiBold" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="2" Text="{Binding Language}" Classes="muted" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="3" Text="{Binding Codec}" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="4" Text="{Binding Channels}" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="5" Text="по умолчанию" Classes="muted small" IsVisible="{Binding IsDefault}" VerticalAlignment="Center" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
+    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+      <HeaderedContentControl Classes="field" Header="Файл">
+        <ComboBox x:Name="FileBox" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" HorizontalAlignment="Stretch" />
+      </HeaderedContentControl>
     </Border>
+    <Grid ColumnDefinitions="*,14,360">
+      <Border Classes="card" Padding="0,14,0,6" VerticalAlignment="Top">
+        <DockPanel>
+          <c:CardHead DockPanel.Dock="Top" Icon="MusicNoteOutline" Title="Аудиодорожки" Margin="18,0,18,8" />
+          <Border DockPanel.Dock="Top" Classes="tblHead" Margin="10,0">
+            <Grid ColumnDefinitions="34,*,70,110,80,110">
+              <TextBlock Text="#" />
+              <TextBlock Grid.Column="1" Text="Тайтл" />
+              <TextBlock Grid.Column="2" Text="Язык" />
+              <TextBlock Grid.Column="3" Text="Кодек" />
+              <TextBlock Grid.Column="4" Text="Каналы" />
+            </Grid>
+          </Border>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="10,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="ot:TrackRow">
+                  <Border Classes="tblRow" Padding="8,7">
+                    <Grid ColumnDefinitions="34,*,70,110,80,110">
+                      <TextBlock Text="{Binding Number}" Classes="cyan b" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding Title, FallbackValue='—', TargetNullValue='—'}" FontWeight="SemiBold"
+                                 VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
+                      <TextBlock Grid.Column="2" Text="{Binding Language}" Classes="dim sm" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Text="{Binding Codec}" Classes="text2 sm" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Text="{Binding Channels}" Classes="text2 sm" VerticalAlignment="Center" />
+                      <Border Grid.Column="5" Classes="badge accent" HorizontalAlignment="Left" IsVisible="{Binding IsDefault}">
+                        <TextBlock Text="по умолчанию" />
+                      </Border>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="2" Classes="card" VerticalAlignment="Top">
+        <StackPanel Spacing="12">
+          <c:CardHead Icon="ContentCopy" Title="Список для копирования" Margin="0" />
+          <Border Classes="seg">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Classes="seg" GroupName="copyStyle" Content="• тайтл" IsChecked="{Binding IsBullets}" />
+              <RadioButton x:Name="NumbersRadio" Classes="seg" GroupName="copyStyle" Content="1. тайтл" IsChecked="{Binding IsNumbers}" />
+              <RadioButton Classes="seg" GroupName="copyStyle" Content="просто текст" IsChecked="{Binding IsPlain}" />
+            </StackPanel>
+          </Border>
+          <TextBox x:Name="CopyBox" Text="{Binding CopyText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                   MinHeight="120" MaxHeight="320" VerticalContentAlignment="Top" />
+          <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding CopyCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <mi:MaterialIcon Kind="ContentCopy" />
+              <TextBlock Text="Копировать" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Border>
+    </Grid>
   </DockPanel>
 </UserControl>
