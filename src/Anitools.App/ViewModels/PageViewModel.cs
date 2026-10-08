@@ -109,13 +109,20 @@ public abstract partial class PageViewModel(IShell shell, string title, Material
         }
         catch (Exception ex) when (ex is PlanException or ToolNotFoundException or MediaProbeException)
         {
-            Clear();
-            Message = ex.Message;
+            // Ошибка прежней папки (её загрузку уже сменила новая) не должна стирать то, что построено для новой
+            if (_loading == cts)
+            {
+                Clear();
+                Message = ex.Message;
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Clear();
-            Message = $"Не удалось прочитать папку: {ex.Message}";
+            if (_loading == cts)
+            {
+                Clear();
+                Message = $"Не удалось прочитать папку: {ex.Message}";
+            }
         }
         finally
         {

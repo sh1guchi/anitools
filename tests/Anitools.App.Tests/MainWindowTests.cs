@@ -87,6 +87,26 @@ public sealed class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Error_of_the_previous_folder_does_not_wipe_the_new_one()
+    {
+        // Папку сменили, пока страница ещё читала прежнюю; прежняя закончилась ошибкой уже после новой
+        using var app = new AppFixture();
+        var page = new GatedPage(app.CreateViewModel());
+        page.SetFolder("old");
+        page.Activate();
+        page.SetFolder("new");
+        page.Release("new");
+        await AppFixture.WaitUntilAsync(() => page.Shown == "new", "новая папка");
+
+        page.Release("old");
+        AppFixture.Flush();
+
+        Assert.Equal("new", page.Shown);
+        Assert.Null(page.Message);
+        Assert.False(page.IsLoading);
+    }
+
+    [AvaloniaFact]
     public void Without_folder_pages_ask_to_choose_one()
     {
         using var app = new AppFixture();
@@ -361,5 +381,32 @@ public sealed class MainWindowTests
         Assert.StartsWith("по этому пути программы нет — пока берётся ", ffmpeg.Found);
         ffmpeg.Configured = Path.Combine(app.Root, "bin");
         Assert.True(ffmpeg.IsFound);
+    }
+
+    /// <summary>Страница, чья загрузка ждёт, пока тест её не отпустит; папка «old» заканчивается ошибкой.</summary>
+    private sealed class GatedPage(IShell shell) : PageViewModel(shell, "Тест", Material.Icons.MaterialIconKind.TestTube)
+    {
+        private readonly Dictionary<string, TaskCompletionSource> _gates = new()
+        {
+            ["old"] = new(TaskCreationOptions.RunContinuationsAsynchronously),
+            ["new"] = new(TaskCreationOptions.RunContinuationsAsynchronously),
+        };
+
+        public string? Shown { get; private set; }
+
+        public void Release(string folder) => _gates[folder].SetResult();
+
+        protected override async Task LoadAsync(string folder, CancellationToken cancellationToken)
+        {
+            await _gates[folder].Task; // отмену не слушает — как чтение, застрявшее на диске
+            if (folder == "old")
+            {
+                throw new Core.Operations.Common.PlanException("Видео не найдены.");
+            }
+
+            Shown = folder;
+        }
+
+        protected override void Clear() => Shown = null;
     }
 }
