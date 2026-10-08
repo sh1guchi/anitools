@@ -2,7 +2,9 @@ using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Operations.Fonts;
 using Anitools.Core.Operations.Hardsub;
 using Anitools.Core.Operations.Hls;
+using Anitools.Core.Operations.Rename;
 using Anitools.Core.Processes;
+using Anitools.Core.Templates;
 using Anitools.Core.Shikimori;
 using Anitools.Core.WorkDir;
 
@@ -48,6 +50,19 @@ public sealed record FontSettings
     public string CustomDir { get; init; } = FontsCollectOptions.DefaultCustomDir;
 }
 
+/// <summary>Переименование: свой шаблон имени.</summary>
+public sealed record RenameSettings
+{
+    /// <summary>
+    /// Свой шаблон имени; null — стандартный (<see cref="RenameTemplate.Default"/>). Хранится только свой,
+    /// как шаблоны в Anime Uploader: стандартный подхватит будущие правки.
+    /// </summary>
+    public string? Template { get; init; }
+
+    /// <summary>Свои пресеты шаблонов (встроенные — <see cref="RenameTemplate.BuiltInPresets"/>).</summary>
+    public IReadOnlyList<TemplatePreset> Presets { get; init; } = [];
+}
+
 /// <summary>
 /// Настройки приложения (settings.json, docs/PLAN.md §3.6). Значения по умолчанию — константы оригинала;
 /// чего нет в файле — берётся по умолчанию, неверное исправляет <see cref="Normalized"/>.
@@ -78,6 +93,8 @@ public sealed record AppSettings
 
     /// <summary>Сдвиг субтитров по умолчанию, с.</summary>
     public double SubShiftSeconds { get; init; } = 1.0;
+
+    public RenameSettings Rename { get; init; } = new();
 
     /// <summary>Недавние рабочие папки, последняя — первой.</summary>
     public IReadOnlyList<string> RecentFolders { get; init; } = [];
@@ -115,6 +132,8 @@ public sealed record AppSettings
         var shift = AudioShift ?? new AudioShiftOptions();
         var convert = AudioConvert ?? new AudioConvertOptions();
         var fonts = Fonts ?? new FontSettings();
+        var template = Rename?.Template;
+        var presets = Rename?.Presets ?? [];
         return this with
         {
             Tools = new ToolPathSettings
@@ -158,6 +177,19 @@ public sealed record AppSettings
                 Workers = convert.Workers >= 1 ? convert.Workers : defaults.AudioConvert.Workers,
             },
             SubShiftSeconds = double.IsFinite(SubShiftSeconds) ? SubShiftSeconds : defaults.SubShiftSeconds,
+            // Шаблон с ошибкой остаётся: редактор покажет, что поправить; пустой и стандартный — не хранятся
+            Rename = new RenameSettings
+            {
+                Template = string.IsNullOrWhiteSpace(template) || template == RenameTemplate.Default || template.Length > 4 * TextTemplate.MaxLength
+                    ? null
+                    : template,
+                // Пустые выпадают, у одинаковых имён остаётся последний
+                Presets = [.. presets
+                    .Where(p => p is not null && !string.IsNullOrWhiteSpace(p.Name) && !string.IsNullOrWhiteSpace(p.Template))
+                    .Select(p => new TemplatePreset(p.Name.Trim(), p.Template))
+                    .GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.Last())],
+            },
             RecentFolders = RecentFolders is null
                 ? []
                 : [.. RecentFolders.Select(Trim).Where(f => f.Length > 0).Distinct(StringComparer.Ordinal).Take(MaxRecentFolders)],

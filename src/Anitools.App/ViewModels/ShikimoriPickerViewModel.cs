@@ -76,19 +76,24 @@ public sealed partial class ShikimoriPickerViewModel : ObservableObject
     private readonly ShikimoriQuery _query;
     private CancellationTokenSource? _posters;
 
-    public ShikimoriPickerViewModel(ShikimoriClient client, string title)
+    /// <param name="source">Откуда название — для подписи в окне: «Название из файлов: …».</param>
+    public ShikimoriPickerViewModel(ShikimoriClient client, string title, string source = "Название из файлов")
     {
         _client = client;
         _query = ShikimoriQuery.FromTitle(title);
         Title = title;
+        Caption = $"{source}: {title}";
         Query = _query.SearchText;
     }
 
     /// <summary>Закрыть диалог с выбором (страница подписывается).</summary>
     public event Action<ShikimoriChoice>? Chosen;
 
-    /// <summary>Название из файлов, для которого ищем.</summary>
+    /// <summary>Название, для которого ищем (из файлов или из поля страницы).</summary>
     public string Title { get; }
+
+    /// <summary>Подпись под заголовком окна: откуда название.</summary>
+    public string Caption { get; }
 
     [ObservableProperty]
     public partial string Query { get; set; }

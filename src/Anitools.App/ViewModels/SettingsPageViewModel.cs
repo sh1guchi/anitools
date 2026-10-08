@@ -512,6 +512,9 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         return errors.Count > 0 ? (null, errors) : (settings, errors);
     }
 
+    /// <summary>Имя файла экспорта по умолчанию.</summary>
+    public const string ExportFileName = "anitools-settings.json";
+
     [RelayCommand]
     private void Save()
     {
@@ -528,6 +531,72 @@ public sealed partial class SettingsPageViewModel : PageViewModel
             Message = null;
             Shell.Toast($"Сохранено в {Shell.Services.Store.Path}", ToastKind.Ok);
             Load(Shell.Services.Settings);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Message = $"Не удалось записать настройки: {ex.Message}";
+        }
+    }
+
+    /// <summary>Все настройки (как на экране) — в файл .json: перенести на другой компьютер или отложить.</summary>
+    [RelayCommand]
+    private async Task ExportSettingsAsync()
+    {
+        var (settings, errors) = Build();
+        if (settings is null)
+        {
+            Message = "Не выгружено — поправьте:\n• " + string.Join("\n• ", errors);
+            return;
+        }
+
+        if (await Shell.Dialogs.PickSaveFileAsync("Экспорт настроек anitools", ExportFileName) is not { } path)
+        {
+            return;
+        }
+
+        try
+        {
+            SettingsStore.Export(settings, path);
+            Message = null;
+            Shell.Toast($"Настройки выгружены: {path}", ToastKind.Ok);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Shell.Toast($"Не удалось записать {path}: {ex.Message}", ToastKind.Warn);
+        }
+    }
+
+    /// <summary>Настройки из файла — поверх текущих, после подтверждения; недавние папки остаются свои.</summary>
+    [RelayCommand]
+    private async Task ImportSettingsAsync()
+    {
+        if (await Shell.Dialogs.PickFileAsync("Импорт настроек anitools", null, ["*.json"]) is not { } path)
+        {
+            return;
+        }
+
+        var (settings, error) = SettingsStore.Import(path, Shell.Services.Settings);
+        if (settings is null)
+        {
+            await Shell.Dialogs.ShowMessageAsync("Импорт настроек", $"Не получилось взять настройки из {Path.GetFileName(path)}: {error}.");
+            return;
+        }
+
+        if (!await Shell.Dialogs.ConfirmAsync(
+                "Импорт настроек",
+                $"Заменить настройки настройками из {Path.GetFileName(path)}? Чего нет в файле — останется как сейчас; недавние папки не трогаются. Несохранённые правки на этой странице пропадут.",
+                "Импортировать",
+                "Отмена"))
+        {
+            return;
+        }
+
+        try
+        {
+            Shell.Services.SaveSettings(settings);
+            Load(Shell.Services.Settings);
+            Message = null;
+            Shell.Toast("Настройки импортированы.", ToastKind.Ok);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

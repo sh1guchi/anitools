@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:Anitools.App.Views.Controls"
+             xmlns:t="using:Anitools.Core.Templates"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="Anitools.App.Views.Controls.TemplateEditor"
+             x:DataType="c:TemplateEditor">
+  <!-- как карточка «Шаблоны подписей» Anime Uploader: панель над полем, поле, ошибки с куском шаблона, переменные чипами -->
+  <StackPanel Spacing="8">
+    <Border Classes="tplEd">
+      <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="tplBar">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+              <Border x:Name="CustomBadge" Classes="badge accent" ToolTip.Tip="Свой шаблон — запоминается сам">
+                <TextBlock Text="свой" />
+              </Border>
+              <Button x:Name="ResetButton" Classes="tb ghost" Focusable="False" ToolTip.Tip="Вернуть стандартный шаблон (Ctrl+Z — передумать)">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                  <mi:MaterialIcon Kind="Restore" />
+                  <TextBlock Text="Стандартный" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Button x:Name="PresetsButton" Classes="tb drop" Focusable="False" ToolTip.Tip="Готовые и свои шаблоны; сохранить этот как пресет">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                  <mi:MaterialIcon Kind="BookmarkMultipleOutline" />
+                  <TextBlock Text="Пресеты" />
+                  <mi:MaterialIcon Kind="ChevronDown" Classes="dd" />
+                </StackPanel>
+              </Button>
+              <Border Classes="tbSep" />
+              <Button x:Name="ConditionButton" Classes="tb drop" Focusable="False" ToolTip.Tip="Показывать кусок, только если… (выделите текст)">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                  <TextBlock Text="Условие" />
+                  <mi:MaterialIcon Kind="ChevronDown" Classes="dd" />
+                </StackPanel>
+              </Button>
+              <Button x:Name="VariableButton" Classes="tb drop acc" Focusable="False" ToolTip.Tip="Вставить переменную">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                  <mi:MaterialIcon Kind="Plus" />
+                  <TextBlock Text="Переменная" />
+                  <mi:MaterialIcon Kind="ChevronDown" Classes="dd" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+        <c:TemplateBox x:Name="Box"
+                       Text="{Binding $parent[c:TemplateEditor].Text, Mode=TwoWay}"
+                       Variables="{Binding $parent[c:TemplateEditor].Variables}"
+                       Conditions="{Binding $parent[c:TemplateEditor].Conditions}"
+                       Issues="{Binding $parent[c:TemplateEditor].Issues}" />
+      </DockPanel>
+    </Border>
+
+    <ItemsControl x:Name="IssuesList" ItemsSource="{Binding $parent[c:TemplateEditor].IssueRows}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Spacing="4" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate DataType="c:TemplateIssueRow">
+          <Button Classes="issue" Classes.warning="{Binding IsWarning}" Focusable="False"
+                  Command="{Binding $parent[c:TemplateEditor].JumpCommand}" CommandParameter="{Binding}"
+                  ToolTip.Tip="Показать в шаблоне">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <mi:MaterialIcon Kind="AlertCircleOutline" />
+              <TextBlock Text="{Binding Message}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+              <TextBlock Classes="snip" VerticalAlignment="Center" IsVisible="{Binding HasSnippet}">
+                <Run Text="{Binding Before, Mode=OneWay}" /><Run Text="{Binding Marked, Mode=OneWay}" Background="{StaticResource RedBrush}" Foreground="White" /><Run Text="{Binding After, Mode=OneWay}" />
+              </TextBlock>
+            </StackPanel>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6">
+      <TextBlock Classes="sm" Foreground="{StaticResource Text2Brush}" FontWeight="SemiBold">
+        <Run Text="Переменные" /><Run Foreground="{StaticResource DimBrush}" FontWeight="Normal" Text=" — нажмите, чтобы вставить там, где каретка" />
+      </TextBlock>
+      <ItemsControl x:Name="ChipsList" ItemsSource="{Binding $parent[c:TemplateEditor].Variables}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" ItemSpacing="5" LineSpacing="5" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="t:TemplateVariable">
+            <Button Classes="chip" Focusable="False" Content="{Binding Name}" ToolTip.Tip="{Binding Label}"
+                    Command="{Binding $parent[c:TemplateEditor].InsertCommand}" CommandParameter="{Binding Name}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

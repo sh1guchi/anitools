@@ -2,7 +2,9 @@ using Anitools.App.ViewModels;
 using Anitools.App.Views;
 using Anitools.App.Views.Dialogs;
 using Anitools.Core.Jobs;
+using Anitools.Core.Settings;
 using Anitools.Core.Shikimori;
+using Anitools.Core.Templates;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -209,6 +211,50 @@ public sealed class ScreenshotTests
         page.Rows.Single(r => r.File.StartsWith("Sousou", StringComparison.Ordinal)).Episode = "10";
 
         Capture(window, "rename");
+    }
+
+    /// <summary>Имена для рутрекера: шаблон с параметрами из самого видео и свой пресет.</summary>
+    [AvaloniaFact]
+    public async Task Rename_page_release_template()
+    {
+        using var app = new AppFixture("To Be Hero X").WithFiles(
+        [
+            .. Enumerable.Range(1, 6).Select(n => $"[SubsPlease] To Be Hero X - {n:00} (1080p) [5A1B2C{n}D].mkv"),
+            .. Enumerable.Range(1, 3).Select(n => $"[SubsPlease] To Be Hero X - {n:00} (1080p) [5A1B2C{n}D].ass"),
+        ]);
+        app.Runner.FfprobeJson = _ => """
+            {"streams": [
+              {"index": 0, "codec_type": "video", "codec_name": "h264", "width": 1920, "height": 1080},
+              {"index": 1, "codec_type": "audio", "codec_name": "flac", "channels": 2, "tags": {"language": "jpn"}, "disposition": {"default": 1}},
+              {"index": 2, "codec_type": "audio", "codec_name": "flac", "channels": 2, "tags": {"language": "rus"}}],
+             "format": {"duration": "1420.0"}}
+            """;
+        const string release = "{название:точки}.S{сезон:00}E{серия}.{разрешение}.BluRay.Remux.{видео}{?мульти}.{мульти}{/}.{аудио}.{каналы}-Sylvar";
+        app.Services.UpdateSettingsQuietly(s => s with
+        {
+            Rename = new RenameSettings { Template = release, Presets = [new TemplatePreset("Рутрекер", release)] },
+        });
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.RenamePage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.Rows.Count == 9 && page.RenameCount == 9, "строки");
+        page.BaseName = "TO BE HERO X";
+
+        Capture(window, "rename-release");
+    }
+
+    [AvaloniaFact]
+    public async Task Rename_page_template_errors()
+    {
+        using var app = new AppFixture().WithFiles([.. Enumerable.Range(1, 4).Select(n => $"[SubsPlease] Sousou no Frieren - {n:00} (1080p).mkv")]);
+        var (vm, window) = await OpenAsync(app);
+        var page = vm.RenamePage;
+        vm.SelectedNav = page;
+        await AppFixture.WaitUntilAsync(() => page.RenameCount == 4, "строки");
+        page.Template = "{название}: {?сезон≠1}Сезон {сзн} {/}Серия {серия";
+        Assert.Equal(0, page.RenameCount);
+
+        Capture(window, "rename-template-errors");
     }
 
     [AvaloniaFact]

@@ -8,8 +8,14 @@ public interface IDialogService
     /// <summary>Выбрать папку; отказ — null.</summary>
     Task<string?> PickFolderAsync(string title, string? start = null);
 
-    /// <summary>Выбрать файл; отказ — null.</summary>
-    Task<string?> PickFileAsync(string title, string? start = null);
+    /// <summary>Выбрать файл; patterns — «*.json» и т.п. (null — любые); отказ — null.</summary>
+    Task<string?> PickFileAsync(string title, string? start = null, IReadOnlyList<string>? patterns = null);
+
+    /// <summary>Куда сохранить файл (предлагается имя); отказ — null.</summary>
+    Task<string?> PickSaveFileAsync(string title, string suggestedName, string? start = null);
+
+    /// <summary>Спросить строку (имя пресета и т.п.); отказ — null.</summary>
+    Task<string?> PromptAsync(string title, string message, string initial = "", string confirm = "Сохранить");
 
     Task<bool> ConfirmAsync(string title, string message, string confirm = "Да", string cancel = "Отмена");
 

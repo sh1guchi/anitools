@@ -1,6 +1,7 @@
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Operations.Hls;
 using Anitools.Core.Settings;
+using Anitools.Core.Templates;
 using Anitools.Core.Tests.Fixtures;
 using Anitools.Core.WorkDir;
 
@@ -23,6 +24,7 @@ public sealed class SettingsStoreTests
         Assert.Equal(6, settings.AudioShift.Workers);
         Assert.Equal(8, settings.AudioConvert.Workers);
         Assert.Empty(settings.RecentFolders);
+        Assert.Null(settings.Rename.Template);
     }
 
     [Fact]
@@ -39,6 +41,7 @@ public sealed class SettingsStoreTests
             AudioConvert = new AudioConvertOptions { Format = AudioFormat.Flac, Channels = null },
             SubShiftSeconds = -0.5,
             RecentFolders = [@"D:\anime\Frieren"],
+            Rename = new RenameSettings { Template = "{название} S{сезон}E{серия}" },
         };
 
         store.Save(settings);
@@ -55,6 +58,7 @@ public sealed class SettingsStoreTests
         Assert.Null(loaded.AudioConvert.Channels);
         Assert.Equal(-0.5, loaded.SubShiftSeconds);
         Assert.Equal([@"D:\anime\Frieren"], loaded.RecentFolders);
+        Assert.Equal("{название} S{сезон}E{серия}", loaded.Rename.Template);
         // Человекочитаемый файл: перечисления словами, кириллица как есть
         var json = File.ReadAllText(store.Path);
         Assert.Contains("\"mode\": \"folder\"", json);
@@ -76,6 +80,7 @@ public sealed class SettingsStoreTests
               "hardsub": { "encodeArgs": [] },
               "audioShift": { "workers": 0 },
               "tools": null,
+              "rename": { "template": "{название} - {серия}{?суффикс}.{суффикс}{/}" },
               "unknownField": 1,
             }
             """);
@@ -93,6 +98,7 @@ public sealed class SettingsStoreTests
         Assert.NotEmpty(settings.Hardsub.EncodeArgs);
         Assert.Equal(6, settings.AudioShift.Workers);
         Assert.Equal("", settings.Tools.Ffmpeg);
+        Assert.Null(settings.Rename.Template); // стандартный не хранится
     }
 
     [Fact]
@@ -124,5 +130,60 @@ public sealed class SettingsStoreTests
         Assert.Equal("/anime/5", settings.RecentFolders[0]);
         Assert.Equal("/anime/11", settings.RecentFolders[1]);
         Assert.Single(settings.RecentFolders, f => f == "/anime/5");
+    }
+
+    [Fact]
+    public void Export_and_import_move_all_settings_but_not_this_computer_state()
+    {
+        using var dir = new TempDir();
+        var mine = new AppSettings
+        {
+            Voices = ["DEEP", "JAM"],
+            SubShiftSeconds = -2,
+            Rename = new RenameSettings
+            {
+                Template = "{название:точки}.S{сезон:00}E{серия}",
+                Presets = [new TemplatePreset("Рутрекер", "{название:точки}.S{сезон:00}E{серия}.1080p-Sylvar")],
+            },
+            RecentFolders = [@"D:\anime\X"],
+            LastUpdateCheck = DateTimeOffset.UnixEpoch,
+        };
+        var file = dir.Combine("export", "anitools-settings.json");
+        SettingsStore.Export(mine, file);
+
+        var json = File.ReadAllText(file);
+        Assert.DoesNotContain("recentFolders", json);
+        Assert.DoesNotContain("lastUpdateCheck", json);
+        Assert.Contains("\"name\": \"Рутрекер\"", json);
+
+        var other = new AppSettings { RecentFolders = [@"E:\other"], Voices = ["AniLibria.TV"] };
+        var (imported, error) = SettingsStore.Import(file, other);
+
+        Assert.Null(error);
+        Assert.Equal(["DEEP", "JAM"], imported!.Voices);
+        Assert.Equal(-2, imported.SubShiftSeconds);
+        Assert.Equal(mine.Rename.Template, imported.Rename.Template);
+        Assert.Equal(mine.Rename.Presets, imported.Rename.Presets);
+        Assert.Equal([@"E:\other"], imported.RecentFolders); // свои недавние папки остались
+        Assert.Null(imported.LastUpdateCheck);
+    }
+
+    [Fact]
+    public void Import_takes_only_what_is_in_the_file_and_refuses_strangers()
+    {
+        using var dir = new TempDir();
+        var current = new AppSettings { Voices = ["DEEP"], SubShiftSeconds = 3 };
+
+        var partial = dir.File("partial.json", """{ "subShiftSeconds": -1, "hls": { "segmentSeconds": 4 } }""");
+        var (settings, error) = SettingsStore.Import(partial, current);
+        Assert.Null(error);
+        Assert.Equal((-1.0, 4), (settings!.SubShiftSeconds, settings.Hls.SegmentSeconds));
+        Assert.Equal(["DEEP"], settings.Voices);
+        Assert.Equal(HlsSettings.Default.Ladder, settings.Hls.Ladder); // вложенное — по полям
+
+        Assert.Equal("в файле нет настроек anitools", SettingsStore.Import(dir.File("other.json", """{ "name": "x" }"""), current).Error);
+        Assert.Equal("в файле нет настроек anitools", SettingsStore.Import(dir.File("list.json", "[1, 2]"), current).Error);
+        Assert.StartsWith("файл не читается как JSON", SettingsStore.Import(dir.File("bad.json", "{ oops"), current).Error);
+        Assert.StartsWith("в настройках из файла ошибка", SettingsStore.Import(dir.File("wrong.json", """{ "voices": 5 }"""), current).Error);
     }
 }

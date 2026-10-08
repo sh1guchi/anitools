@@ -186,7 +186,20 @@ internal sealed class FakeDialogs : IDialogService
 
     public Task<string?> PickFolderAsync(string title, string? start = null) => Task.FromResult(NextFolder);
 
-    public Task<string?> PickFileAsync(string title, string? start = null) => Task.FromResult(NextFile);
+    public Task<string?> PickFileAsync(string title, string? start = null, IReadOnlyList<string>? patterns = null) => Task.FromResult(NextFile);
+
+    public string? NextSaveFile { get; set; }
+
+    public Task<string?> PickSaveFileAsync(string title, string suggestedName, string? start = null) => Task.FromResult(NextSaveFile);
+
+    /// <summary>Что «введут» в окно с полем; null — отмена. Вопросы записываются в <see cref="Messages"/>.</summary>
+    public Queue<string?> Answers { get; } = [];
+
+    public Task<string?> PromptAsync(string title, string message, string initial = "", string confirm = "Сохранить")
+    {
+        Messages.Add(message);
+        return Task.FromResult(Answers.Count > 0 ? Answers.Dequeue() : null);
+    }
 
     public Task<bool> ConfirmAsync(string title, string message, string confirm = "Да", string cancel = "Отмена")
     {

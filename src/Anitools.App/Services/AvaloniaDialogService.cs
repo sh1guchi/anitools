@@ -20,16 +20,34 @@ public sealed class AvaloniaDialogService(Window owner) : IDialogService
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
-    public async Task<string?> PickFileAsync(string title, string? start = null)
+    public async Task<string?> PickFileAsync(string title, string? start = null, IReadOnlyList<string>? patterns = null)
     {
         var files = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = title,
             AllowMultiple = false,
             SuggestedStartLocation = await StartAsync(start),
+            FileTypeFilter = patterns is null ? null : [new FilePickerFileType(string.Join(", ", patterns)) { Patterns = [.. patterns] }, FilePickerFileTypes.All],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
+
+    public async Task<string?> PickSaveFileAsync(string title, string suggestedName, string? start = null)
+    {
+        var extension = Path.GetExtension(suggestedName);
+        var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedName,
+            DefaultExtension = extension.TrimStart('.'),
+            SuggestedStartLocation = await StartAsync(start),
+            FileTypeChoices = extension.Length > 0 ? [new FilePickerFileType("*" + extension) { Patterns = ["*" + extension] }] : null,
+        });
+        return file?.TryGetLocalPath();
+    }
+
+    public Task<string?> PromptAsync(string title, string message, string initial = "", string confirm = "Сохранить") =>
+        new PromptDialog(title, message, initial, confirm).ShowDialog<string?>(owner);
 
     public Task<bool> ConfirmAsync(string title, string message, string confirm = "Да", string cancel = "Отмена") =>
         new MessageDialog(title, message, confirm, cancel).ShowDialog<bool>(owner);

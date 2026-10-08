@@ -414,6 +414,187 @@
       <Setter Property="Padding" Value="8,4,8,3" />
       <Setter Property="FontSize" Value="13" />
     </Style>
+
+    <!--
+      Поле шаблона (c:TemplateBox): шаблон как у TextBox из Fluent, но со своим TextPresenter (цвет плашек)
+      и слоем плашек под текстом; рамка и фокус — у обёртки .tplEd.
+    -->
+    <Style Selector="TextBox.tpl">
+      <Setter Property="MinHeight" Value="42" />
+      <Setter Property="Padding" Value="12,4" />
+      <Setter Property="FontSize" Value="14.5" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+      <Setter Property="PlaceholderText" Value="например: {название} - {серия}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DockPanel Name="PART_InnerDockPanel" Margin="{TemplateBinding Padding}" Background="Transparent">
+            <ScrollViewer Name="PART_ScrollViewer"
+                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                          VerticalScrollBarVisibility="Disabled"
+                          AllowAutoHide="{TemplateBinding ScrollViewer.AllowAutoHide}"
+                          BringIntoViewOnFocusChange="{TemplateBinding ScrollViewer.BringIntoViewOnFocusChange}">
+              <ScrollViewer.Styles>
+                <Style Selector="ScrollContentPresenter#PART_ContentPresenter">
+                  <Setter Property="Cursor" Value="IBeam" />
+                </Style>
+              </ScrollViewer.Styles>
+              <Panel>
+                <TextBlock Name="PART_Placeholder" Text="{TemplateBinding PlaceholderText}" Foreground="{StaticResource FaintBrush}"
+                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                           IsVisible="{TemplateBinding Text, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                <c:TemplateTokenLayer Name="PART_TokenLayer" />
+                <c:TemplateTextPresenter Name="PART_TextPresenter"
+                                         Text="{TemplateBinding Text, Mode=TwoWay}"
+                                         CaretBlinkInterval="{TemplateBinding CaretBlinkInterval}"
+                                         CaretIndex="{TemplateBinding CaretIndex}"
+                                         SelectionStart="{TemplateBinding SelectionStart}"
+                                         SelectionEnd="{TemplateBinding SelectionEnd}"
+                                         TextAlignment="{TemplateBinding TextAlignment}"
+                                         TextWrapping="{TemplateBinding TextWrapping}"
+                                         LineHeight="{TemplateBinding LineHeight}"
+                                         LetterSpacing="{TemplateBinding LetterSpacing}"
+                                         PasswordChar="{TemplateBinding PasswordChar}"
+                                         RevealPassword="{TemplateBinding RevealPassword}"
+                                         SelectionBrush="{TemplateBinding SelectionBrush}"
+                                         SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}"
+                                         CaretBrush="{TemplateBinding CaretBrush}"
+                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+              </Panel>
+            </ScrollViewer>
+          </DockPanel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <!-- Редактор шаблона (c:TemplateEditor): .tx-edcard, .tx-toolbar, .tx-tb, .tx-chip, .tx-errs -->
+    <Style Selector="Border.tplEd">
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Background" Value="{StaticResource BgBrush}" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+          <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.tplEd:focus-within">
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BoxShadow" Value="0 0 0 3 #249B73FF" />
+    </Style>
+    <Style Selector="Border.tplBar">
+      <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="CornerRadius" Value="9,9,0,0" />
+      <Setter Property="Padding" Value="6,5" />
+    </Style>
+    <Style Selector="Border.tbSep">
+      <Setter Property="Width" Value="1" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="Margin" Value="3,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Background" Value="{StaticResource Line2Brush}" />
+    </Style>
+    <Style Selector="Button.tb">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="8,0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.tb mi|MaterialIcon">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+    </Style>
+    <Style Selector="Button.tb mi|MaterialIcon.dd">
+      <Setter Property="Width" Value="13" />
+      <Setter Property="Height" Value="13" />
+      <Setter Property="Margin" Value="-2,0,0,0" />
+      <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style Selector="Button.tb:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.tb:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="Button.tb.drop">
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+    </Style>
+    <Style Selector="Button.tb.drop:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.tb.drop:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+    </Style>
+    <Style Selector="Button.tb.acc">
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+    </Style>
+    <Style Selector="Button.tb.acc:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.tb.acc:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <Style Selector="Button.tb.ghost">
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    </Style>
+    <Style Selector="Button.chip">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+      <Setter Property="CornerRadius" Value="20" />
+      <Setter Property="Padding" Value="10,3" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <Style Selector="Button.issue">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Background" Value="{StaticResource RedBgBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.issue:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.issue:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2EFF5F5F" />
+    </Style>
+    <Style Selector="Button.issue mi|MaterialIcon">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Button.issue.warning">
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+    </Style>
+    <Style Selector="Button.issue.warning:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.issue.warning:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2EFFC34B" />
+    </Style>
+    <Style Selector="Button.issue.warning mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="TextBlock.snip">
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    </Style>
     <Style Selector="ComboBox">
       <Setter Property="MinHeight" Value="34" />
       <Setter Property="CornerRadius" Value="7" />
