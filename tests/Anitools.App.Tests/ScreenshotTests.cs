@@ -52,7 +52,10 @@ public sealed class ScreenshotTests
 
         Assert.False(chips.IsVisible);
         Assert.True(summary.IsVisible);
-        Assert.Equal("программы", vm.ToolsSummary);
+        // чего нет — по именам (на Windows без ImDisk — «ImDisk»), всё есть — «программы»
+        var missing = vm.ToolChips.Where(c => !c.Ok).Select(c => c.Name).ToList();
+        Assert.Equal(missing.Count == 0 ? "программы" : string.Join(", ", missing), vm.ToolsSummary);
+        Assert.Equal(missing.Count == 0, vm.ToolsOk);
         Capture(window, "main-window-narrow");
         release.SetResult();
     }
