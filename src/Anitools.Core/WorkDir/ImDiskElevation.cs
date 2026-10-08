@@ -331,10 +331,13 @@ public sealed class ElevatedImDisk : IImDiskAdmin, IDisposable
         {
             var exe = Environment.ProcessPath ?? throw new Win32Exception("не найден путь к программе");
             var arguments = $"{ImDiskHelper.Argument} {pipeName} {Environment.ProcessId}";
+            // Запуск через «dotnet Anitools.dll» (не через exe): помощнику нужна та же dll. Location в одном exe пуст,
+            // поэтому путь — из папки приложения и имени сборки
             if (Path.GetFileNameWithoutExtension(exe).Equals("dotnet", StringComparison.OrdinalIgnoreCase)
-                && Assembly.GetEntryAssembly()?.Location is { Length: > 0 } dll)
+                && Assembly.GetEntryAssembly()?.GetName().Name is { Length: > 0 } name
+                && Path.Combine(AppContext.BaseDirectory, name + ".dll") is var dll && File.Exists(dll))
             {
-                arguments = $"\"{dll}\" {arguments}"; // запуск из исходников: dotnet Anitools.App.dll
+                arguments = $"\"{dll}\" {arguments}";
             }
 
             using var process = Process.Start(new ProcessStartInfo(exe, arguments)
