@@ -55,6 +55,13 @@ python3 tools/gen_golden.py          # перегенерировать
 python3 tools/gen_golden.py --check  # проверить, что актуальны
 ```
 
+## Выпуск версии
+
+1. Поднять `<Version>` в `Directory.Build.props` (например, 1.0.1) — PR, зелёный CI, merge.
+2. GitHub → **Actions** → **Release** → **Run workflow** (ветка `main`). Workflow соберёт `Anitools.exe` и
+   установщик, проверит установку на чистой Windows, создаст тег `v1.0.1` и выпуск с `anitools-setup.exe`,
+   `Anitools.exe` и `SHA256SUMS.txt`. Установленные anitools увидят новую версию сами.
+
 ## Статус
 
 - [x] Этап 1 — скелет решения, пустое окно, golden-эталоны
