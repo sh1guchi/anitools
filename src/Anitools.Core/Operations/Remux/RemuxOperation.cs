@@ -40,14 +40,28 @@ public static class RemuxOperation
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже конвертирован", Outputs = [output] };
             }
 
+            // AVI: меток времени часто не хватает — генерируются, отрицательные сдвигаются к нулю (как avi_to_mkv.bat, §2.9.10)
+            var avi = string.Equals(Path.GetExtension(file), ".avi", StringComparison.OrdinalIgnoreCase);
+            List<string> args = ["-nostdin"];
+            if (avi)
+            {
+                args.AddRange(["-fflags", "+genpts"]);
+            }
+
             // «-map 0:a?» вместо «0:a» оригинала: файлы без звука иначе падают (docs/PLAN.md §2.8 #7)
-            List<string> args = ["-nostdin", "-i", file, "-map", "0:v:0", "-map", "0:a?"];
+            args.AddRange(["-i", file, "-map", "0:v:0", "-map", "0:a?"]);
             if (options.Format == RemuxFormat.Mkv && options.CopySubtitles)
             {
                 args.AddRange(["-map", "0:s?"]);
             }
 
-            args.AddRange(["-c", "copy", "-y", output]);
+            args.AddRange(["-c", "copy"]);
+            if (avi)
+            {
+                args.AddRange(["-avoid_negative_ts", "make_zero"]);
+            }
+
+            args.AddRange(["-y", output]);
             return new PlanItem
             {
                 Source = file,

@@ -154,10 +154,13 @@ public sealed class MainWindowTests
         vm.SelectedNav = page;
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 3, "план MP4");
 
-        page.IsAviToMkv = true;
-        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 1, "план AVI → MKV");
-        Assert.Equal("Old - 01.avi", page.Preview.Rows[0].Label);
-        Assert.Equal("→ Old - 01.mkv", page.Preview.Rows[0].Target);
+        // AVI — обычный вход, с флагами меток времени
+        Assert.Contains("+genpts", page.Preview.Plan!.Items.Single(i => i.Label == "Old - 01.avi").Command!.Arguments);
+
+        page.IsM2tsToMkv = true;
+        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 1, "план M2TS → MKV");
+        Assert.Equal("Disc.m2ts", page.Preview.Rows[0].Label);
+        Assert.Equal("→ Disc.mkv", page.Preview.Rows[0].Target);
 
         page.IsMkv = true;
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 3, "план MKV");

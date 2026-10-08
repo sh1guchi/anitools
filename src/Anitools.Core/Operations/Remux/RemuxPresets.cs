@@ -5,14 +5,11 @@ using Anitools.Core.Processes;
 namespace Anitools.Core.Operations.Remux;
 
 /// <summary>
-/// Профили ремукса из bat-файлов пользователя (§2.9.10): результат — рядом с исходником, готовый не переделывается.
+/// Профиль ремукса из m2ts.bat (§2.9.10): результат — рядом с исходником, готовый не переделывается.
+/// AVI (avi_to_mkv.bat) отдельного профиля не требует — обычный ремукс добавляет к нему те же флаги.
 /// </summary>
 public static class RemuxPresets
 {
-    /// <summary>AVI → MKV (avi_to_mkv.bat): копия потоков, недостающие таймстампы генерируются, отрицательные — к нулю.</summary>
-    public static OperationPlan AviToMkv(string folder) => Plan(folder, ".avi", "AVI → MKV", (input, output) =>
-        ["-fflags", "+genpts", "-i", input, "-c", "copy", "-avoid_negative_ts", "make_zero", output, "-y", "-loglevel", "warning"]);
-
     /// <summary>
     /// Blu-ray M2TS → MKV (m2ts.bat): видео и субтитры копией, звук (обычно PCM Blu-ray) — во FLAC без потерь.
     /// </summary>

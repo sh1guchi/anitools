@@ -13,7 +13,6 @@
           <TextBlock Text="Формат:" VerticalAlignment="Center" Margin="0,0,12,0" />
           <RadioButton x:Name="Mp4Radio" GroupName="remux" Content="MP4" IsChecked="{Binding IsMp4}" Margin="0,0,16,0" />
           <RadioButton x:Name="MkvRadio" GroupName="remux" Content="MKV" IsChecked="{Binding IsMkv}" Margin="0,0,16,0" />
-          <RadioButton x:Name="AviRadio" GroupName="remux" Content="AVI → MKV" IsChecked="{Binding IsAviToMkv}" Margin="0,0,16,0" />
           <RadioButton x:Name="M2tsRadio" GroupName="remux" Content="Blu-ray M2TS → MKV" IsChecked="{Binding IsM2tsToMkv}" />
         </WrapPanel>
         <CheckBox x:Name="SubsBox" Content="копировать субтитры" IsChecked="{Binding CopySubtitles}" IsVisible="{Binding IsMkv}" />
