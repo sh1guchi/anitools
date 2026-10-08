@@ -113,7 +113,18 @@ public sealed class ToolPagesTests
         await AppFixture.WaitUntilAsync(() => clean.Values.Count == 2, "стили");
         Assert.Equal(["Default", "Signs"], clean.Values.Select(v => v.Value));
         Assert.Equal(0, clean.RemoveCount);
-        clean.Values[1].IsChecked = true;
+        // поиск по словам: найденные видны и отмечаются одной кнопкой (Enter)
+        clean.Search = "def, нет такого";
+        Assert.Equal(1, clean.MatchCount);
+        Assert.Equal([true, false], clean.Values.Select(v => v.IsMatch));
+        clean.CheckFoundCommand.Execute(null);
+        Assert.Equal([true, false], clean.Values.Select(v => v.IsChecked));
+        clean.UncheckFoundCommand.Execute(null);
+        clean.Search = "SIGN";
+        clean.CheckFoundCommand.Execute(null);
+        clean.Search = "";
+        Assert.All(clean.Values, v => Assert.True(v.IsMatch));
+        Assert.Equal([false, true], clean.Values.Select(v => v.IsChecked));
         Assert.Equal(1, clean.RemoveCount);
         Assert.StartsWith("Будет удалено строк: 1 в 1 файле", clean.Summary);
 
