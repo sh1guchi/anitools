@@ -72,31 +72,28 @@ public static partial class ImDiskHelper
     public static async Task ServeAsync(Stream channel, IImDiskAdmin imdisk, CancellationToken cancellationToken = default)
     {
         var created = new HashSet<char>();
-        using var reader = new StreamReader(channel, Utf8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+
+        // Читатель и писатель канал не закрывают и сами не закрываются: их Dispose сбрасывает буфер в уже оборванный
+        // канал и падает (на Windows — «Pipe is broken»), а помощник должен выйти тихо
+        var reader = new StreamReader(channel, Utf8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
         var writer = new StreamWriter(channel, Utf8, leaveOpen: true) { AutoFlush = true, NewLine = "\n" };
-        await using (writer.ConfigureAwait(false))
+        try
         {
-            try
+            while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
             {
-                while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
-                {
-                    var reply = await ExecuteAsync(line, imdisk, created, cancellationToken).ConfigureAwait(false);
-                    await writer.WriteLineAsync(JsonSerializer.Serialize(reply).AsMemory(), cancellationToken).ConfigureAwait(false);
-                }
+                var reply = await ExecuteAsync(line, imdisk, created, cancellationToken).ConfigureAwait(false);
+                await writer.WriteLineAsync(JsonSerializer.Serialize(reply).AsMemory(), cancellationToken).ConfigureAwait(false);
             }
-            catch (IOException)
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
+        {
+            // приложение закрылось или пропало посреди ответа
+        }
+        finally
+        {
+            foreach (var letter in created)
             {
-                // приложение пропало посреди ответа
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            finally
-            {
-                foreach (var letter in created)
-                {
-                    await imdisk.RemoveAsync(letter).ConfigureAwait(false);
-                }
+                await imdisk.RemoveAsync(letter).ConfigureAwait(false);
             }
         }
     }
