@@ -124,7 +124,7 @@ public static partial class FontText
         }
     }
 
-    /// <summary>UTF-16BE без ошибок разбора: непарные суррогаты и нечётный последний байт пропускаются.</summary>
+    /// <summary>UTF-16BE с пропуском ошибок: непарные суррогаты и нечётный последний байт отбрасываются.</summary>
     internal static string DecodeUtf16BeIgnore(ReadOnlySpan<byte> raw)
     {
         var text = new StringBuilder(raw.Length / 2);

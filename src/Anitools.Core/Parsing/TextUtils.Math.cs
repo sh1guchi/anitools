@@ -1,6 +1,6 @@
 namespace Anitools.Core.Parsing;
 
-/// <summary>Арифметика с плавающей точкой для расчётов битрейта: точная сумма, деление с округлением вниз, запись числа.</summary>
+/// <summary>Арифметика с плавающей точкой: компенсированная сумма, деление с округлением вниз, короткая запись числа.</summary>
 internal static partial class TextUtils
 {
     /// <summary>

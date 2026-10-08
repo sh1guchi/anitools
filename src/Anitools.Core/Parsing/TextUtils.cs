@@ -5,7 +5,7 @@ using System.Text;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Строки и регулярки по одним правилам для любых имён: пробелы, регистр, разбор целых чисел,
+/// Строки и регулярки по явным правилам для любых имён: пробелы, регистр, разбор целых чисел,
 /// расширение и имя без него, порядок сортировки. Правила — для всего диапазона Unicode:
 /// \w = [\p{L}\p{N}_], \d = \p{Nd}, <see cref="IsAlnum"/> — буква или цифра любого вида.
 /// </summary>
@@ -179,7 +179,7 @@ internal static partial class TextUtils
     /// <summary>Строка цифр как число без ведущих нулей: «007» → «7».</summary>
     public static string IntString(string s) => ParseInt(s).ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>Число не меньше чем из двух цифр: 5 → «05», 128 → «128».</summary>
+    /// <summary>Число с ведущим нулём до двух цифр: 5 → «05», 128 → «128».</summary>
     public static string Pad2(BigInteger n) => n.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0');
 
     /// <summary>Путь → (без расширения, расширение), разделители Windows (/ и \): «a.b.» → («a.b», «.»), «.mkv» → («.mkv», «»).</summary>

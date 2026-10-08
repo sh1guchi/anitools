@@ -83,8 +83,7 @@ public static class AudioExtractOperation
 
     /// <summary>
     /// Имя папки дорожки: тайтл → кодек из «Audio: …» → номер; санитизация — <see cref="TitleText.SanitizeTrackFolder"/>;
-    /// повтор имени → «имя_N»
-    /// (N — номер дорожки в исходнике).
+    /// повтор имени → «имя_N» (N — номер дорожки в исходнике).
     /// </summary>
     public static IReadOnlyDictionary<int, string> TrackFolderNames(IReadOnlyList<AudioTrackInfo> tracks, IReadOnlyList<int> ids)
     {
