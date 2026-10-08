@@ -19,6 +19,9 @@ public enum CopyListStyle
 
     /// <summary>Просто тайтлы.</summary>
     Plain,
+
+    /// <summary>Одной строкой через запятую: русские озвучки, потом «English», потом «Original» (японская).</summary>
+    Comma,
 }
 
 /// <summary>«Дорожки файла» (mka_muxer.py, режим 2): таблица аудиодорожек и список тайтлов для копирования.</summary>
@@ -43,6 +46,11 @@ public static class TrackListOperation
     /// <summary>Список для копирования (print_copy_block): без тайтла — «Дорожка N».</summary>
     public static string CopyList(IReadOnlyList<TrackRow> rows, CopyListStyle style)
     {
+        if (style == CopyListStyle.Comma)
+        {
+            return CommaList(rows);
+        }
+
         var text = new StringBuilder();
         for (var i = 0; i < rows.Count; i++)
         {
@@ -58,5 +66,51 @@ public static class TrackListOperation
         return text.ToString();
     }
 
+    /// <summary>
+    /// «AniLibria.TV, DEEP, English, Original»: сначала русские (и прочие) озвучки по порядку дорожек, потом английская
+    /// как «English», потом японская как «Original». Английская и японская — по языку дорожки (eng / jpn), иначе
+    /// по тайтлу («English», «Оригинальная», «JP»…). Одинаковые подписи — один раз.
+    /// </summary>
+    public static string CommaList(IReadOnlyList<TrackRow> rows)
+    {
+        var labels = rows
+            .Select(row => (Row: row, Group: Group(row)))
+            .OrderBy(x => x.Group) // устойчивая сортировка: внутри группы — порядок дорожек
+            .Select(x => x.Group switch
+            {
+                VoiceGroup.English => "English",
+                VoiceGroup.Original => "Original",
+                _ => string.IsNullOrEmpty(x.Row.Title) ? $"Дорожка {x.Row.Number}" : x.Row.Title,
+            })
+            .Distinct(StringComparer.Ordinal);
+        return string.Join(", ", labels);
+    }
+
+    /// <summary>Чья озвучка: язык дорожки, а если он не английский и не японский — догадка по тайтлу.</summary>
+    public static VoiceGroup Group(TrackRow row)
+    {
+        var language = PyText.Lower(row.Language ?? "");
+        var guessed = language switch
+        {
+            "eng" or "en" => "eng",
+            "jpn" or "ja" or "jp" => "jpn",
+            _ => LanguageGuess.Detect(row.Title),
+        };
+        return guessed switch
+        {
+            "eng" => VoiceGroup.English,
+            "jpn" => VoiceGroup.Original,
+            _ => VoiceGroup.Dub,
+        };
+    }
+
     private static string? NonEmpty(string? s) => string.IsNullOrEmpty(s) ? null : s;
+}
+
+/// <summary>Порядок в списке через запятую: озвучки, английская, оригинальная.</summary>
+public enum VoiceGroup
+{
+    Dub,
+    English,
+    Original,
 }

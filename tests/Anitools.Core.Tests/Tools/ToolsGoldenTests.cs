@@ -113,7 +113,7 @@ public sealed class ToolsGoldenTests
             var source = input.GetProperty("source").GetString()!;
             dir.File(source);
             var plan = input.GetProperty("tool").GetString() == "delay-1s"
-                ? AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -input.GetProperty("seconds").GetDouble() })
+                ? AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -input.GetProperty("seconds").GetDouble(), Reencode = true })
                 : AudioConvertOperation.Plan(dir.Path, new AudioConvertOptions { Format = Format(input.GetProperty("format").GetString()!) });
             var args = Assert.Single(plan.Items).Command!.Arguments.Select(a => a.Replace(dir.Path + Path.DirectorySeparatorChar, "", StringComparison.Ordinal).Replace('\\', '/')).ToList();
             Assert.Equal("-y", args[^2]);

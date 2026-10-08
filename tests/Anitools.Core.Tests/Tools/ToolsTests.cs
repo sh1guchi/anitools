@@ -6,6 +6,7 @@ using Anitools.Core.Operations.Common;
 using Anitools.Core.Operations.Hardsub;
 using Anitools.Core.Operations.Remux;
 using Anitools.Core.Operations.SubShift;
+using Anitools.Core.Operations.TrackList;
 using Anitools.Core.Processes;
 using Anitools.Core.Tests.Fixtures;
 
@@ -156,12 +157,18 @@ public sealed class ToolsTests
         dir.File("audio_fixed/Done.mka", "готово");
         dir.File("Done.mp3");
 
-        var plus = AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 1.5 });
-        var minus = AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -2 });
+        var plus = AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 1.5, Reencode = true });
+        var minus = AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -2, Reencode = true });
+        var lossless = AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -2 });
 
         Assert.Equal([PlanItemStatus.Skip, PlanItemStatus.Run], plus.Items.Select(i => i.Status));
         Assert.Contains("adelay=delays=1500:all=1", plus.Items[1].Command!.Arguments);
         Assert.Equal(["-ss", "2.0"], minus.Items[1].Command!.Arguments.SkipWhile(a => a != "-ss").Take(2));
+        // по умолчанию — без перекодирования: mkvmerge сдвигает метки времени всех дорожек
+        var copy = lossless.Items[1].Command!;
+        Assert.Equal(Tool.Mkvmerge, copy.Tool);
+        Assert.Equal(["-o", dir.Combine("audio_fixed", "Voice.mka"), "--no-video", "--sync", "-1:-2000", dir.Combine("Voice.flac")], copy.Arguments);
+        Assert.Equal([1], copy.WarningExitCodes);
         Assert.Throws<PlanException>(() => AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 0 }));
     }
 
@@ -194,6 +201,26 @@ public sealed class ToolsTests
             items[0].Command!.Arguments);
         Assert.DoesNotContain("+genpts", items[1].Command!.Arguments);
         Assert.DoesNotContain("-avoid_negative_ts", items[1].Command!.Arguments);
+    }
+
+    [Fact]
+    public void Comma_list_puts_dubs_first_then_english_then_original()
+    {
+        TrackRow Row(int n, string? title, string? language) => new(n, title, language, "aac", "2.0", n == 1);
+        IReadOnlyList<TrackRow> rows =
+        [
+            Row(1, "Оригинальная", "jpn"),
+            Row(2, "AniLibria.TV", "rus"),
+            Row(3, "Crunchyroll", "eng"),
+            Row(4, "DEEP", "rus"),
+            Row(5, null, null),
+            Row(6, "Japanese", "und"),
+            Row(7, "ENG", null),
+        ];
+
+        Assert.Equal("AniLibria.TV, DEEP, Дорожка 5, English, Original", TrackListOperation.CopyList(rows, CopyListStyle.Comma));
+        Assert.Equal(VoiceGroup.Original, TrackListOperation.Group(rows[5]));
+        Assert.Equal(VoiceGroup.English, TrackListOperation.Group(rows[6]));
     }
 
     private static void InterlockedMax(ref int target, int value)

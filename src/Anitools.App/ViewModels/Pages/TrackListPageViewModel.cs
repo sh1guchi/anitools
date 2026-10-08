@@ -45,6 +45,12 @@ public sealed partial class TrackListPageViewModel(IShell shell) : PageViewModel
         set => SetStyle(value, CopyListStyle.Plain);
     }
 
+    public bool IsComma
+    {
+        get => Style == CopyListStyle.Comma;
+        set => SetStyle(value, CopyListStyle.Comma);
+    }
+
     protected override Task LoadAsync(string folder, CancellationToken cancellationToken)
     {
         var files = TrackListOperation.ListFiles(folder);
@@ -77,6 +83,7 @@ public sealed partial class TrackListPageViewModel(IShell shell) : PageViewModel
         OnPropertyChanged(nameof(IsBullets));
         OnPropertyChanged(nameof(IsNumbers));
         OnPropertyChanged(nameof(IsPlain));
+        OnPropertyChanged(nameof(IsComma));
         CopyText = TrackListOperation.CopyList([.. Rows], Style);
     }
 

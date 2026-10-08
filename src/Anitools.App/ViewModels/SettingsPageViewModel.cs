@@ -178,6 +178,10 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     [ObservableProperty]
     public partial string AudioShiftWorkers { get; set; } = "";
 
+    /// <summary>Сдвиг аудио с перекодированием в AAC (как в оригинале); по умолчанию — без.</summary>
+    [ObservableProperty]
+    public partial bool AudioShiftReencode { get; set; }
+
     [ObservableProperty]
     public partial string AudioConvertFormat { get; set; } = "";
 
@@ -286,6 +290,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
                 Seconds = Number(AudioShiftSeconds, "Сдвиг аудио", errors, -3600, 3600),
                 Bitrate = Required(AudioShiftBitrate, "Битрейт сдвига аудио", errors),
                 Workers = Int(AudioShiftWorkers, "Файлов сразу (сдвиг аудио)", errors, 1, 64),
+                Reencode = AudioShiftReencode,
             },
             AudioConvert = new AudioConvertOptions
             {
@@ -412,6 +417,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         AudioShiftSeconds = Text(s.AudioShift.Seconds);
         AudioShiftBitrate = s.AudioShift.Bitrate;
         AudioShiftWorkers = Text(s.AudioShift.Workers);
+        AudioShiftReencode = s.AudioShift.Reencode;
         AudioConvertFormat = s.AudioConvert.Format.ToString();
         AudioConvertBitrate = s.AudioConvert.Bitrate;
         AudioConvertChannels = s.AudioConvert.Channels is { } ch ? Text(ch) : "";

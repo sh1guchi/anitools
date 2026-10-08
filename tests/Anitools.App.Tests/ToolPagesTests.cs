@@ -1,6 +1,7 @@
 using Anitools.App.ViewModels;
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Jobs;
+using Anitools.Core.Processes;
 using Avalonia.Headless.XUnit;
 
 namespace Anitools.App.Tests;
@@ -47,6 +48,11 @@ public sealed class ToolPagesTests
         vm.SelectedNav = shift;
         await AppFixture.WaitUntilAsync(() => shift.Preview.Rows.Count == 2, "сдвиг");
 
+        // по умолчанию — без перекодирования (mkvmerge --sync), AAC — по выбору, как в оригинале
+        Assert.False(shift.Reencode);
+        Assert.Contains("-1:1000", shift.Preview.Plan!.Items[0].Command!.Arguments);
+        Assert.Equal(Tool.Mkvmerge, shift.Preview.Plan!.Items[0].Command!.Tool);
+        shift.Reencode = true;
         Assert.Contains("adelay=delays=1000:all=1", shift.Preview.Plan!.Items[0].Command!.Arguments);
         shift.Seconds = "-0,5";
         Assert.Equal(["-ss", "0.5"], shift.Preview.Plan!.Items[0].Command!.Arguments.SkipWhile(a => a != "-ss").Take(2));
@@ -78,6 +84,9 @@ public sealed class ToolPagesTests
         page.IsNumbers = true;
         await page.CopyCommand.ExecuteAsync(null);
         Assert.Equal("1. AniLibria.TV\n2. Оригинальная\n3. DEEP\n", app.Dialogs.Clipboard);
+        // через запятую: русские озвучки, потом English, потом Original
+        page.IsComma = true;
+        Assert.Equal("AniLibria.TV, DEEP, Original", page.CopyText);
     }
 
     [AvaloniaFact]

@@ -215,10 +215,13 @@
                 </HeaderedContentControl>
               </WrapPanel>
               <HeaderedContentControl Classes="field" Header="Сдвиг аудио: с · битрейт AAC · файлов сразу">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <TextBox Text="{Binding AudioShiftSeconds}" Width="70" HorizontalAlignment="Left" />
-                  <TextBox Text="{Binding AudioShiftBitrate}" Width="70" HorizontalAlignment="Left" />
-                  <TextBox Text="{Binding AudioShiftWorkers}" Width="56" HorizontalAlignment="Left" />
+                <StackPanel Spacing="8">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBox Text="{Binding AudioShiftSeconds}" Width="70" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding AudioShiftBitrate}" Width="70" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding AudioShiftWorkers}" Width="56" HorizontalAlignment="Left" />
+                  </StackPanel>
+                  <CheckBox Content="перекодировать в AAC (как в оригинале), а не сдвигать без потерь" IsChecked="{Binding AudioShiftReencode}" />
                 </StackPanel>
               </HeaderedContentControl>
               <HeaderedContentControl Classes="field" Header="Перекодирование аудио: формат · битрейт · каналов · файлов сразу">

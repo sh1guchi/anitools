@@ -58,7 +58,9 @@
             <StackPanel Orientation="Horizontal">
               <RadioButton Classes="seg" GroupName="copyStyle" Content="• тайтл" IsChecked="{Binding IsBullets}" />
               <RadioButton x:Name="NumbersRadio" Classes="seg" GroupName="copyStyle" Content="1. тайтл" IsChecked="{Binding IsNumbers}" />
-              <RadioButton Classes="seg" GroupName="copyStyle" Content="просто текст" IsChecked="{Binding IsPlain}" />
+              <RadioButton Classes="seg" GroupName="copyStyle" Content="текст" IsChecked="{Binding IsPlain}" />
+              <RadioButton x:Name="CommaRadio" Classes="seg" GroupName="copyStyle" Content="через запятую" IsChecked="{Binding IsComma}"
+                           ToolTip.Tip="Одной строкой: русские озвучки, потом English, потом Original" />
             </StackPanel>
           </Border>
           <TextBox x:Name="CopyBox" Text="{Binding CopyText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
