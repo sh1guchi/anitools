@@ -11,7 +11,7 @@
       <Grid ColumnDefinitions="Auto,*,Auto">
         <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
         <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
-                   Text="Дорожки из каждой серии — в папки «надписи» и «сабы» (приписки «.надписи» / «.сабы»), за один запуск. Не нужна папка — «—»." />
+                   Text="Дорожки из каждой серии — в папки «надписи» и «сабы» (приписки «.надписи» / «.сабы»), за один запуск. Одна дорожка может идти в обе папки." />
         <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
                 IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
           <StackPanel Orientation="Horizontal" Spacing="8">
@@ -33,12 +33,13 @@
             </Panel>
           </c:CardHead>
           <Border Classes="tblHead" Padding="8,4">
-            <Grid ColumnDefinitions="40,*,190,60,Auto">
+            <Grid ColumnDefinitions="40,*,190,60,96,96">
               <TextBlock Text="ID" />
               <TextBlock Grid.Column="1" Text="Тайтл" />
               <TextBlock Grid.Column="2" Text="Кодек" />
               <TextBlock Grid.Column="3" Text="Язык" />
-              <TextBlock Grid.Column="4" Text="Куда извлечь" Width="250" />
+              <TextBlock Grid.Column="4" Text="В надписи" />
+              <TextBlock Grid.Column="5" Text="В сабы" />
             </Grid>
           </Border>
           <ScrollViewer MaxHeight="200" HorizontalScrollBarVisibility="Disabled" Margin="0,-12,0,0">
@@ -46,19 +47,14 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="p:SubtitleTrackRowViewModel">
                   <Border Classes="tblRow">
-                    <Grid ColumnDefinitions="40,*,190,60,Auto">
+                    <Grid ColumnDefinitions="40,*,190,60,96,96">
                       <TextBlock Text="{Binding Id}" Classes="cyan b" VerticalAlignment="Center" />
                       <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
                       <TextBlock Grid.Column="2" Text="{Binding Codec}" Classes="text2 sm" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
                       <TextBlock Grid.Column="3" Text="{Binding Language}" Classes="dim sm" VerticalAlignment="Center" />
-                      <!-- у каждой строки своя группа вариантов (без GroupName — по родительской панели) -->
-                      <Border Grid.Column="4" Classes="seg" Width="250">
-                        <StackPanel Orientation="Horizontal">
-                          <RadioButton Classes="seg" Content="—" IsChecked="{Binding IsNone}" Width="50" ToolTip.Tip="Не извлекать" />
-                          <RadioButton Classes="seg" Content="надписи" IsChecked="{Binding IsSigns}" Width="100" />
-                          <RadioButton Classes="seg" Content="сабы" IsChecked="{Binding IsSubs}" Width="98" />
-                        </StackPanel>
-                      </Border>
+                      <!-- в каждой папке — одна дорожка (отметили другую — прежняя снимается), одна дорожка — хоть в обе -->
+                      <CheckBox Grid.Column="4" Content="надписи" IsChecked="{Binding IsSigns}" VerticalAlignment="Center" />
+                      <CheckBox Grid.Column="5" Content="сабы" IsChecked="{Binding IsSubs}" VerticalAlignment="Center" />
                     </Grid>
                   </Border>
                 </DataTemplate>

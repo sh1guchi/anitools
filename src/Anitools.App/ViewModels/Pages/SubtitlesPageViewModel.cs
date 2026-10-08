@@ -10,15 +10,10 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>Куда дорожка: никуда, в надписи или в сабы.</summary>
-public enum SubtitleRole
-{
-    None,
-    Signs,
-    Subs,
-}
-
-/// <summary>Дорожка субтитров первого файла: «1  Надписи  S_TEXT/ASS → .ass  rus» и куда её извлекать.</summary>
+/// <summary>
+/// Дорожка субтитров первого файла: «1  Надписи  S_TEXT/ASS → .ass  rus» и куда её извлекать — в надписи, в сабы,
+/// в обе папки сразу или никуда.
+/// </summary>
 public sealed partial class SubtitleTrackRowViewModel(SubtitleTrack track) : ObservableObject
 {
     public SubtitleTrack Track { get; } = track;
@@ -32,40 +27,16 @@ public sealed partial class SubtitleTrackRowViewModel(SubtitleTrack track) : Obs
     public string Language => Track.Language.Length > 0 ? Track.Language : Track.LanguageIetf;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNone), nameof(IsSigns), nameof(IsSubs))]
-    public partial SubtitleRole Role { get; set; }
+    public partial bool IsSigns { get; set; }
 
-    public bool IsNone
-    {
-        get => Role == SubtitleRole.None;
-        set => SetRole(value, SubtitleRole.None);
-    }
-
-    public bool IsSigns
-    {
-        get => Role == SubtitleRole.Signs;
-        set => SetRole(value, SubtitleRole.Signs);
-    }
-
-    public bool IsSubs
-    {
-        get => Role == SubtitleRole.Subs;
-        set => SetRole(value, SubtitleRole.Subs);
-    }
-
-    private void SetRole(bool selected, SubtitleRole role)
-    {
-        if (selected)
-        {
-            Role = role;
-        }
-    }
+    [ObservableProperty]
+    public partial bool IsSubs { get; set; }
 }
 
 /// <summary>
-/// П.4 «Субтитры» (§4.6): дорожки по первому файлу; у надписей и у сабов — своя дорожка (или никакой), извлекаются
-/// за один запуск; в каждой серии — та же по ID, тайтлу или языку; надписи → «надписи\… .надписи.ass»,
-/// сабы → «сабы\… .сабы.ass».
+/// П.4 «Субтитры» (§4.6): дорожки по первому файлу; у надписей и у сабов — своя дорожка (или никакой; одна дорожка
+/// может идти в обе папки), извлекаются за один запуск; в каждой серии — та же по ID, тайтлу или языку;
+/// надписи → «надписи\… .надписи.ass», сабы → «сабы\… .сабы.ass».
 /// </summary>
 public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel(shell, "Субтитры", MaterialIconKind.SubtitlesOutline)
 {
@@ -87,9 +58,9 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
     [ObservableProperty]
     public partial bool IsPlanning { get; set; }
 
-    public SubtitleTrackRowViewModel? SignsTrack => Tracks.FirstOrDefault(t => t.Role == SubtitleRole.Signs);
+    public SubtitleTrackRowViewModel? SignsTrack => Tracks.FirstOrDefault(t => t.IsSigns);
 
-    public SubtitleTrackRowViewModel? SubsTrack => Tracks.FirstOrDefault(t => t.Role == SubtitleRole.Subs);
+    public SubtitleTrackRowViewModel? SubsTrack => Tracks.FirstOrDefault(t => t.IsSubs);
 
     public bool IsById
     {
@@ -124,10 +95,7 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         _assigning = true;
         foreach (var track in source.Tracks)
         {
-            var row = new SubtitleTrackRowViewModel(track)
-            {
-                Role = track == signs ? SubtitleRole.Signs : track == subs ? SubtitleRole.Subs : SubtitleRole.None,
-            };
+            var row = new SubtitleTrackRowViewModel(track) { IsSigns = track == signs, IsSubs = track == subs };
             row.PropertyChanged += OnTrackChanged;
             Tracks.Add(row);
         }
@@ -153,10 +121,14 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         _ = ReplanAsync();
     }
 
-    /// <summary>У надписей и у сабов — по одной дорожке: выбрали новую — прежняя освобождается.</summary>
+    /// <summary>
+    /// У надписей и у сабов — по одной дорожке: отметили другую — прежняя в этой папке снимается. Одна и та же
+    /// дорожка может стоять и в надписях, и в сабах.
+    /// </summary>
     private void OnTrackChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_assigning || e.PropertyName != nameof(SubtitleTrackRowViewModel.Role) || sender is not SubtitleTrackRowViewModel changed)
+        if (_assigning || sender is not SubtitleTrackRowViewModel changed
+            || e.PropertyName is not (nameof(SubtitleTrackRowViewModel.IsSigns) or nameof(SubtitleTrackRowViewModel.IsSubs)))
         {
             return;
         }
@@ -164,11 +136,15 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         _assigning = true;
         try
         {
-            if (changed.Role != SubtitleRole.None)
+            foreach (var other in Tracks.Where(t => t != changed))
             {
-                foreach (var other in Tracks.Where(t => t != changed && t.Role == changed.Role))
+                if (e.PropertyName == nameof(SubtitleTrackRowViewModel.IsSigns) && changed.IsSigns)
                 {
-                    other.Role = SubtitleRole.None;
+                    other.IsSigns = false;
+                }
+                else if (e.PropertyName == nameof(SubtitleTrackRowViewModel.IsSubs) && changed.IsSubs)
+                {
+                    other.IsSubs = false;
                 }
             }
         }
