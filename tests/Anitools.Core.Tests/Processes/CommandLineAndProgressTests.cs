@@ -7,7 +7,7 @@ public sealed class CommandLineAndProgressTests
 {
     [Fact]
     public void CommandLine_matches_golden() =>
-        GoldenAssert.All("list2cmdline", input => CommandLine.Format(input.EnumerateArray().Select(a => a.GetString()!)));
+        GoldenAssert.All("command_line", input => CommandLine.Format(input.EnumerateArray().Select(a => a.GetString()!)));
 
     [Fact]
     public void Progress_parser_reads_real_ffmpeg_output()

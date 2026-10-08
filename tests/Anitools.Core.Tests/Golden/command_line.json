@@ -1,5 +1,5 @@
 {
-  "function": "list2cmdline",
+  "function": "command_line",
   "description": "Командная строка для логов ошибок: кавычки и обратные косые по правилам Windows",
   "cases": [
     {"input": ["ffmpeg", "-nostdin", "-y", "-i", "D:\\anime\\Sousou no Frieren\\Frieren - 01.mkv", "-map", "0:v:0"], "output": "ffmpeg -nostdin -y -i \"D:\\anime\\Sousou no Frieren\\Frieren - 01.mkv\" -map 0:v:0"},

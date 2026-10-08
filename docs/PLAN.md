@@ -888,7 +888,7 @@ NVENC/scale_cuda/NVDEC и CPU-фолбэк на реальной видеока�
 - `MediaProbe`: один `ffprobe -show_streams -show_format` вместо разбора `ffmpeg -i`; `CodecDescription` повторяет
   «Audio: …» из `ffmpeg -i` (сверено на всех фикстурах) — для имён папок дорожек без тайтла.
 - Фикстуры реального вывода ffprobe/ffmpeg/mkvmerge — `tests/Anitools.Core.Tests/Fixtures/media/`;
-  новые эталоны `mov_audio_titles`, `mkv_subtitle_tracks`, `list2cmdline`.
+  новые эталоны `mov_audio_titles`, `mkv_subtitle_tracks`, `command_line`.
 - Логи ошибок — время, команда, код и хвост вывода (§2.6); два лога одного файла в одну секунду не затирают друг друга (`…_2.log`).
 
 Решения этапа 3 (часть 2 — операции):
@@ -1011,7 +1011,7 @@ NVENC/scale_cuda/NVDEC и CPU-фолбэк на реальной видеока�
   кириллица в cmap), `FontIndex`, `FontDownloader` (Google Fonts без браузерного User-Agent — отдаёт .ttf, проверено;
   dafont до 4 архивов; 1001fonts), `AssFontsCollector` (своя папка → системные → скачивание, кириллица, дубли
   начертаний, `_2` при одинаковом имени, сохранение скачанного в свою папку, fonts.zip Deflate с атрибутом 0x20).
-- Кириллица проверяется по правилам fontTools: лучшая таблица символов (3,10)/(0,6)/(0,4)/(3,1)/…,
+- Кириллица проверяется по лучшей таблице символов шрифта: (3,10)/(0,6)/(0,4)/(3,1)/…,
   форматы 0, 4, 6, 12; нет cmap/maxp, обрыв, неизвестный формат — «есть». Эталоны: `sfnt_font_names` на синтетических
   шрифтах (MacRoman, нечётный UTF-16, непарный суррогат, обрыв таблицы, коллекции, cmap 4 и 12), `font_keys`,
   `ass_font_names`, `fonts_from_zip`, `font_downloads` (ответы серверов проигрываются по URL), **`ass_fonts_scenarios`** —
