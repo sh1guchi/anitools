@@ -30,6 +30,10 @@ public abstract partial class PageViewModel(IShell shell, string title, Material
     [ObservableProperty]
     public partial string? Badge { get; set; }
 
+    /// <summary>Пульсирующая точка в навигации: идёт задача.</summary>
+    [ObservableProperty]
+    public partial bool IsLive { get; set; }
+
     [ObservableProperty]
     public partial string Folder { get; set; } = "";
 
@@ -40,12 +44,11 @@ public abstract partial class PageViewModel(IShell shell, string title, Material
     [ObservableProperty]
     public partial string? Message { get; set; }
 
-    /// <summary>Что произошло после действия: «Поставлено в очередь…».</summary>
-    [ObservableProperty]
-    public partial string? Notice { get; set; }
-
     /// <summary>Страница работает с рабочей папкой («Задачи» и «Настройки» — нет).</summary>
     public virtual bool UsesFolder => true;
+
+    /// <summary>Пояснение рядом с названием у страниц без рабочей папки (у остальных там папка).</summary>
+    public virtual string? Subtitle => null;
 
     public bool IsActive { get; private set; }
 
@@ -57,7 +60,6 @@ public abstract partial class PageViewModel(IShell shell, string title, Material
         }
 
         Folder = folder;
-        Notice = null;
         Invalidate();
     }
 
@@ -138,7 +140,7 @@ public abstract partial class PageViewModel(IShell shell, string title, Material
         var jobs = Shell.Services.Jobs;
         var waiting = jobs.IsBusy;
         var job = jobs.Enqueue($"{title} · {Path.GetFileName(Folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))}", Folder, work);
-        Notice = waiting ? "Поставлено в очередь — ход работы в «Задачах»." : "Запущено — ход работы в «Задачах» и внизу окна.";
+        Shell.Toast(waiting ? "Поставлено в очередь — ход работы в «Задачах»." : "Запущено — ход работы в «Задачах» и в полосе сверху.");
         return job;
     }
 

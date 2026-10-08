@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Anitools.App.Views"
+             xmlns:c="using:Anitools.App.Views.Controls"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.App"
              RequestedThemeVariant="Dark">
@@ -8,94 +9,825 @@
     <!-- страница → её представление -->
     <views:ViewLocator />
   </Application.DataTemplates>
+
+  <!--
+    Оформление как у Anime Uploader (style.css): тёмные панели, фиолетовый акцент, зелёный/жёлтый/красный/бирюзовый
+    для состояний. Цвета — токены ниже; стили компонентов — в Application.Styles.
+  -->
   <Application.Resources>
-    <SolidColorBrush x:Key="AccentBrush" Color="#FFA855F7" />
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FF1D1726" />
-    <SolidColorBrush x:Key="NavBackgroundBrush" Color="#FF17131E" />
-    <SolidColorBrush x:Key="CardBrush" Color="#FF1E1927" />
-    <SolidColorBrush x:Key="DividerBrush" Color="#33A855F7" />
-    <SolidColorBrush x:Key="OkBrush" Color="#FF4ADE80" />
-    <SolidColorBrush x:Key="ErrorBrush" Color="#FFF87171" />
-    <SolidColorBrush x:Key="WarningBrush" Color="#FFFBBF24" />
-    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#26F87171" />
-    <SolidColorBrush x:Key="NoticeBackgroundBrush" Color="#2234D399" />
-    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Menlo, monospace</FontFamily>
+    <Color x:Key="AccentColor">#FF9B73FF</Color>
+    <SolidColorBrush x:Key="BgBrush" Color="#FF0E0F13" />
+    <SolidColorBrush x:Key="Bg2Brush" Color="#FF121318" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#FF17181E" />
+    <SolidColorBrush x:Key="Panel2Brush" Color="#FF1D1E26" />
+    <SolidColorBrush x:Key="Panel3Brush" Color="#FF24252F" />
+    <SolidColorBrush x:Key="LineBrush" Color="#FF2A2B36" />
+    <SolidColorBrush x:Key="Line2Brush" Color="#FF363745" />
+    <SolidColorBrush x:Key="TextBrush" Color="#FFE7E7EC" />
+    <SolidColorBrush x:Key="Text2Brush" Color="#FFB9B9C6" />
+    <SolidColorBrush x:Key="DimBrush" Color="#FF8D8D9C" />
+    <SolidColorBrush x:Key="FaintBrush" Color="#FF62626F" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF9B73FF" />
+    <SolidColorBrush x:Key="Accent2Brush" Color="#FFB89BFF" />
+    <SolidColorBrush x:Key="AccentBgBrush" Color="#249B73FF" />
+    <SolidColorBrush x:Key="AccentLineBrush" Color="#739B73FF" />
+    <SolidColorBrush x:Key="GreenBrush" Color="#FF50D787" />
+    <SolidColorBrush x:Key="GreenBgBrush" Color="#1F50D787" />
+    <SolidColorBrush x:Key="YellowBrush" Color="#FFFFC34B" />
+    <SolidColorBrush x:Key="YellowBgBrush" Color="#1FFFC34B" />
+    <SolidColorBrush x:Key="YellowLineBrush" Color="#66FFC34B" />
+    <SolidColorBrush x:Key="RedBrush" Color="#FFFF5F5F" />
+    <SolidColorBrush x:Key="RedBgBrush" Color="#1FFF5F5F" />
+    <SolidColorBrush x:Key="RedLineBrush" Color="#8CFF5F5F" />
+    <SolidColorBrush x:Key="CyanBrush" Color="#FF4BCDD7" />
+    <SolidColorBrush x:Key="CyanBgBrush" Color="#1F4BCDD7" />
+    <SolidColorBrush x:Key="BlueBrush" Color="#FF5F9BFF" />
+    <!-- полоса хода: от акцента к светлому акценту -->
+    <LinearGradientBrush x:Key="BarBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+      <GradientStop Offset="0" Color="#FF9B73FF" />
+      <GradientStop Offset="1" Color="#FFB89BFF" />
+    </LinearGradientBrush>
+    <!-- значок слева сверху: градиентная плитка -->
+    <LinearGradientBrush x:Key="BrandBrush" StartPoint="10%,0%" EndPoint="90%,100%">
+      <GradientStop Offset="0" Color="#FFB394FF" />
+      <GradientStop Offset="0.6" Color="#FF7B4FF2" />
+      <GradientStop Offset="1" Color="#FF5F37D4" />
+    </LinearGradientBrush>
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Cascadia Code, Consolas, Menlo, monospace</FontFamily>
+
+    <!-- Fluent: те же токены для стандартных элементов -->
+    <CornerRadius x:Key="ControlCornerRadius">7</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">10</CornerRadius>
+    <StaticResource x:Key="ButtonBackground" ResourceKey="Panel2Brush" />
+    <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="Panel3Brush" />
+    <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="Panel3Brush" />
+    <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="Panel2Brush" />
+    <StaticResource x:Key="ButtonBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ButtonForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonBackground" ResourceKey="Panel2Brush" />
+    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="Panel3Brush" />
+    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="Panel3Brush" />
+    <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ToggleButtonBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ToggleButtonBorderBrushPointerOver" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ToggleButtonBorderBrushPressed" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ToggleButtonBorderBrushChecked" ResourceKey="AccentLineBrush" />
+    <StaticResource x:Key="ToggleButtonBorderBrushCheckedPointerOver" ResourceKey="AccentBrush" />
+    <StaticResource x:Key="ToggleButtonBorderBrushCheckedPressed" ResourceKey="AccentBrush" />
+    <StaticResource x:Key="ToggleButtonForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="TextBrush" />
+    <StaticResource x:Key="TextControlBackground" ResourceKey="BgBrush" />
+    <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="BgBrush" />
+    <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="BgBrush" />
+    <StaticResource x:Key="TextControlBackgroundDisabled" ResourceKey="Bg2Brush" />
+    <StaticResource x:Key="TextControlBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="AccentBrush" />
+    <StaticResource x:Key="TextControlBorderBrushDisabled" ResourceKey="LineBrush" />
+    <StaticResource x:Key="TextControlForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="TextBrush" />
+    <StaticResource x:Key="TextControlForegroundDisabled" ResourceKey="DimBrush" />
+    <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="TextControlPlaceholderForegroundDisabled" ResourceKey="FaintBrush" />
+    <Thickness x:Key="TextControlBorderThemeThickness">1</Thickness>
+    <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+    <Color x:Key="TextControlSelectionHighlightColor">#739B73FF</Color>
+    <StaticResource x:Key="ComboBoxBackground" ResourceKey="BgBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundPointerOver" ResourceKey="BgBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundPressed" ResourceKey="BgBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="BgBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundDisabled" ResourceKey="Bg2Brush" />
+    <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="AccentBrush" />
+    <StaticResource x:Key="ComboBoxBorderBrushDisabled" ResourceKey="LineBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundBorderBrushFocused" ResourceKey="AccentBrush" />
+    <StaticResource x:Key="ComboBoxBackgroundBorderBrushUnfocused" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ComboBoxForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ComboBoxForegroundFocused" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ComboBoxForegroundDisabled" ResourceKey="DimBrush" />
+    <StaticResource x:Key="ComboBoxPlaceHolderForeground" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="ComboBoxDropDownGlyphForeground" ResourceKey="DimBrush" />
+    <StaticResource x:Key="ComboBoxDropDownBackground" ResourceKey="PanelBrush" />
+    <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ComboBoxItemBackgroundPointerOver" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ComboBoxItemBackgroundPressed" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ComboBoxItemBackgroundSelected" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ComboBoxItemBackgroundSelectedPointerOver" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ComboBoxItemBackgroundSelectedPressed" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="ComboBoxItemForegroundSelected" ResourceKey="TextBrush" />
+    <StaticResource x:Key="ComboBoxItemForegroundSelectedPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="MenuFlyoutPresenterBackground" ResourceKey="PanelBrush" />
+    <StaticResource x:Key="MenuFlyoutPresenterBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="MenuFlyoutItemBackgroundPointerOver" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="MenuFlyoutItemBackgroundPressed" ResourceKey="AccentBgBrush" />
+    <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="TextBrush" />
+    <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="TextBrush" />
+    <StaticResource x:Key="FlyoutPresenterBackground" ResourceKey="PanelBrush" />
+    <StaticResource x:Key="FlyoutBorderThemeBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ToolTipBackground" ResourceKey="Panel2Brush" />
+    <StaticResource x:Key="ToolTipBorderBrush" ResourceKey="Line2Brush" />
+    <StaticResource x:Key="ToolTipForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="CheckBoxForegroundUnchecked" ResourceKey="TextBrush" />
+    <StaticResource x:Key="CheckBoxForegroundChecked" ResourceKey="TextBrush" />
+    <StaticResource x:Key="CheckBoxForegroundIndeterminate" ResourceKey="TextBrush" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="DimBrush" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" ResourceKey="BgBrush" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" ResourceKey="BgBrush" />
+    <StaticResource x:Key="RadioButtonForeground" ResourceKey="TextBrush" />
+    <StaticResource x:Key="RadioButtonOuterEllipseStroke" ResourceKey="FaintBrush" />
+    <StaticResource x:Key="RadioButtonOuterEllipseStrokePointerOver" ResourceKey="DimBrush" />
+    <StaticResource x:Key="RadioButtonOuterEllipseFill" ResourceKey="BgBrush" />
+    <StaticResource x:Key="RadioButtonOuterEllipseFillPointerOver" ResourceKey="BgBrush" />
+
+    <!-- Заголовок карточки: [значок] Название · пояснение … действия справа -->
+    <ControlTheme x:Key="{x:Type c:CardHead}" TargetType="c:CardHead">
+      <Setter Property="Margin" Value="0,0,0,12" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto" MinHeight="26">
+            <mi:MaterialIcon Name="PART_Icon" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"
+                             Foreground="{StaticResource Accent2Brush}" />
+            <TextBlock Grid.Column="1" Classes="h2" Text="{TemplateBinding Title}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Classes="dim" FontSize="13" Text="{TemplateBinding Caption}" Margin="10,1,10,0"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <ContentPresenter Grid.Column="3" Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
   </Application.Resources>
+
   <Application.Styles>
     <FluentTheme>
       <FluentTheme.Palettes>
-        <!-- пурпурный акцент, как рамки rich в консольной версии -->
-        <ColorPaletteResources x:Key="Dark" Accent="#FFA855F7" RegionColor="#FF15121B" />
-        <ColorPaletteResources x:Key="Light" Accent="#FF8B2FD9" />
+        <ColorPaletteResources x:Key="Dark" Accent="#FF9B73FF" RegionColor="#FF0E0F13" BaseHigh="#FFE7E7EC"
+                               ChromeMediumLow="#FF17181E" ListLow="#FF1D1E26" ListMedium="#FF24252F" ErrorText="#FFFF5F5F" />
+        <ColorPaletteResources x:Key="Light" Accent="#FF7A4DF0" />
       </FluentTheme.Palettes>
     </FluentTheme>
     <mi:MaterialIconStyles />
 
-    <Style Selector="TextBlock.h1">
-      <Setter Property="FontSize" Value="22" />
+    <!-- ── Текст ── -->
+    <Style Selector=":is(TextBlock).h1">
+      <Setter Property="FontSize" Value="19" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <Style Selector="TextBlock.h2">
+    <Style Selector=":is(TextBlock).h2">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector=":is(TextBlock).h3">
       <Setter Property="FontSize" Value="15" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <Style Selector="TextBlock.muted">
-      <Setter Property="Opacity" Value="0.6" />
-    </Style>
-    <Style Selector="TextBlock.small">
-      <Setter Property="FontSize" Value="12" />
-    </Style>
-    <Style Selector="TextBlock.navHeader">
-      <Setter Property="FontSize" Value="11" />
+    <Style Selector=":is(TextBlock).b">
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="LetterSpacing" Value="1.5" />
-      <Setter Property="Opacity" Value="0.5" />
     </Style>
-    <Style Selector="TextBlock.error">
-      <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+    <Style Selector=":is(TextBlock).text2">
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
     </Style>
-    <Style Selector="TextBlock.skip">
-      <Setter Property="Opacity" Value="0.5" />
+    <Style Selector=":is(TextBlock).dim, :is(TextBlock).muted">
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
     </Style>
-    <Style Selector="Border.card">
-      <Setter Property="Background" Value="{StaticResource CardBrush}" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="14,12" />
+    <Style Selector=":is(TextBlock).faint, :is(TextBlock).skip">
+      <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
     </Style>
-    <Style Selector="Border.message">
-      <Setter Property="Background" Value="{StaticResource MessageBackgroundBrush}" />
-      <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Padding" Value="10,6" />
+    <Style Selector=":is(TextBlock).sm, :is(TextBlock).small">
+      <Setter Property="FontSize" Value="12.5" />
     </Style>
-    <Style Selector="Border.notice">
-      <Setter Property="Background" Value="{StaticResource NoticeBackgroundBrush}" />
-      <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Padding" Value="10,6" />
+    <Style Selector=":is(TextBlock).mono">
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="12.5" />
     </Style>
+    <Style Selector=":is(TextBlock).ok">
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector=":is(TextBlock).warn">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector=":is(TextBlock).err, :is(TextBlock).error">
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector=":is(TextBlock).accent">
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <Style Selector=":is(TextBlock).cyan">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <!-- «ВИДЕО», «АУДИО»… в меню -->
+    <Style Selector="TextBlock.navHeader">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+    </Style>
+
+    <!-- ── Значки ── -->
     <Style Selector="mi|MaterialIcon.ok">
-      <Setter Property="Foreground" Value="{StaticResource OkBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
     </Style>
     <Style Selector="mi|MaterialIcon.bad">
-      <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.warn">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
     </Style>
     <Style Selector="mi|MaterialIcon.accent">
-      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
     </Style>
-    <Style Selector="mi|MaterialIcon.muted">
-      <Setter Property="Opacity" Value="0.55" />
+    <Style Selector="mi|MaterialIcon.cyan">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
     </Style>
-    <!-- кнопка-ссылка: без рамки и фона -->
+    <Style Selector="mi|MaterialIcon.muted, mi|MaterialIcon.dim">
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.faint">
+      <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+    </Style>
+
+    <!-- ── Кнопки: .btn, .primary, .danger, .ghost, .sm, .lg, .icon, .link ── -->
+    <Style Selector="Button, ToggleButton">
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="14,0" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button:pressed, ToggleButton:pressed">
+      <Setter Property="RenderTransform" Value="translateY(1px)" />
+    </Style>
+    <Style Selector="Button:disabled, ToggleButton:disabled">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+    <Style Selector="Button mi|MaterialIcon, ToggleButton mi|MaterialIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Accent2Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent2Brush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="Button.danger">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{StaticResource RedLineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource RedBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource RedBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+
+    <Style Selector="Button.ghost, ToggleButton.ghost">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <Style Selector="Button.sm, ToggleButton.sm">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="Button.lg">
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="Padding" Value="18,0" />
+      <Setter Property="FontSize" Value="15" />
+    </Style>
+    <Style Selector="Button.lg mi|MaterialIcon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+    </Style>
+
+    <!-- .icon-btn: квадратная, без рамки, приглушённая -->
+    <Style Selector="Button.icon">
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Width" Value="32" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    </Style>
+    <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="Button.icon mi|MaterialIcon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+    </Style>
+    <Style Selector="Button.icon.sm">
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Width" Value="26" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.icon.sm mi|MaterialIcon">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+    </Style>
+
+    <!-- кнопка-ссылка -->
     <Style Selector="Button.link">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
       <Setter Property="Padding" Value="4,2" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontWeight" Value="Normal" />
     </Style>
-    <Style Selector="Button.icon">
-      <Setter Property="Padding" Value="6" />
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <!-- ── Поля ввода ── -->
+    <Style Selector="TextBox">
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="10,7,10,6" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBox /template/ Border#PART_BorderElement">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+          <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BoxShadow" Value="0 0 0 3 #249B73FF" />
+    </Style>
+    <Style Selector="TextBox.sm">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="8,4,8,3" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="CornerRadius" Value="7" />
+    </Style>
+    <Style Selector="ComboBoxItem">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Margin" Value="4,1" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="CheckBox, RadioButton">
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="ToolTip">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="CornerRadius" Value="7" />
+    </Style>
+    <Style Selector="MenuFlyoutPresenter">
+      <Setter Property="Padding" Value="5" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="13.5" />
+    </Style>
+
+    <!-- поле с подписью сверху (.field) -->
+    <Style Selector="HeaderedContentControl.field">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <StackPanel Spacing="5">
+            <ContentPresenter Content="{TemplateBinding Header}" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource Text2Brush}" />
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </StackPanel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <!-- .seg: переключатель вариантов полосой -->
+    <Style Selector="Border.seg">
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Background" Value="{StaticResource BgBrush}" />
+      <Setter Property="ClipToBounds" Value="True" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="RadioButton.seg">
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="BorderThickness" Value="1,0,0,0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="PART_Seg" Background="Transparent" BorderBrush="{StaticResource Line2Brush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}" VerticalAlignment="Center"
+                              HorizontalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.seg:nth-child(1)">
       <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="RadioButton.seg:pointerover /template/ Border#PART_Seg">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+    </Style>
+    <Style Selector="RadioButton.seg:checked">
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="RadioButton.seg:checked /template/ Border#PART_Seg">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BoxShadow" Value="inset 0 -2 0 0 #FF9B73FF" />
+    </Style>
+    <Style Selector="RadioButton.seg:disabled">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <!-- ── Карточки, плашки, заметки ── -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Padding" Value="18,16" />
+    </Style>
+    <!-- вложенный блок внутри карточки (.tpl) -->
+    <Style Selector="Border.box">
+      <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14,12" />
+    </Style>
+    <Style Selector="Border.badge">
+      <Setter Property="CornerRadius" Value="20" />
+      <Setter Property="Padding" Value="8,1" />
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge TextBlock">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    </Style>
+    <Style Selector="Border.badge mi|MaterialIcon">
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
+    </Style>
+    <Style Selector="Border.badge.accent">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.badge.accent TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <Style Selector="Border.badge.accent mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <Style Selector="Border.badge.ok">
+      <Setter Property="Background" Value="{StaticResource GreenBgBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.badge.ok TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.badge.ok mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.badge.warn">
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.badge.warn TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.badge.warn mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.badge.err">
+      <Setter Property="Background" Value="{StaticResource RedBgBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.badge.err TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Border.badge.err mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Border.badge.cyan">
+      <Setter Property="Background" Value="{StaticResource CyanBgBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.badge.cyan TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <Style Selector="Border.badge.cyan mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+
+    <!-- .note: тонированная строка с значком (жёлтая; .info — бирюзовая, .err — красная, .ok — зелёная) -->
+    <Style Selector="Border.note">
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+    </Style>
+    <Style Selector="Border.note mi|MaterialIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+    <Style Selector="Border.note.info">
+      <Setter Property="Background" Value="{StaticResource CyanBgBrush}" />
+    </Style>
+    <Style Selector="Border.note.info mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <Style Selector="Border.note.err">
+      <Setter Property="Background" Value="{StaticResource RedBgBrush}" />
+    </Style>
+    <Style Selector="Border.note.err mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+    </Style>
+    <Style Selector="Border.note.ok">
+      <Setter Property="Background" Value="{StaticResource GreenBgBrush}" />
+    </Style>
+    <Style Selector="Border.note.ok mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+    <Style Selector="Border.note Button.icon">
+      <Setter Property="Margin" Value="0,-5,-6,-5" />
+    </Style>
+
+    <!-- .hint: подсказка с бирюзовым значком -->
+    <Style Selector="Grid.hint mi|MaterialIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Margin" Value="0,1,8,0" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Foreground" Value="{StaticResource CyanBrush}" />
+    </Style>
+    <Style Selector="Grid.hint TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- ── Страница: тело и нижняя полоса с кнопкой запуска (.q-bar) ── -->
+    <Style Selector="Border.pageBar">
+      <Setter Property="Padding" Value="22,12,22,14" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="Background" Value="{StaticResource Bg2Brush}" />
+    </Style>
+    <Style Selector="Border.pageBar TextBlock.barTitle">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- ── Полоса хода (.pbar) ── -->
+    <Style Selector="ProgressBar">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+      <Setter Property="Foreground" Value="{StaticResource BarBrush}" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="MinHeight" Value="4" />
+    </Style>
+    <Style Selector="ProgressBar.pbar">
+      <Setter Property="Height" Value="8" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+
+    <!-- ── Таблицы (.tbl): шапка и строки с разделителями ── -->
+    <Style Selector="Border.tblHead">
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="Border.tblHead TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    </Style>
+    <Style Selector="Border.tblRow">
+      <Setter Property="BorderBrush" Value="#992A2B36" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.tblRow:pointerover">
+      <Setter Property="Background" Value="#8024252F" />
+    </Style>
+
+    <!-- ── Списки: строки выбора (.shiki-row) ── -->
+    <Style Selector="ListBox.rows">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem">
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="12,7" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.rows ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <!-- ── Меню слева (.nav-item): полоса акцента у края, подсветка, значок акцентом ── -->
+    <Style Selector="ListBox.nav">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem">
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="11,6" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Panel>
+            <Border Name="PART_Bar" Width="3" HorizontalAlignment="Left" Margin="0,9" CornerRadius="0,3,3,0"
+                    Background="{StaticResource AccentBrush}" IsVisible="False" />
+            <ContentPresenter Name="PART_ContentPresenter" Margin="10,0"
+                              Background="{TemplateBinding Background}"
+                              CornerRadius="{TemplateBinding CornerRadius}"
+                              Padding="{TemplateBinding Padding}"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              Foreground="{TemplateBinding Foreground}"
+                              HorizontalContentAlignment="Stretch"
+                              VerticalContentAlignment="Center" />
+          </Panel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel2Brush}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.nav ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentBgBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected /template/ Border#PART_Bar">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem mi|MaterialIcon.navIcon">
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:pointerover mi|MaterialIcon.navIcon">
+      <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected mi|MaterialIcon.navIcon">
+      <Setter Property="Foreground" Value="{StaticResource Accent2Brush}" />
+    </Style>
+    <!-- недоступные пункты — заголовки разделов -->
+    <Style Selector="ListBox.nav ListBoxItem:disabled">
+      <Setter Property="Cursor" Value="Arrow" />
+      <Setter Property="Padding" Value="11,10,11,3" />
+    </Style>
+
+    <!-- ── Вращающийся кружок (.spin) ── -->
+    <Style Selector="Arc.spin">
+      <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+      <Setter Property="StrokeThickness" Value="2" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StartAngle" Value="-90" />
+      <Setter Property="SweepAngle" Value="100" />
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Style.Animations>
+        <Animation Duration="0:0:0.8" IterationCount="INFINITE">
+          <KeyFrame Cue="0%">
+            <Setter Property="RotateTransform.Angle" Value="0" />
+          </KeyFrame>
+          <KeyFrame Cue="100%">
+            <Setter Property="RotateTransform.Angle" Value="360" />
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Ellipse.spinTrack">
+      <Setter Property="Stroke" Value="{StaticResource Line2Brush}" />
+      <Setter Property="StrokeThickness" Value="2" />
+    </Style>
+
+    <!-- точка «идёт задача» (.nav-dot.live): пульсирует -->
+    <Style Selector="Ellipse.pulse">
+      <Setter Property="Fill" Value="{StaticResource AccentLineBrush}" />
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Style.Animations>
+        <Animation Duration="0:0:1.6" IterationCount="INFINITE">
+          <KeyFrame Cue="0%">
+            <Setter Property="ScaleTransform.ScaleX" Value="1" />
+            <Setter Property="ScaleTransform.ScaleY" Value="1" />
+            <Setter Property="Opacity" Value="0.9" />
+          </KeyFrame>
+          <KeyFrame Cue="70%">
+            <Setter Property="ScaleTransform.ScaleX" Value="2.6" />
+            <Setter Property="ScaleTransform.ScaleY" Value="2.6" />
+            <Setter Property="Opacity" Value="0" />
+          </KeyFrame>
+          <KeyFrame Cue="100%">
+            <Setter Property="ScaleTransform.ScaleX" Value="1" />
+            <Setter Property="ScaleTransform.ScaleY" Value="1" />
+            <Setter Property="Opacity" Value="0" />
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+
+    <!-- ── Тосты: всплывают справа сверху и исчезают сами ── -->
+    <Style Selector="Border.toast">
+      <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line2Brush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="BoxShadow" Value="0 10 30 0 #73000000, 0 2 6 0 #4D000000" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+        </Transitions>
+      </Setter>
+      <Style.Animations>
+        <Animation Duration="0:0:0.22" Easing="CubicEaseOut">
+          <KeyFrame Cue="0%">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="TranslateTransform.Y" Value="8" />
+          </KeyFrame>
+          <KeyFrame Cue="100%">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="TranslateTransform.Y" Value="0" />
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Border.toast.out">
+      <Setter Property="Opacity" Value="0" />
     </Style>
   </Application.Styles>
 </Application>

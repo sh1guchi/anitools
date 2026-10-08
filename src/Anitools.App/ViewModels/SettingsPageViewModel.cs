@@ -94,6 +94,8 @@ public sealed partial class SettingsPageViewModel : PageViewModel
 
     public override bool UsesFolder => false;
 
+    public override string Subtitle => "общие для всех инструментов";
+
     public ObservableCollection<ToolPathRow> ToolPaths { get; } = [];
 
     public ObservableCollection<LadderRowViewModel> Ladder { get; } = [];
@@ -304,7 +306,6 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         var (settings, errors) = Build();
         if (settings is null)
         {
-            Notice = null;
             Message = "Не сохранено:\n• " + string.Join("\n• ", errors);
             return;
         }
@@ -313,7 +314,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         {
             Shell.Services.SaveSettings(settings);
             Message = null;
-            Notice = $"Сохранено в {Shell.Services.Store.Path}";
+            Shell.Toast($"Сохранено в {Shell.Services.Store.Path}", ToastKind.Ok);
             Load(Shell.Services.Settings);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -327,7 +328,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     {
         Load(Shell.Services.Settings);
         Message = null;
-        Notice = "Изменения отменены.";
+        Shell.Toast("Изменения отменены.");
     }
 
     [RelayCommand]
@@ -337,7 +338,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         var current = Shell.Services.Settings;
         Load(new AppSettings { Tools = current.Tools, RecentFolders = current.RecentFolders });
         Message = null;
-        Notice = "Подставлены значения по умолчанию — нажмите «Сохранить», чтобы применить.";
+        Shell.Toast("Подставлены значения по умолчанию — нажмите «Сохранить», чтобы применить.");
     }
 
     [RelayCommand]

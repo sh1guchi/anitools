@@ -1,38 +1,52 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:p="using:Anitools.App.ViewModels.Pages"
-             xmlns:ot="using:Anitools.Core.Operations.TrackList"
              xmlns:c="using:Anitools.App.Views.Controls"
              xmlns:v="using:Anitools.App.Views"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.SubShiftPageView"
              x:DataType="p:SubShiftPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
-      <StackPanel Spacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Сдвиг, с:" VerticalAlignment="Center" />
-          <TextBox x:Name="SecondsBox" Text="{Binding Seconds}" Width="80" />
-          <TextBlock Text="плюс — позже, минус — раньше" Classes="muted" VerticalAlignment="Center" Margin="8,0,0,0" />
-        </StackPanel>
-        <TextBlock Classes="muted" TextWrapping="Wrap" Text="Все .srt/.ass/.ssa папки → «subs_fixed» (там перезаписываются: сдвиг могли поменять)." />
-      </StackPanel>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Все .srt/.ass/.ssa папки → «subs_fixed» (там перезаписываются: сдвиг могли поменять)." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Files.Count, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="TimerEditOutline" />
+            <TextBlock Text="Сдвинуть" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </Border>
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}" Content="Сдвинуть"
-              IsEnabled="{Binding Files.Count, Converter={x:Static v:Converters.IsPositive}}" />
-    </Grid>
-    <Border Classes="card">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="FilesList" ItemsSource="{Binding Files}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="x:String">
-              <TextBlock Text="{Binding}" Margin="0,2" TextTrimming="CharacterEllipsis" />
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+        <HeaderedContentControl Classes="field" Header="Сдвиг, с">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBox x:Name="SecondsBox" Text="{Binding Seconds}" Width="96" HorizontalAlignment="Left" />
+            <TextBlock Text="плюс — позже, минус — раньше" Classes="dim" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </HeaderedContentControl>
+      </Border>
+      <Border Classes="card" Padding="0,14,0,6" VerticalAlignment="Top" IsVisible="{Binding Files.Count, Converter={x:Static v:Converters.IsPositive}}">
+        <DockPanel>
+          <c:CardHead DockPanel.Dock="Top" Icon="FileDocumentMultipleOutline" Title="Субтитры" Caption="{Binding Files.Count}" Margin="18,0,18,8" />
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="x:String">
+                  <Border Classes="tblRow" Padding="8,7">
+                    <TextBlock Text="{Binding}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </DockPanel>
   </DockPanel>
 </UserControl>

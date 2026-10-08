@@ -3,55 +3,69 @@
              xmlns:p="using:Anitools.App.ViewModels.Pages"
              xmlns:c="using:Anitools.App.Views.Controls"
              xmlns:v="using:Anitools.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.SubtitlesPageView"
              x:DataType="p:SubtitlesPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
-              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
-    </Grid>
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12"
-            IsVisible="{Binding Tracks.Count, Converter={x:Static v:Converters.IsPositive}}">
-      <StackPanel Spacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock Classes="h2" Text="Дорожки субтитров" />
-          <TextBlock Classes="muted" Text="{Binding TracksCaption}" VerticalAlignment="Center" />
-          <ProgressBar IsIndeterminate="True" Width="80" MinWidth="0" IsVisible="{Binding IsPlanning}" VerticalAlignment="Center" />
-        </StackPanel>
-        <ListBox x:Name="TracksList" ItemsSource="{Binding Tracks}" SelectedItem="{Binding SelectedTrack}" MaxHeight="190"
-                 Background="Transparent" Grid.IsSharedSizeScope="True">
-          <ListBox.ItemTemplate>
-            <DataTemplate DataType="p:SubtitleTrackRowViewModel">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="40" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="N" />
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="C" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Id}" Classes="muted" />
-                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="2" Text="{Binding Codec}" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="3" Text="{Binding Language}" Classes="muted" />
-              </Grid>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel Orientation="Horizontal" Spacing="16">
-          <TextBlock Text="Искать в каждой серии:" VerticalAlignment="Center" />
-          <RadioButton GroupName="subMode" Content="по ID" IsChecked="{Binding IsById}" />
-          <RadioButton x:Name="ByTitleRadio" GroupName="subMode" Content="по тайтлу" IsChecked="{Binding IsByTitle}" />
-          <RadioButton GroupName="subMode" Content="по языку" IsChecked="{Binding IsByLanguage}" />
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Spacing="16">
-          <TextBlock Text="Тип:" VerticalAlignment="Center" />
-          <RadioButton GroupName="subKind" Content="надписи → папка «надписи», «.надписи»" IsChecked="{Binding IsSigns}" />
-          <RadioButton x:Name="SubsRadio" GroupName="subKind" Content="сабы → папка «сабы», «.сабы»" IsChecked="{Binding IsSubs}" />
-        </StackPanel>
-      </StackPanel>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Выбранная дорожка субтитров из каждой серии — в папку «надписи» или «сабы» с суффиксом в имени." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="Play" />
+            <TextBlock x:Name="RunText" Text="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </Border>
-    <c:PlanPreviewView DataContext="{Binding Preview}" />
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14"
+              IsVisible="{Binding Tracks.Count, Converter={x:Static v:Converters.IsPositive}}">
+        <StackPanel Spacing="12">
+          <c:CardHead Icon="SubtitlesOutline" Title="Дорожка субтитров" Caption="{Binding TracksCaption}" Margin="0">
+            <Panel Width="16" Height="16" IsVisible="{Binding IsPlanning}">
+              <Ellipse Classes="spinTrack" />
+              <Arc Classes="spin" />
+            </Panel>
+          </c:CardHead>
+          <ListBox x:Name="TracksList" Classes="rows" ItemsSource="{Binding Tracks}" SelectedItem="{Binding SelectedTrack}" MaxHeight="190">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="p:SubtitleTrackRowViewModel">
+                <Grid ColumnDefinitions="40,*,200,70">
+                  <TextBlock Text="{Binding Id}" Classes="cyan b" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
+                  <TextBlock Grid.Column="2" Text="{Binding Codec}" Classes="text2 sm" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
+                  <TextBlock Grid.Column="3" Text="{Binding Language}" Classes="dim sm" VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <WrapPanel Orientation="Horizontal" ItemSpacing="28" LineSpacing="12">
+            <HeaderedContentControl Classes="field" Header="Искать в каждой серии">
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="subMode" Content="по ID" IsChecked="{Binding IsById}" />
+                  <RadioButton x:Name="ByTitleRadio" Classes="seg" GroupName="subMode" Content="по тайтлу" IsChecked="{Binding IsByTitle}" />
+                  <RadioButton Classes="seg" GroupName="subMode" Content="по языку" IsChecked="{Binding IsByLanguage}" />
+                </StackPanel>
+              </Border>
+            </HeaderedContentControl>
+            <HeaderedContentControl Classes="field" Header="Тип">
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="subKind" Content="надписи → «надписи»" IsChecked="{Binding IsSigns}" />
+                  <RadioButton x:Name="SubsRadio" Classes="seg" GroupName="subKind" Content="сабы → «сабы»" IsChecked="{Binding IsSubs}" />
+                </StackPanel>
+              </Border>
+            </HeaderedContentControl>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <c:PlanPreviewView DataContext="{Binding Preview}" />
+    </DockPanel>
   </DockPanel>
 </UserControl>

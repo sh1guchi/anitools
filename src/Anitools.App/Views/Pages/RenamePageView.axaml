@@ -6,69 +6,96 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.RenamePageView"
              x:DataType="p:RenamePageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
-      <StackPanel Spacing="8">
-        <Grid ColumnDefinitions="Auto,*,Auto">
-          <TextBlock Text="Базовое название:" VerticalAlignment="Center" Margin="0,0,10,0" />
-          <TextBox x:Name="BaseNameBox" Grid.Column="1" Text="{Binding BaseName}" />
-          <Button Grid.Column="2" Margin="8,0,0,0" Command="{Binding SearchShikimoriCommand}">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,16,0" Spacing="2">
+          <TextBlock Classes="barTitle" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" />
+          <Button Classes="link" HorizontalAlignment="Left" Command="{Binding UndoCommand}" Padding="0,1"
+                  IsVisible="{Binding UndoText, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <mi:MaterialIcon Kind="Magnify" />
-              <TextBlock Text="Найти на Shikimori" />
+              <mi:MaterialIcon Kind="Undo" Width="15" Height="15" />
+              <TextBlock x:Name="UndoTextBlock" Text="{Binding UndoText}" FontSize="13" TextTrimming="CharacterEllipsis" />
             </StackPanel>
           </Button>
-        </Grid>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Нумерация файлов начинается с:" VerticalAlignment="Center" />
-          <TextBox x:Name="StartBox" Text="{Binding NumberingStart}" Width="60" />
-          <TextBlock Text="Суффикс:" VerticalAlignment="Center" Margin="18,0,0,0" />
-          <TextBox Text="{Binding Suffix}" Width="160" PlaceholderText="напр. надписи" />
         </StackPanel>
-        <TextBlock Classes="muted small" TextWrapping="Wrap"
-                   Text="Номер в строке можно поправить руками — он берётся как есть. Пустой номер — файл не трогать." />
-      </StackPanel>
+        <Button x:Name="RenameButton" Grid.Column="1" Classes="primary lg" Command="{Binding RenameCommand}"
+                IsEnabled="{Binding RenameCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="RenameOutline" />
+            <TextBlock Text="{Binding RenameCount, StringFormat='Переименовать ({0})'}" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </Border>
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button Classes="link" HorizontalAlignment="Left" Command="{Binding UndoCommand}"
-              IsVisible="{Binding UndoText, Converter={x:Static ObjectConverters.IsNotNull}}">
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <mi:MaterialIcon Kind="Undo" />
-          <TextBlock x:Name="UndoTextBlock" Text="{Binding UndoText}" TextTrimming="CharacterEllipsis" />
-        </StackPanel>
-      </Button>
-      <Button x:Name="RenameButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RenameCommand}"
-              IsEnabled="{Binding RenameCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding RenameCount, StringFormat='Переименовать ({0})'}" />
-    </Grid>
-    <TextBlock DockPanel.Dock="Top" Classes="muted" Text="{Binding Summary}" Margin="10,0,0,6" />
-    <Border Classes="card" Padding="0" IsVisible="{Binding Rows.Count, Converter={x:Static v:Converters.IsPositive}}">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Grid.IsSharedSizeScope="True" Margin="10,6">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="p:RenameRowViewModel">
-              <Grid Margin="0,1">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="Old" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="28" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding File}" VerticalAlignment="Center" MaxWidth="460" TextTrimming="CharacterEllipsis"
-                           ToolTip.Tip="{Binding File}" Margin="0,0,10,0" />
-                <TextBox Grid.Column="1" Text="{Binding Episode}" HorizontalContentAlignment="Center" MinHeight="0" Padding="4,2"
-                         FontWeight="{Binding IsManual, Converter={x:Static v:Converters.BoldIf}}" />
-                <TextBlock Grid.Column="2" Text="→" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted" />
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                  <TextBlock Text="{Binding NewName}" Classes.skip="{Binding !WillRename}" />
-                  <TextBlock Text="{Binding Note}" Classes.error="{Binding IsProblem}" Classes.muted="{Binding !IsProblem}" />
-                </StackPanel>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,24,Auto,24,Auto">
+            <HeaderedContentControl Classes="field" Header="Базовое название">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox x:Name="BaseNameBox" Text="{Binding BaseName}" />
+                <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding SearchShikimoriCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <mi:MaterialIcon Kind="Magnify" />
+                    <TextBlock Text="Найти на Shikimori" />
+                  </StackPanel>
+                </Button>
               </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Border>
+            </HeaderedContentControl>
+            <HeaderedContentControl Grid.Column="2" Classes="field" Header="Нумерация с">
+              <TextBox x:Name="StartBox" Text="{Binding NumberingStart}" Width="80" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Grid.Column="4" Classes="field" Header="Суффикс">
+              <TextBox Text="{Binding Suffix}" Width="170" PlaceholderText="напр. надписи" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+          </Grid>
+          <Grid Classes="hint">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <mi:MaterialIcon Kind="InformationOutline" />
+            <TextBlock Grid.Column="1" Text="Номер в строке можно поправить руками — он берётся как есть. Пустой номер — файл не трогать." />
+          </Grid>
+        </StackPanel>
+      </Border>
+      <Border Classes="card" Padding="0,14,0,6" VerticalAlignment="Top" IsVisible="{Binding Rows.Count, Converter={x:Static v:Converters.IsPositive}}">
+        <DockPanel>
+          <c:CardHead DockPanel.Dock="Top" Icon="FileMultipleOutline" Title="Файлы" Margin="18,0,18,8" />
+          <Border DockPanel.Dock="Top" Classes="tblHead" Margin="10,0">
+            <Grid ColumnDefinitions="*,70,30,1.2*">
+              <TextBlock Text="Сейчас" />
+              <TextBlock Grid.Column="1" Text="Серия" HorizontalAlignment="Center" />
+              <TextBlock Grid.Column="3" Text="Станет" />
+            </Grid>
+          </Border>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="10,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="p:RenameRowViewModel">
+                  <Border Classes="tblRow">
+                    <Grid ColumnDefinitions="*,70,30,1.2*">
+                      <TextBlock Text="{Binding File}" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                 ToolTip.Tip="{Binding File}" Margin="0,0,10,0" />
+                      <TextBox Grid.Column="1" Classes="sm" Text="{Binding Episode}" HorizontalContentAlignment="Center"
+                               FontWeight="{Binding IsManual, Converter={x:Static v:Converters.BoldIf}}" />
+                      <mi:MaterialIcon Grid.Column="2" Kind="ArrowRight" Classes="faint" Width="15" Height="15" />
+                      <Grid Grid.Column="3" ColumnDefinitions="Auto,*">
+                        <TextBlock Text="{Binding NewName}" VerticalAlignment="Center" Classes="text2" Classes.faint="{Binding !WillRename}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="460" ToolTip.Tip="{Binding NewName}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Note}" Classes="sm" Classes.err="{Binding IsProblem}" Classes.dim="{Binding !IsProblem}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="10,0,0,0" />
+                      </Grid>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </DockPanel>
   </DockPanel>
 </UserControl>

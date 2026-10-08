@@ -5,6 +5,7 @@ using Anitools.App.Views;
 using Anitools.App.Views.Dialogs;
 using Anitools.Core.Jobs;
 using Anitools.Core.Shikimori;
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 
 namespace Anitools.App.Tests;
@@ -26,6 +27,34 @@ public sealed class ScreenshotTests
         vm.VideoOnlyPage.Preview.Rows[5].IsChecked = false;
 
         Capture(window, "main-window");
+    }
+
+    [AvaloniaFact]
+    public async Task Narrow_window_collapses_tools_into_one_chip()
+    {
+        using var app = new AppFixture().WithFiles([.. Episodes.Take(4)]);
+        var (vm, window) = await OpenAsync(app);
+        var chips = window.FindControl<ItemsControl>("ToolChipsList")!;
+        var summary = window.FindControl<Border>("ToolsSummaryChip")!;
+        AppFixture.Flush();
+        Assert.True(chips.IsVisible);
+        Assert.False(summary.IsVisible);
+
+        window.Width = 1000;
+        var release = new TaskCompletionSource();
+        app.Services.Jobs.Enqueue("HLS · Sousou no Frieren", app.Folder, async context =>
+        {
+            context.Report(0.41, "серия 5/12 · видео 41%");
+            await release.Task;
+            return new JobOutcome(true, "");
+        });
+        await AppFixture.WaitUntilAsync(() => vm.CurrentJob is { Progress: > 40 }, "задача в шапке");
+
+        Assert.False(chips.IsVisible);
+        Assert.True(summary.IsVisible);
+        Assert.Equal("программы", vm.ToolsSummary);
+        Capture(window, "main-window-narrow");
+        release.SetResult();
     }
 
     [AvaloniaFact]

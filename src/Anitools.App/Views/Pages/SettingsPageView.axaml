@@ -6,198 +6,236 @@
              x:Class="Anitools.App.Views.Pages.SettingsPageView"
              x:DataType="vm:SettingsPageViewModel">
   <UserControl.Styles>
-    <Style Selector="TextBlock.label">
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Margin" Value="0,0,12,0" />
-    </Style>
-    <Style Selector="Grid.row">
-      <Setter Property="Margin" Value="0,3" />
+    <Style Selector="WrapPanel.fields">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="ItemSpacing" Value="18" />
+      <Setter Property="LineSpacing" Value="12" />
     </Style>
   </UserControl.Styles>
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button Classes="link" HorizontalAlignment="Left" Command="{Binding OpenSettingsFolderCommand}">
-        <TextBlock Text="{Binding SettingsPath}" Classes="muted small" TextTrimming="CharacterEllipsis" />
-      </Button>
-      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-        <Button Content="По умолчанию" Command="{Binding DefaultsCommand}" />
-        <Button Content="Отменить изменения" Command="{Binding RevertCommand}" />
-        <Button x:Name="SaveButton" Classes="accent" Padding="20,8" Content="Сохранить" Command="{Binding SaveCommand}" />
-      </StackPanel>
-    </Grid>
-    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Spacing="12" Margin="0,0,14,0">
-
-        <Border Classes="card">
-          <StackPanel Spacing="4">
-            <TextBlock Classes="h2" Text="Программы" />
-            <TextBlock Classes="muted small" TextWrapping="Wrap"
-                       Text="Пусто — искать самим: FFMPEG_PATH/FFPROBE_PATH → PATH → Program Files. Можно указать файл или папку с программой." />
-            <ItemsControl ItemsSource="{Binding ToolPaths}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:ToolPathRow">
-                  <Grid Classes="row" ColumnDefinitions="110,*,Auto" RowDefinitions="Auto,Auto">
-                    <TextBlock Classes="label" Text="{Binding Name}" FontWeight="SemiBold" />
-                    <TextBox Grid.Column="1" Text="{Binding Configured}" PlaceholderText="искать автоматически" />
-                    <Button Grid.Column="2" Content="Обзор…" Command="{Binding BrowseCommand}" Margin="6,0,0,0" />
-                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="2,2,0,4">
-                      <mi:MaterialIcon Kind="CheckCircle" Classes="ok" Width="14" Height="14" IsVisible="{Binding IsFound}" />
-                      <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="14" Height="14" IsVisible="{Binding !IsFound}" />
-                      <TextBlock Text="{Binding Found}" Classes="muted small" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="*,Auto">
+        <Button Classes="link" HorizontalAlignment="Left" VerticalAlignment="Center" Command="{Binding OpenSettingsFolderCommand}"
+                ToolTip.Tip="Открыть папку с настройками">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <mi:MaterialIcon Kind="FileCogOutline" Width="15" Height="15" />
+            <TextBlock Text="{Binding SettingsPath}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
           </StackPanel>
-        </Border>
-
-        <Border Classes="card">
-          <StackPanel Spacing="4">
-            <TextBlock Classes="h2" Text="Войс-лист" />
-            <TextBlock Classes="muted small" Text="Названия озвучек для выбора — по одной в строке." />
-            <TextBox x:Name="VoicesBox" Text="{Binding VoicesText}" AcceptsReturn="True" TextWrapping="NoWrap" Height="150" />
-          </StackPanel>
-        </Border>
-
-        <Border Classes="card">
-          <StackPanel Spacing="4">
-            <TextBlock Classes="h2" Text="HLS" />
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Кодирование" />
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                <RadioButton GroupName="encoder" Content="видеокарта (NVENC)" IsChecked="{Binding UseNvenc}" />
-                <RadioButton GroupName="encoder" Content="процессор (libx264)" IsChecked="{Binding !UseNvenc}" />
-              </StackPanel>
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Качество" />
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                <RadioButton GroupName="cq" Content="постоянное CQ" IsChecked="{Binding UseFixedCq}" />
-                <TextBox Text="{Binding FixedCq}" Width="70" IsEnabled="{Binding UseFixedCq}" />
-                <RadioButton GroupName="cq" Content="подбор CQ под размер" IsChecked="{Binding !UseFixedCq}" />
-              </StackPanel>
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Потолок битрейта, × лестницы" />
-              <TextBox Grid.Column="1" Text="{Binding FixedCqPeak}" Width="70" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Пресет NVENC" />
-              <ComboBox Grid.Column="1" ItemsSource="{Binding NvencPresets}" SelectedItem="{Binding NvencPreset}" Width="90" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Сегмент, с" />
-              <TextBox Grid.Column="1" Text="{Binding SegmentSeconds}" Width="70" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Отдельный архив верхнего качества, ГБ" />
-              <TextBox Grid.Column="1" Text="{Binding SeparateTopZipGb}" Width="70" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Подбор CQ" />
-              <WrapPanel Grid.Column="1" Orientation="Horizontal">
-                <TextBlock Text="окон" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding CalibrationWindows}" Width="56" Margin="0,0,14,0" />
-                <TextBlock Text="допуск, %" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding CalibrationTolerancePercent}" Width="56" Margin="0,0,14,0" />
-                <TextBlock Text="проходов" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding CalibrationMaxPasses}" Width="56" Margin="0,0,14,0" />
-                <TextBlock Text="CQ старт/мин/макс" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding CqStart}" Width="56" Margin="0,0,4,0" />
-                <TextBox Text="{Binding CqMin}" Width="56" Margin="0,0,4,0" />
-                <TextBox Text="{Binding CqMax}" Width="56" />
-              </WrapPanel>
-            </Grid>
-            <TextBlock Text="Лестница качеств (ширина × высота, битрейт кбит/с)" Classes="muted" Margin="0,8,0,2" />
-            <ItemsControl ItemsSource="{Binding Ladder}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:LadderRowViewModel">
-                  <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2">
-                    <TextBlock Text="{Binding Name}" Width="60" VerticalAlignment="Center" FontWeight="SemiBold" />
-                    <TextBox Text="{Binding Width}" Width="70" />
-                    <TextBlock Text="×" VerticalAlignment="Center" />
-                    <TextBox Text="{Binding Height}" Width="70" />
-                    <TextBox Text="{Binding BitrateKbps}" Width="90" Margin="12,0,0,0" />
-                    <TextBlock Text="кбит/с" VerticalAlignment="Center" Classes="muted" />
-                  </StackPanel>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
-        </Border>
-
-        <Border Classes="card">
-          <StackPanel Spacing="4">
-            <TextBlock Classes="h2" Text="Временные файлы HLS (по умолчанию)" />
-            <StackPanel Orientation="Horizontal" Spacing="16">
-              <RadioButton GroupName="workdir" Content="RAM-диск (ImDisk)" IsChecked="{Binding IsRamDisk}" />
-              <RadioButton GroupName="workdir" Content="папка" IsChecked="{Binding IsFolder}" />
-              <RadioButton GroupName="workdir" Content="рядом с выходом" IsChecked="{Binding IsNearOutput}" />
+        </Button>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Classes="ghost" Content="По умолчанию" Command="{Binding DefaultsCommand}" />
+          <Button Content="Отменить изменения" Command="{Binding RevertCommand}" />
+          <Button x:Name="SaveButton" Classes="primary lg" Command="{Binding SaveCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <mi:MaterialIcon Kind="ContentSaveOutline" />
+              <TextBlock Text="Сохранить" />
             </StackPanel>
-            <Grid Classes="row" ColumnDefinitions="220,*,Auto">
-              <TextBlock Classes="label" Text="Папка" />
-              <TextBox Grid.Column="1" Text="{Binding WorkDirFolder}" />
-              <Button Grid.Column="2" Content="Обзор…" Command="{Binding BrowseWorkDirCommand}" Margin="6,0,0,0" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Размер RAM-диска, ГБ" />
-              <TextBox Grid.Column="1" Text="{Binding RamDiskGb}" Width="70" />
-            </Grid>
-          </StackPanel>
-        </Border>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+    <DockPanel Margin="22,18,22,0">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <Grid ColumnDefinitions="*,14,*" RowDefinitions="Auto,14,Auto,14,Auto,18" Margin="0,0,12,0">
 
-        <Border Classes="card">
-          <StackPanel Spacing="4">
-            <TextBlock Classes="h2" Text="Прочее" />
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="API Shikimori" />
-              <TextBox Grid.Column="1" Text="{Binding ShikimoriBaseUrl}" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*,Auto">
-              <TextBlock Classes="label" Text="Своя папка шрифтов" />
-              <TextBox Grid.Column="1" Text="{Binding FontsCustomDir}" />
-              <Button Grid.Column="2" Content="Обзор…" Command="{Binding BrowseFontsDirCommand}" Margin="6,0,0,0" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Хардсаб: параметры ffmpeg" />
-              <TextBox Grid.Column="1" Text="{Binding HardsubArgs}" FontFamily="{StaticResource MonoFont}" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Хардсаб: папка шрифтов" />
-              <TextBox Grid.Column="1" Text="{Binding HardsubFontsDir}" Width="160" />
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Сдвиг аудио" />
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                <TextBox Text="{Binding AudioShiftSeconds}" Width="70" />
-                <TextBlock Text="с, AAC" VerticalAlignment="Center" />
-                <TextBox Text="{Binding AudioShiftBitrate}" Width="70" />
-                <TextBlock Text="файлов сразу" VerticalAlignment="Center" Margin="8,0,0,0" />
-                <TextBox Text="{Binding AudioShiftWorkers}" Width="56" />
-              </StackPanel>
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,*">
-              <TextBlock Classes="label" Text="Перекодирование аудио" />
-              <WrapPanel Grid.Column="1" Orientation="Horizontal">
-                <ComboBox ItemsSource="{Binding AudioFormats}" SelectedItem="{Binding AudioConvertFormat}" Width="90" Margin="0,0,6,0" />
-                <TextBox Text="{Binding AudioConvertBitrate}" Width="70" Margin="0,0,6,0" />
-                <TextBlock Text="каналов" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding AudioConvertChannels}" Width="56" PlaceholderText="как есть" Margin="0,0,10,0" />
-                <CheckBox Content="чинить метки времени" IsChecked="{Binding AudioConvertFixTimestamps}" Margin="0,0,10,0" />
-                <TextBlock Text="файлов сразу" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <TextBox Text="{Binding AudioConvertWorkers}" Width="56" />
+          <!-- Программы -->
+          <Border Classes="card">
+            <StackPanel Spacing="10">
+              <c:CardHead Icon="ApplicationCogOutline" Title="Программы" Margin="0" />
+              <TextBlock Classes="dim" FontSize="12.5" TextWrapping="Wrap"
+                         Text="Пусто — искать самим: FFMPEG_PATH/FFPROBE_PATH → PATH → Program Files. Можно указать файл или папку с программой." />
+              <ItemsControl ItemsSource="{Binding ToolPaths}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="10" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="vm:ToolPathRow">
+                    <HeaderedContentControl Classes="field" Header="{Binding Name}">
+                      <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                          <TextBox Text="{Binding Configured}" PlaceholderText="искать автоматически" />
+                          <Button Grid.Column="1" Classes="icon" Command="{Binding BrowseCommand}" ToolTip.Tip="Выбрать файл" Margin="4,0,0,0">
+                            <mi:MaterialIcon Kind="FolderSearchOutline" />
+                          </Button>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                          <mi:MaterialIcon Kind="CheckCircle" Classes="ok" Width="14" Height="14" IsVisible="{Binding IsFound}" />
+                          <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="14" Height="14" IsVisible="{Binding !IsFound}" />
+                          <TextBlock Text="{Binding Found}" Classes="dim sm" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                      </StackPanel>
+                    </HeaderedContentControl>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <!-- Войс-лист -->
+          <Border Grid.Column="2" Classes="card">
+            <DockPanel>
+              <c:CardHead DockPanel.Dock="Top" Icon="AccountVoice" Title="Войс-лист" Margin="0,0,0,10" />
+              <TextBlock DockPanel.Dock="Top" Classes="dim" FontSize="12.5" Text="Названия озвучек для выбора — по одной в строке." Margin="0,0,0,8" />
+              <TextBox x:Name="VoicesBox" Text="{Binding VoicesText}" AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="150"
+                       VerticalContentAlignment="Top" />
+            </DockPanel>
+          </Border>
+
+          <!-- HLS -->
+          <Border Grid.Row="2" Grid.ColumnSpan="3" Classes="card">
+            <StackPanel Spacing="14">
+              <c:CardHead Icon="LayersTripleOutline" Title="HLS" Margin="0" />
+              <WrapPanel Classes="fields">
+                <HeaderedContentControl Classes="field" Header="Кодирование">
+                  <Border Classes="seg">
+                    <StackPanel Orientation="Horizontal">
+                      <RadioButton Classes="seg" GroupName="encoder" Content="видеокарта (NVENC)" IsChecked="{Binding UseNvenc}" />
+                      <RadioButton Classes="seg" GroupName="encoder" Content="процессор (libx264)" IsChecked="{Binding !UseNvenc}" />
+                    </StackPanel>
+                  </Border>
+                </HeaderedContentControl>
+                <HeaderedContentControl Classes="field" Header="Качество">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Classes="seg">
+                      <StackPanel Orientation="Horizontal">
+                        <RadioButton Classes="seg" GroupName="cq" Content="постоянное CQ" IsChecked="{Binding UseFixedCq}" />
+                        <RadioButton Classes="seg" GroupName="cq" Content="подбор CQ под размер" IsChecked="{Binding !UseFixedCq}" />
+                      </StackPanel>
+                    </Border>
+                    <TextBox Text="{Binding FixedCq}" Width="64" IsEnabled="{Binding UseFixedCq}" HorizontalAlignment="Left" />
+                  </StackPanel>
+                </HeaderedContentControl>
+                <HeaderedContentControl Classes="field" Header="Пресет NVENC">
+                  <ComboBox ItemsSource="{Binding NvencPresets}" SelectedItem="{Binding NvencPreset}" Width="90" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
               </WrapPanel>
-            </Grid>
-            <Grid Classes="row" ColumnDefinitions="220,Auto,*">
-              <TextBlock Classes="label" Text="Сдвиг субтитров, с" />
-              <TextBox Grid.Column="1" Text="{Binding SubShiftSeconds}" Width="70" />
-            </Grid>
-          </StackPanel>
-        </Border>
+              <WrapPanel Classes="fields">
+                <HeaderedContentControl Classes="field" Header="Потолок битрейта, × лестницы">
+                  <TextBox Text="{Binding FixedCqPeak}" Width="96" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Classes="field" Header="Сегмент, с">
+                  <TextBox Text="{Binding SegmentSeconds}" Width="96" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Classes="field" Header="Отдельный архив верхнего качества, ГБ">
+                  <TextBox Text="{Binding SeparateTopZipGb}" Width="96" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
+              </WrapPanel>
+              <HeaderedContentControl Classes="field" Header="Подбор CQ: окон · допуск, % · проходов · CQ старт / мин / макс">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBox Text="{Binding CalibrationWindows}" Width="64" ToolTip.Tip="окон" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding CalibrationTolerancePercent}" Width="64" ToolTip.Tip="допуск, %" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding CalibrationMaxPasses}" Width="64" ToolTip.Tip="проходов" Margin="0,0,12,0" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding CqStart}" Width="64" ToolTip.Tip="CQ старт" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding CqMin}" Width="64" ToolTip.Tip="CQ мин" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding CqMax}" Width="64" ToolTip.Tip="CQ макс" HorizontalAlignment="Left" />
+                </StackPanel>
+              </HeaderedContentControl>
+              <StackPanel Spacing="6">
+                <TextBlock Text="Лестница качеств" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource Text2Brush}" />
+                <Border Classes="tblHead" Padding="4,4">
+                  <Grid ColumnDefinitions="70,180,*">
+                    <TextBlock Text="Качество" />
+                    <TextBlock Grid.Column="1" Text="Ширина × высота" />
+                    <TextBlock Grid.Column="2" Text="Битрейт, кбит/с" />
+                  </Grid>
+                </Border>
+                <ItemsControl ItemsSource="{Binding Ladder}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:LadderRowViewModel">
+                      <Border Classes="tblRow" Padding="4,4">
+                        <Grid ColumnDefinitions="70,180,*">
+                          <TextBlock Text="{Binding Name}" Classes="cyan b" VerticalAlignment="Center" />
+                          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <TextBox Classes="sm" Text="{Binding Width}" Width="70" HorizontalAlignment="Left" />
+                            <TextBlock Text="×" Classes="dim" VerticalAlignment="Center" />
+                            <TextBox Classes="sm" Text="{Binding Height}" Width="70" HorizontalAlignment="Left" />
+                          </StackPanel>
+                          <TextBox Grid.Column="2" Classes="sm" Text="{Binding BitrateKbps}" Width="96" HorizontalAlignment="Left" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </Border>
 
-      </StackPanel>
-    </ScrollViewer>
+          <!-- Временные файлы HLS -->
+          <Border Grid.Row="4" Classes="card">
+            <StackPanel Spacing="12">
+              <c:CardHead Icon="Memory" Title="Временные файлы HLS" Caption="по умолчанию" Margin="0" />
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="workdir" Content="RAM-диск (ImDisk)" IsChecked="{Binding IsRamDisk}" />
+                  <RadioButton Classes="seg" GroupName="workdir" Content="папка" IsChecked="{Binding IsFolder}" />
+                  <RadioButton Classes="seg" GroupName="workdir" Content="рядом с выходом" IsChecked="{Binding IsNearOutput}" />
+                </StackPanel>
+              </Border>
+              <HeaderedContentControl Classes="field" Header="Папка">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBox Text="{Binding WorkDirFolder}" />
+                  <Button Grid.Column="1" Classes="icon" Command="{Binding BrowseWorkDirCommand}" ToolTip.Tip="Выбрать папку" Margin="4,0,0,0">
+                    <mi:MaterialIcon Kind="FolderSearchOutline" />
+                  </Button>
+                </Grid>
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Размер RAM-диска, ГБ">
+                <TextBox Text="{Binding RamDiskGb}" Width="96" HorizontalAlignment="Left" />
+              </HeaderedContentControl>
+            </StackPanel>
+          </Border>
+
+          <!-- Прочее -->
+          <Border Grid.Row="4" Grid.Column="2" Classes="card">
+            <StackPanel Spacing="12">
+              <c:CardHead Icon="DotsHorizontalCircleOutline" Title="Прочее" Margin="0" />
+              <HeaderedContentControl Classes="field" Header="API Shikimori">
+                <TextBox Text="{Binding ShikimoriBaseUrl}" />
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Своя папка шрифтов">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBox Text="{Binding FontsCustomDir}" />
+                  <Button Grid.Column="1" Classes="icon" Command="{Binding BrowseFontsDirCommand}" ToolTip.Tip="Выбрать папку" Margin="4,0,0,0">
+                    <mi:MaterialIcon Kind="FolderSearchOutline" />
+                  </Button>
+                </Grid>
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Хардсаб: параметры ffmpeg">
+                <TextBox Text="{Binding HardsubArgs}" FontFamily="{StaticResource MonoFont}" FontSize="12.5" TextWrapping="Wrap" />
+              </HeaderedContentControl>
+              <WrapPanel Classes="fields">
+                <HeaderedContentControl Classes="field" Header="Хардсаб: папка шрифтов">
+                  <TextBox Text="{Binding HardsubFontsDir}" Width="150" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Classes="field" Header="Сдвиг субтитров, с">
+                  <TextBox Text="{Binding SubShiftSeconds}" Width="96" HorizontalAlignment="Left" />
+                </HeaderedContentControl>
+              </WrapPanel>
+              <HeaderedContentControl Classes="field" Header="Сдвиг аудио: с · битрейт AAC · файлов сразу">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBox Text="{Binding AudioShiftSeconds}" Width="70" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding AudioShiftBitrate}" Width="70" HorizontalAlignment="Left" />
+                  <TextBox Text="{Binding AudioShiftWorkers}" Width="56" HorizontalAlignment="Left" />
+                </StackPanel>
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Перекодирование аудио: формат · битрейт · каналов · файлов сразу">
+                <StackPanel Spacing="8">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ComboBox ItemsSource="{Binding AudioFormats}" SelectedItem="{Binding AudioConvertFormat}" Width="96" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding AudioConvertBitrate}" Width="70" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding AudioConvertChannels}" Width="80" PlaceholderText="как есть" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding AudioConvertWorkers}" Width="56" HorizontalAlignment="Left" />
+                  </StackPanel>
+                  <CheckBox Content="чинить метки времени" IsChecked="{Binding AudioConvertFixTimestamps}" />
+                </StackPanel>
+              </HeaderedContentControl>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </ScrollViewer>
+    </DockPanel>
   </DockPanel>
 </UserControl>

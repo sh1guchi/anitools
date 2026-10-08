@@ -48,6 +48,11 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
         set => Select(value, RemuxProfile.M2tsToMkv);
     }
 
+    /// <summary>Какие файлы берутся: «MKV», «MP4», «AVI»… (у профиля Blu-ray — только M2TS).</summary>
+    public IReadOnlyList<string> InputFormats => Profile == RemuxProfile.M2tsToMkv
+        ? ["M2TS"]
+        : [.. RemuxOperation.Extensions.Select(e => e.TrimStart('.').ToUpperInvariant())];
+
     public string Description => Profile switch
     {
         RemuxProfile.Mp4 => "Видео и все аудиодорожки — в MP4, без перекодирования. Выход: папка «converted_mp4».",
@@ -78,6 +83,7 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
         OnPropertyChanged(nameof(IsMkv));
         OnPropertyChanged(nameof(IsM2tsToMkv));
         OnPropertyChanged(nameof(Description));
+        OnPropertyChanged(nameof(InputFormats));
         Invalidate();
     }
 

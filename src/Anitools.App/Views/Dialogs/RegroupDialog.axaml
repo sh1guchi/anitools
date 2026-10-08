@@ -1,31 +1,41 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Anitools.App.ViewModels"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         Icon="/Assets/anitools.ico"
         x:Class="Anitools.App.Views.Dialogs.RegroupDialog"
         x:DataType="vm:RegroupViewModel"
         Title="Перегруппировка"
         Width="900" Height="600" MinWidth="640" MinHeight="400"
         ShowInTaskbar="False"
+        Background="{StaticResource PanelBrush}"
         WindowStartupLocation="CenterOwner">
-  <DockPanel Margin="18">
-    <TextBlock DockPanel.Dock="Top" Classes="muted" TextWrapping="Wrap" Margin="0,0,0,10"
+  <DockPanel Margin="20,18,20,18">
+    <TextBlock DockPanel.Dock="Top" Classes="h2" FontSize="17" Text="Перегруппировка тайтлов" Margin="0,0,0,6" />
+    <TextBlock DockPanel.Dock="Top" Classes="text2" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,12"
                Text="У каждого файла — название тайтла: одинаковые названия — один тайтл (одна папка в hls_multi), пустое — файл не конвертировать." />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,12,0,0">
-      <Button Content="Без названия → «Прочее»" Command="{Binding RestToOtherCommand}" />
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,14,0,0">
+      <Button Classes="ghost" Command="{Binding RestToOtherCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <mi:MaterialIcon Kind="FolderArrowRightOutline" />
+          <TextBlock Text="Без названия → «Прочее»" />
+        </StackPanel>
+      </Button>
       <Button Grid.Column="2" Content="Отмена" Command="{Binding CancelCommand}" Margin="0,0,8,0" IsCancel="True" />
-      <Button Grid.Column="3" Classes="accent" Content="Применить" Command="{Binding ApplyCommand}" />
+      <Button Grid.Column="3" Classes="primary" Content="Применить" Command="{Binding ApplyCommand}" />
     </Grid>
-    <Border Classes="card" Padding="6">
+    <Border Background="{StaticResource BgBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="4">
       <ScrollViewer HorizontalScrollBarVisibility="Disabled">
         <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:RegroupRowViewModel">
-              <Grid ColumnDefinitions="*,300" Margin="4,2">
-                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" Margin="0,0,10,0" />
-                <ComboBox Grid.Column="1" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Group}" PlaceholderText="не конвертировать"
-                          ItemsSource="{Binding $parent[Window].((vm:RegroupViewModel)DataContext).GroupNames}" />
-              </Grid>
+              <Border Classes="tblRow">
+                <Grid ColumnDefinitions="*,300">
+                  <TextBlock Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" Margin="0,0,10,0" />
+                  <ComboBox Grid.Column="1" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Group}" PlaceholderText="не конвертировать"
+                            ItemsSource="{Binding $parent[Window].((vm:RegroupViewModel)DataContext).GroupNames}" />
+                </Grid>
+              </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

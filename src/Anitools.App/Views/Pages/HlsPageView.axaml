@@ -6,117 +6,183 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.HlsPageView"
              x:DataType="p:HlsPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Border DockPanel.Dock="Top" Classes="message" Margin="0,0,0,10"
-            IsVisible="{Binding Warning, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <TextBlock Text="{Binding Warning}" TextWrapping="Wrap" />
-    </Border>
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,10">
-      <StackPanel Spacing="8">
-        <WrapPanel Orientation="Horizontal">
-          <TextBlock Text="Качество:" VerticalAlignment="Center" Margin="0,0,12,0" />
-          <RadioButton GroupName="hlsCq" Content="постоянное CQ" IsChecked="{Binding UseFixedCq}" Margin="0,0,6,0" />
-          <TextBox Text="{Binding FixedCq}" Width="60" IsEnabled="{Binding UseFixedCq}" Margin="0,0,16,0" />
-          <RadioButton GroupName="hlsCq" Content="подбор под размер" IsChecked="{Binding !UseFixedCq}" Margin="0,0,24,0" />
-          <RadioButton GroupName="hlsEnc" Content="NVENC" IsChecked="{Binding UseNvenc}" Margin="0,0,6,0" />
-          <ComboBox ItemsSource="{Binding NvencPresets}" SelectedItem="{Binding NvencPreset}" IsEnabled="{Binding UseNvenc}" Width="80" Margin="0,0,16,0" />
-          <RadioButton GroupName="hlsEnc" Content="процессор" IsChecked="{Binding !UseNvenc}" />
-        </WrapPanel>
-        <WrapPanel Orientation="Horizontal">
-          <TextBlock Text="Временные файлы:" VerticalAlignment="Center" Margin="0,0,12,0" />
-          <RadioButton GroupName="hlsWork" Content="RAM-диск" IsChecked="{Binding IsRamDisk}" Margin="0,0,6,0" />
-          <TextBox Text="{Binding RamDiskGb}" Width="56" IsEnabled="{Binding IsRamDisk}" />
-          <TextBlock Text="ГБ" VerticalAlignment="Center" Margin="6,0,16,0" />
-          <RadioButton GroupName="hlsWork" Content="папка" IsChecked="{Binding IsFolder}" Margin="0,0,6,0" />
-          <TextBox Text="{Binding WorkDirFolder}" Width="200" IsEnabled="{Binding IsFolder}" />
-          <Button Content="…" Command="{Binding BrowseWorkDirCommand}" IsEnabled="{Binding IsFolder}" Margin="4,0,16,0" />
-          <RadioButton GroupName="hlsWork" Content="рядом с выходом" IsChecked="{Binding IsNearOutput}" />
-        </WrapPanel>
-        <CheckBox Content="Выключить компьютер по завершении" IsChecked="{Binding Shutdown}" IsVisible="{Binding CanShutdown}" />
-      </StackPanel>
-    </Border>
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <TextBlock x:Name="SummaryText" Text="{Binding Summary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" />
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
-              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
-    </Grid>
-    <Grid RowDefinitions="*,8,*">
-    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Spacing="12" Margin="0,0,12,0">
-
-        <Border Classes="card">
-          <StackPanel Spacing="6">
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Classes="h2" Text="Тайтлы" VerticalAlignment="Center" />
-              <Button Grid.Column="1" Content="Перегруппировать…" Command="{Binding RegroupCommand}" />
-            </Grid>
-            <ItemsControl x:Name="GroupsList" ItemsSource="{Binding Groups}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="p:HlsGroupViewModel">
-                  <StackPanel Spacing="4" Margin="0,4,0,8">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
-                      <CheckBox IsChecked="{Binding IsIncluded}" MinWidth="0">
-                        <TextBlock>
-                          <Run Text="{Binding Title}" FontWeight="SemiBold" />
-                          <Run Text="{Binding FilesText}" Foreground="Gray" />
-                        </TextBlock>
-                      </CheckBox>
-                      <TextBlock Grid.Column="2" Text="{Binding ShikimoriText}" Classes="muted" VerticalAlignment="Center" Margin="12,0" />
-                      <Button Grid.Column="3" Command="{Binding PickShikimoriCommand}" IsEnabled="{Binding IsIncluded}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <mi:MaterialIcon Kind="Magnify" />
-                          <TextBlock Text="Shikimori" />
-                        </StackPanel>
-                      </Button>
-                      <Button Grid.Column="4" Classes="icon" Command="{Binding ClearShikimoriCommand}" IsVisible="{Binding HasShikimori}"
-                              ToolTip.Tip="Без Shikimori — папка по названию" Margin="4,0,0,0">
-                        <mi:MaterialIcon Kind="Close" />
-                      </Button>
-                    </Grid>
-                    <StackPanel Spacing="4" Margin="28,0,0,0" IsVisible="{Binding IsIncluded}">
-                      <TextBlock Classes="muted small">
-                        <Run Text="Папка:" />
-                        <Run Text="{Binding TitleFolder}" />
-                      </TextBlock>
-                      <ItemsControl ItemsSource="{Binding Layouts}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate DataType="p:HlsLayoutViewModel">
-                            <StackPanel Spacing="2" Margin="0,4,0,0">
-                              <TextBlock Text="{Binding Header}" Classes="small" FontWeight="SemiBold" TextWrapping="Wrap" />
-                              <ItemsControl ItemsSource="{Binding Rows}">
-                                <ItemsControl.ItemTemplate>
-                                  <DataTemplate DataType="p:HlsVoiceRowViewModel">
-                                    <Grid ColumnDefinitions="Auto,28,*,60,60,240" Margin="0,1">
-                                      <CheckBox IsChecked="{Binding IsTaken}" MinWidth="0" ToolTip.Tip="Брать дорожку" />
-                                      <TextBlock Grid.Column="1" Text="{Binding Number}" Classes="muted" VerticalAlignment="Center" />
-                                      <TextBlock Grid.Column="2" Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
-                                      <TextBlock Grid.Column="3" Text="{Binding Language}" Classes="muted" VerticalAlignment="Center" />
-                                      <TextBlock Grid.Column="4" Text="{Binding Channels}" Classes="muted" VerticalAlignment="Center" />
-                                      <ComboBox Grid.Column="5" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Voice}"
-                                                IsEnabled="{Binding IsTaken}" PlaceholderText="озвучка"
-                                                ItemsSource="{Binding $parent[UserControl].((p:HlsPageViewModel)DataContext).Voices}" />
-                                    </Grid>
-                                  </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                              </ItemsControl>
-                            </StackPanel>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
-                  </StackPanel>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,16,0" Spacing="2">
+          <TextBlock x:Name="SummaryText" Classes="barTitle" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Summary}" />
+          <CheckBox Content="выключить компьютер, когда всё закончится" IsChecked="{Binding Shutdown}" IsVisible="{Binding CanShutdown}"
+                    FontSize="13" MinHeight="0" />
+        </StackPanel>
+        <Button x:Name="RunButton" Grid.Column="1" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="Play" />
+            <TextBlock x:Name="RunText" Text="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
           </StackPanel>
-        </Border>
+        </Button>
+      </Grid>
+    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="note" Margin="0,0,0,14"
+              IsVisible="{Binding Warning, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="Auto,*">
+          <mi:MaterialIcon Kind="AlertOutline" VerticalAlignment="Top" Margin="0,1,9,0" />
+          <TextBlock Grid.Column="1" Text="{Binding Warning}" TextWrapping="Wrap" FontSize="13" />
+        </Grid>
+      </Border>
 
-      </StackPanel>
-    </ScrollViewer>
-    <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="Transparent" />
-    <c:PlanPreviewView Grid.Row="2" DataContext="{Binding Preview}" />
-    </Grid>
+      <!-- Качество, кодирование, временные файлы -->
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+        <WrapPanel Orientation="Horizontal" ItemSpacing="28" LineSpacing="14">
+          <HeaderedContentControl Classes="field" Header="Качество">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="hlsCq" Content="постоянное CQ" IsChecked="{Binding UseFixedCq}" />
+                  <RadioButton Classes="seg" GroupName="hlsCq" Content="подбор под размер" IsChecked="{Binding !UseFixedCq}" />
+                </StackPanel>
+              </Border>
+              <TextBox Text="{Binding FixedCq}" Width="64" IsVisible="{Binding UseFixedCq}" ToolTip.Tip="CQ" HorizontalAlignment="Left" />
+            </StackPanel>
+          </HeaderedContentControl>
+          <HeaderedContentControl Classes="field" Header="Кодирование">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="hlsEnc" Content="NVENC" IsChecked="{Binding UseNvenc}" />
+                  <RadioButton Classes="seg" GroupName="hlsEnc" Content="процессор" IsChecked="{Binding !UseNvenc}" />
+                </StackPanel>
+              </Border>
+              <ComboBox ItemsSource="{Binding NvencPresets}" SelectedItem="{Binding NvencPreset}" IsVisible="{Binding UseNvenc}" Width="80"
+                        ToolTip.Tip="Пресет NVENC" HorizontalAlignment="Left" />
+            </StackPanel>
+          </HeaderedContentControl>
+          <HeaderedContentControl Classes="field" Header="Временные файлы">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Classes="seg">
+                <StackPanel Orientation="Horizontal">
+                  <RadioButton Classes="seg" GroupName="hlsWork" Content="RAM-диск" IsChecked="{Binding IsRamDisk}" />
+                  <RadioButton Classes="seg" GroupName="hlsWork" Content="папка" IsChecked="{Binding IsFolder}" />
+                  <RadioButton Classes="seg" GroupName="hlsWork" Content="рядом с выходом" IsChecked="{Binding IsNearOutput}" />
+                </StackPanel>
+              </Border>
+              <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsRamDisk}">
+                <TextBox Text="{Binding RamDiskGb}" Width="56" HorizontalAlignment="Left" />
+                <TextBlock Text="ГБ" Classes="dim" VerticalAlignment="Center" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsFolder}">
+                <TextBox Text="{Binding WorkDirFolder}" Width="220" PlaceholderText="папка для временных файлов" HorizontalAlignment="Left" />
+                <Button Classes="icon" Command="{Binding BrowseWorkDirCommand}" ToolTip.Tip="Выбрать папку">
+                  <mi:MaterialIcon Kind="FolderSearchOutline" />
+                </Button>
+              </StackPanel>
+            </StackPanel>
+          </HeaderedContentControl>
+        </WrapPanel>
+      </Border>
+
+      <Grid RowDefinitions="*,10,*">
+        <!-- Тайтлы: папки, Shikimori, озвучки по наборам дорожек -->
+        <Border Classes="card" Padding="0,14,0,10" VerticalAlignment="Top" IsVisible="{Binding Groups.Count, Converter={x:Static v:Converters.IsPositive}}">
+          <DockPanel>
+            <c:CardHead DockPanel.Dock="Top" Icon="FolderMultipleOutline" Title="Тайтлы" Margin="18,0,18,10">
+              <Button Classes="sm" Command="{Binding RegroupCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <mi:MaterialIcon Kind="SwapVertical" />
+                  <TextBlock Text="Перегруппировать…" />
+                </StackPanel>
+              </Button>
+            </c:CardHead>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+              <ItemsControl x:Name="GroupsList" ItemsSource="{Binding Groups}" Margin="18,0">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="10" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="p:HlsGroupViewModel">
+                    <Border Classes="box">
+                      <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                          <CheckBox IsChecked="{Binding IsIncluded}" MinWidth="0" MinHeight="0">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" />
+                          </CheckBox>
+                          <Border Grid.Column="1" Classes="badge" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding FilesText}" />
+                          </Border>
+                          <Border Grid.Column="3" Classes="badge" Classes.accent="{Binding HasShikimori}" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding ShikimoriText}" MaxWidth="320" TextTrimming="CharacterEllipsis" />
+                          </Border>
+                          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="2">
+                            <Button Classes="sm" Command="{Binding PickShikimoriCommand}" IsEnabled="{Binding IsIncluded}">
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="Magnify" />
+                                <TextBlock Text="Shikimori" />
+                              </StackPanel>
+                            </Button>
+                            <Button Classes="icon sm" Command="{Binding ClearShikimoriCommand}" IsVisible="{Binding HasShikimori}"
+                                    ToolTip.Tip="Без Shikimori — папка по названию">
+                              <mi:MaterialIcon Kind="Close" />
+                            </Button>
+                          </StackPanel>
+                        </Grid>
+                        <StackPanel Spacing="8" IsVisible="{Binding IsIncluded}">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <mi:MaterialIcon Kind="FolderOutline" Classes="dim" Width="14" Height="14" VerticalAlignment="Center" />
+                            <TextBlock Classes="dim sm" VerticalAlignment="Center">
+                              <Run Text="hls_multi /" />
+                              <Run Text="{Binding TitleFolder}" Foreground="{StaticResource Text2Brush}" />
+                            </TextBlock>
+                          </StackPanel>
+                          <ItemsControl ItemsSource="{Binding Layouts}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate DataType="p:HlsLayoutViewModel">
+                                <StackPanel Spacing="4" Margin="0,2,0,0">
+                                  <TextBlock Text="{Binding Header}" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" />
+                                  <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemsPanel>
+                                      <ItemsPanelTemplate>
+                                        <StackPanel Spacing="4" />
+                                      </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate DataType="p:HlsVoiceRowViewModel">
+                                        <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                                CornerRadius="7" Padding="8,3">
+                                          <Grid ColumnDefinitions="Auto,30,*,64,64,240">
+                                            <CheckBox IsChecked="{Binding IsTaken}" MinWidth="0" MinHeight="0" ToolTip.Tip="Брать дорожку" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Number}" Classes="cyan b" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                                            <TextBlock Grid.Column="3" Text="{Binding Language}" Classes="dim sm" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4" Text="{Binding Channels}" Classes="dim sm" VerticalAlignment="Center" />
+                                            <ComboBox Grid.Column="5" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Voice}"
+                                                      IsEnabled="{Binding IsTaken}" PlaceholderText="озвучка"
+                                                      ItemsSource="{Binding $parent[UserControl].((p:HlsPageViewModel)DataContext).Voices}" />
+                                          </Grid>
+                                        </Border>
+                                      </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+                                </StackPanel>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </StackPanel>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+        <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="Transparent" />
+        <c:PlanPreviewView Grid.Row="2" DataContext="{Binding Preview}" />
+      </Grid>
+    </DockPanel>
   </DockPanel>
 </UserControl>

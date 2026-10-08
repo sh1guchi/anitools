@@ -158,7 +158,7 @@ public sealed class PagesTests
         await AppFixture.WaitUntilAsync(() => page.Rows.Count == 3 && page.Rows.All(r => r.Status == RenameRowStatus.Unchanged), "после переименования");
         Assert.True(File.Exists(Path.Combine(app.Folder, "Sousou no Frieren - Season 2 - 03.mkv")));
         Assert.StartsWith("Откатить последнее переименование: 3 файла в ", page.UndoText);
-        Assert.Equal("Переименовано: 3.", page.Notice);
+        Assert.Contains(vm.Toasts, t => t.Text == "Переименовано: 3." && t.Kind == ToastKind.Ok);
 
         await page.UndoCommand.ExecuteAsync(null);
         await AppFixture.WaitUntilAsync(() => File.Exists(Path.Combine(app.Folder, "weird.mkv")), "откат");

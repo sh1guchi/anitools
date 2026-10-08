@@ -5,6 +5,8 @@
 - План и полное описание поведения: [docs/PLAN.md](docs/PLAN.md)
 - Оригинал (не менять): [reference/python/](reference/python/)
 
+![anitools](docs/screenshots/main-window.png)
+
 ## Структура
 
 | Папка | Что там |
@@ -50,4 +52,6 @@ python3 tools/gen_golden.py --check  # проверить, что актуаль
 - [x] Этап 6 — доп. инструменты: сборка озвучек в .mka, шрифты для .ass и из видео, хардсаб, сдвиги, чистка .ass, перекодирование аудио
 - [x] Этап 7 — GUI: все экраны (п.1–7 и доп. инструменты), очередь задач, настройки, запуск командой `ani`,
   скриншоты — в [docs/screenshots/](docs/screenshots/)
+- [x] После этапа 7 — оформление как у Anime Uploader, всплывающие уведомления, запуск exe ≈ втрое быстрее
+  (ReadyToRun), AVI в обычном ремуксе
 - [ ] Этап 8 — проверка на Windows, см. [docs/PLAN.md §7](docs/PLAN.md)

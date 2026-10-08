@@ -84,7 +84,7 @@ public sealed partial class TrackListPageViewModel(IShell shell) : PageViewModel
     private async Task CopyAsync()
     {
         await Shell.Dialogs.CopyTextAsync(CopyText);
-        Notice = "Скопировано в буфер обмена.";
+        Shell.Toast("Скопировано в буфер обмена.", ToastKind.Ok);
     }
 
     private async Task ReadAsync()

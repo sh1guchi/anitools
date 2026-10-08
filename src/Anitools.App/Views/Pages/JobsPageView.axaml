@@ -5,53 +5,136 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.JobsPageView"
              x:DataType="vm:JobsPageViewModel">
-  <DockPanel Margin="24,18,24,16">
+  <UserControl.Styles>
+    <!-- значок состояния (.item-ic): кружок с цветом по итогу -->
+    <Style Selector="Panel.state">
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="24" />
+    </Style>
+    <Style Selector="Border.stateBg">
+      <Setter Property="CornerRadius" Value="12" />
+    </Style>
+    <Style Selector="Border.stateBg.ok">
+      <Setter Property="Background" Value="{StaticResource GreenBgBrush}" />
+    </Style>
+    <Style Selector="Border.stateBg.err">
+      <Setter Property="Background" Value="{StaticResource RedBgBrush}" />
+    </Style>
+    <Style Selector="Border.stateBg.warn">
+      <Setter Property="Background" Value="{StaticResource YellowBgBrush}" />
+    </Style>
+    <Style Selector="Border.log">
+      <Setter Property="Background" Value="{StaticResource BgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="Border.log TextBox">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Padding" Value="10,8" />
+    </Style>
+    <Style Selector="Border.log TextBox /template/ Border#PART_BorderElement, Border.log TextBox:focus /template/ Border#PART_BorderElement, Border.log TextBox:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BoxShadow" Value="none" />
+    </Style>
+    <Style Selector="Border.jobCard.running">
+      <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}" />
+    </Style>
+  </UserControl.Styles>
+  <DockPanel Margin="22,18,22,0">
     <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
-      <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center"
-                 Text="Задачи выполняются по одной: видеокарта и диск заняты одной командой, остальные ждут." />
-      <Button Grid.Column="1" Command="{Binding ClearFinishedCommand}" Content="Убрать законченные" />
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14">
+      <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"
+                 Text="Задачи выполняются по одной: видеокарта и диск заняты одной командой, остальные ждут своей очереди." />
+      <Button Grid.Column="2" Classes="sm" Command="{Binding ClearFinishedCommand}" Margin="12,0,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <mi:MaterialIcon Kind="Broom" />
+          <TextBlock Text="Убрать законченные" />
+        </StackPanel>
+      </Button>
     </Grid>
-    <TextBlock DockPanel.Dock="Top" Classes="muted" Text="Задач пока нет — запустите что-нибудь на странице инструмента."
-               IsVisible="{Binding IsEmpty}" Margin="0,8,0,0" />
+
+    <!-- пусто (.empty) -->
+    <StackPanel DockPanel.Dock="Top" IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" Spacing="8" Margin="0,70,0,0">
+      <mi:MaterialIcon Kind="FormatListChecks" Classes="faint" Width="42" Height="42" />
+      <TextBlock Classes="h3" Text="Задач пока нет" HorizontalAlignment="Center" />
+      <TextBlock Classes="dim" Text="Запустите что-нибудь на странице инструмента — ход работы появится здесь." HorizontalAlignment="Center" />
+    </StackPanel>
+
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <ItemsControl x:Name="JobsList" ItemsSource="{Binding Jobs}">
+      <ItemsControl x:Name="JobsList" ItemsSource="{Binding Jobs}" Margin="0,0,0,18">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="10" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="vm:JobViewModel">
-            <Border Classes="card" Margin="0,0,0,8">
-              <StackPanel Spacing="6">
+            <Border Classes="card jobCard" Classes.running="{Binding IsRunning}" Padding="16,12,16,13">
+              <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                  <Panel Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <mi:MaterialIcon Kind="{Binding Icon}" Classes.accent="{Binding IsRunning}" Classes.ok="{Binding IsDone}"
-                                     Classes.bad="{Binding IsFailed}" Classes.muted="{Binding IsMuted}" Width="22" Height="22" />
+                  <!-- состояние -->
+                  <Panel Classes="state" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <Border Classes="stateBg" Classes.ok="{Binding IsDone}" Classes.err="{Binding IsFailed}" Classes.warn="{Binding IsCancelled}" />
+                    <mi:MaterialIcon Kind="Check" Classes="ok" Width="15" Height="15" IsVisible="{Binding IsDone}" />
+                    <mi:MaterialIcon Kind="Close" Classes="bad" Width="15" Height="15" IsVisible="{Binding IsFailed}" />
+                    <mi:MaterialIcon Kind="Cancel" Classes="warn" Width="14" Height="14" IsVisible="{Binding IsCancelled}" />
+                    <Panel IsVisible="{Binding IsRunning}" Width="18" Height="18">
+                      <Ellipse Classes="spinTrack" />
+                      <Arc Classes="spin" />
+                    </Panel>
+                    <Panel IsVisible="{Binding IsQueued}">
+                      <Ellipse Stroke="{StaticResource Line2Brush}" StrokeThickness="1.5" StrokeDashArray="2,2" />
+                      <mi:MaterialIcon Kind="ClockOutline" Classes="faint" Width="13" Height="13" />
+                    </Panel>
                   </Panel>
-                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding Status}" Classes="muted" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14.5" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Status}" Classes="text2" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}" />
                   </StackPanel>
-                  <TextBlock Grid.Column="2" Text="{Binding Time}" Classes="muted" VerticalAlignment="Center" Margin="12,0" />
+                  <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0" Spacing="1">
+                    <TextBlock Text="{Binding PercentText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"
+                               IsVisible="{Binding IsRunning}" />
+                    <TextBlock Text="{Binding Time}" Classes="dim sm" HorizontalAlignment="Right" />
+                  </StackPanel>
                   <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <Button Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" Content="Отмена" />
-                    <Button Command="{Binding OpenFolderCommand}" ToolTip.Tip="Открыть папку">
+                    <Button Classes="danger sm" Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="StopCircleOutline" />
+                        <TextBlock Text="Отмена" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="icon" Command="{Binding OpenFolderCommand}" ToolTip.Tip="Открыть папку">
                       <mi:MaterialIcon Kind="FolderOpenOutline" />
                     </Button>
-                    <ToggleButton IsChecked="{Binding IsLogOpen}" ToolTip.Tip="Журнал задачи">
-                      <StackPanel Orientation="Horizontal" Spacing="4">
+                    <ToggleButton Classes="sm" IsChecked="{Binding IsLogOpen}" ToolTip.Tip="Журнал задачи">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
                         <mi:MaterialIcon Kind="TextBoxOutline" />
-                        <TextBlock Text="Лог" />
+                        <TextBlock Text="Журнал" />
                       </StackPanel>
                     </ToggleButton>
                   </StackPanel>
                 </Grid>
-                <ProgressBar Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding IsIndeterminate}"
-                             IsVisible="{Binding IsRunning}" MinWidth="0" />
-                <TextBlock Text="{Binding Detail}" Classes="muted small" TextWrapping="Wrap"
+                <ProgressBar Classes="pbar" Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding IsIndeterminate}"
+                             IsVisible="{Binding IsRunning}" />
+                <TextBlock Text="{Binding Detail}" Classes="dim sm" TextWrapping="Wrap"
                            IsVisible="{Binding Detail, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <Grid IsVisible="{Binding IsLogOpen}" RowDefinitions="Auto,Auto">
-                  <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
-                           FontFamily="{StaticResource MonoFont}" FontSize="12" MaxHeight="260" />
-                  <Button Grid.Row="1" Classes="link" HorizontalAlignment="Right" Command="{Binding CopyLogCommand}" Content="Скопировать журнал" />
-                </Grid>
+                <StackPanel Spacing="4" IsVisible="{Binding IsLogOpen}">
+                  <Border Classes="log">
+                    <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" MaxHeight="280" />
+                  </Border>
+                  <Button Classes="link" HorizontalAlignment="Right" Command="{Binding CopyLogCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <mi:MaterialIcon Kind="ContentCopy" Width="14" Height="14" />
+                      <TextBlock Text="Скопировать журнал" FontSize="13" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
               </StackPanel>
             </Border>
           </DataTemplate>

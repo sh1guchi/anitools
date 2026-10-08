@@ -15,6 +15,7 @@ public sealed partial class MessageDialog : Window
     {
         InitializeComponent();
         Title = title;
+        TitleText.Text = title;
         MessageText.Text = message;
         ConfirmButton.Content = confirm;
         ConfirmButton.Click += (_, _) => Close(true);

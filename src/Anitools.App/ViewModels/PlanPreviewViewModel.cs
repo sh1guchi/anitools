@@ -39,6 +39,9 @@ public sealed partial class PlanRowViewModel : ObservableObject
 
     public bool IsError => Item.Status == PlanItemStatus.Error;
 
+    /// <summary>Почему пропуск или ошибка — рядом с плашкой «пропуск» / «ошибка».</summary>
+    public string Reason => Item.Reason ?? (IsSkip ? "нечего делать" : "");
+
     [ObservableProperty]
     public partial bool IsChecked { get; set; }
 

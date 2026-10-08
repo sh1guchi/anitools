@@ -1,48 +1,76 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:p="using:Anitools.App.ViewModels.Pages"
-             xmlns:ot="using:Anitools.Core.Operations.TrackList"
              xmlns:c="using:Anitools.App.Views.Controls"
              xmlns:v="using:Anitools.App.Views"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.AssEditPageView"
              x:DataType="p:AssEditPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
-      <StackPanel Spacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="16">
-          <TextBlock Text="Поле:" VerticalAlignment="Center" />
-          <RadioButton GroupName="assField" Content="стиль" IsChecked="{Binding IsStyle}" />
-          <RadioButton x:Name="ActorRadio" GroupName="assField" Content="актёр" IsChecked="{Binding IsActor}" />
-          <TextBlock Text="Режим:" VerticalAlignment="Center" Margin="24,0,0,0" />
-          <RadioButton GroupName="assMode" Content="оставить отмеченные" IsChecked="{Binding KeepSelected}" />
-          <RadioButton x:Name="RemoveRadio" GroupName="assMode" Content="удалить отмеченные" IsChecked="{Binding RemovesSelected}" />
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,16,0" Spacing="2">
+          <TextBlock x:Name="SummaryText" Classes="barTitle" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Summary}" />
+          <TextBlock Classes="dim" FontSize="12.5" Text="Перед правкой оригиналы копируются в папку «ass_backup_…»." />
         </StackPanel>
-      </StackPanel>
+        <Button x:Name="RunButton" Grid.Column="1" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding RemoveCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="Broom" />
+            <TextBlock Text="Править" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </Border>
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <TextBlock x:Name="SummaryText" Text="{Binding Summary}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}" Content="Править"
-              IsEnabled="{Binding RemoveCount, Converter={x:Static v:Converters.IsPositive}}" />
-    </Grid>
-    <Border Classes="card">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="ValuesList" ItemsSource="{Binding Values}" Grid.IsSharedSizeScope="True">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="p:AssValueRowViewModel">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" SharedSizeGroup="V" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Display}" Margin="0,0,18,0" />
-                <TextBlock Grid.Column="1" Text="{Binding Example}" Classes="muted small" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+        <WrapPanel Orientation="Horizontal" ItemSpacing="28" LineSpacing="12">
+          <HeaderedContentControl Classes="field" Header="Поле">
+            <Border Classes="seg">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton Classes="seg" GroupName="assField" Content="стиль" IsChecked="{Binding IsStyle}" />
+                <RadioButton x:Name="ActorRadio" Classes="seg" GroupName="assField" Content="актёр" IsChecked="{Binding IsActor}" />
+              </StackPanel>
+            </Border>
+          </HeaderedContentControl>
+          <HeaderedContentControl Classes="field" Header="Режим">
+            <Border Classes="seg">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton Classes="seg" GroupName="assMode" Content="оставить отмеченные" IsChecked="{Binding KeepSelected}" />
+                <RadioButton x:Name="RemoveRadio" Classes="seg" GroupName="assMode" Content="удалить отмеченные" IsChecked="{Binding RemovesSelected}" />
+              </StackPanel>
+            </Border>
+          </HeaderedContentControl>
+        </WrapPanel>
+      </Border>
+      <Border Classes="card" Padding="0,14,0,6" VerticalAlignment="Top" IsVisible="{Binding Values.Count, Converter={x:Static v:Converters.IsPositive}}">
+        <DockPanel>
+          <c:CardHead DockPanel.Dock="Top" Icon="FormatListBulleted" Title="Значения" Caption="{Binding Values.Count}" Margin="18,0,18,8" />
+          <Border DockPanel.Dock="Top" Classes="tblHead" Margin="10,0">
+            <Grid ColumnDefinitions="*,*">
+              <TextBlock Text="Значение" />
+              <TextBlock Grid.Column="1" Text="Например, в файле" />
+            </Grid>
+          </Border>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="ValuesList" ItemsSource="{Binding Values}" Margin="10,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="p:AssValueRowViewModel">
+                  <Border Classes="tblRow">
+                    <Grid ColumnDefinitions="*,*">
+                      <CheckBox IsChecked="{Binding IsChecked}" MinHeight="0" Margin="0,0,12,0">
+                        <TextBlock Text="{Binding Display}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                      </CheckBox>
+                      <TextBlock Grid.Column="1" Text="{Binding Example}" Classes="dim sm" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </DockPanel>
   </DockPanel>
 </UserControl>

@@ -6,29 +6,43 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.AudioConvertPageView"
              x:DataType="p:AudioConvertPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,12">
-      <StackPanel Spacing="8">
-        <WrapPanel Orientation="Horizontal">
-          <TextBlock Text="Формат:" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <ComboBox x:Name="FormatBox" ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" Width="100" Margin="0,0,16,0" />
-          <TextBlock Text="битрейт" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <TextBox Text="{Binding Bitrate}" Width="70" IsEnabled="{Binding HasBitrate}" Margin="0,0,16,0" />
-          <TextBlock Text="каналов" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <TextBox Text="{Binding Channels}" Width="56" PlaceholderText="как есть" Margin="0,0,16,0" />
-          <TextBlock Text="файлов сразу" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <TextBox Text="{Binding Workers}" Width="56" />
-        </WrapPanel>
-        <CheckBox Content="чинить метки времени (наложения обрезаются, дыры — тишиной)" IsChecked="{Binding FixTimestamps}" />
-        <TextBlock Classes="muted" Text="Выход — папка «converted»." />
-      </StackPanel>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Аудиофайлы папки (mp3, flac, wav, mka…) — в выбранный формат. Выход — папка «converted»." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="Play" />
+            <TextBlock x:Name="RunText" Text="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </Border>
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
-              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
-    </Grid>
-    <c:PlanPreviewView DataContext="{Binding Preview}" />
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
+        <StackPanel Spacing="12">
+          <WrapPanel Orientation="Horizontal" ItemSpacing="28" LineSpacing="12">
+            <HeaderedContentControl Classes="field" Header="Формат">
+              <ComboBox x:Name="FormatBox" ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" Width="110" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Classes="field" Header="Битрейт">
+              <TextBox Text="{Binding Bitrate}" Width="90" IsEnabled="{Binding HasBitrate}" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Classes="field" Header="Каналов">
+              <TextBox Text="{Binding Channels}" Width="90" PlaceholderText="как есть" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Classes="field" Header="Файлов сразу">
+              <TextBox Text="{Binding Workers}" Width="72" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+          </WrapPanel>
+          <CheckBox Content="чинить метки времени (наложения обрезаются, дыры — тишиной)" IsChecked="{Binding FixTimestamps}" />
+        </StackPanel>
+      </Border>
+      <c:PlanPreviewView DataContext="{Binding Preview}" />
+    </DockPanel>
   </DockPanel>
 </UserControl>

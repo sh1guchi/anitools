@@ -6,94 +6,117 @@
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              x:Class="Anitools.App.Views.Pages.AudioMuxPageView"
              x:DataType="p:AudioMuxPageViewModel">
-  <DockPanel Margin="24,18,24,16">
-    <c:PageHeader DockPanel.Dock="Top" />
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-      <Button x:Name="RunButton" Grid.Column="1" Classes="accent" Padding="20,8" Command="{Binding RunCommand}"
-              IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}"
-              Content="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
-    </Grid>
-    <ScrollViewer DockPanel.Dock="Top" MaxHeight="470" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,12">
-      <StackPanel Spacing="12" Margin="0,0,12,0">
-        <Border Classes="card">
-          <StackPanel Spacing="6">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Classes="h2" Text="Дорожки исходника" />
-              <TextBlock Classes="muted" Text="{Binding TracksCaption}" VerticalAlignment="Center" />
-            </StackPanel>
-            <ItemsControl ItemsSource="{Binding SourceTracks}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="p:AudioTrackRowViewModel">
-                  <CheckBox IsChecked="{Binding IsSelected}" Margin="0,0,18,0">
-                    <TextBlock>
-                      <Run Text="{Binding Number}" />
-                      <Run Text="{Binding Title}" FontWeight="SemiBold" />
-                      <Run Text="{Binding Language}" Foreground="Gray" />
-                    </TextBlock>
-                  </CheckBox>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <CheckBox x:Name="ExternalBox" Content="добавить внешние аудио серии (папки «Audio only», озвучки рядом)" IsChecked="{Binding UseExternal}" />
-              <ProgressBar IsIndeterminate="True" Width="80" MinWidth="0" IsVisible="{Binding IsAnalyzing}" VerticalAlignment="Center" />
-            </StackPanel>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="pageBar">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
+        <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
+                   Text="Видео + выбранные дорожки исходника + внешние озвучки → папка «Processed Audio», без перекодирования; порядок, тайтлы и язык — как в наборе." />
+        <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
+                IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="Play" />
+            <TextBlock x:Name="RunText" Text="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.RunText}}" />
           </StackPanel>
-        </Border>
+        </Button>
+      </Grid>
+    </Border>
+    <DockPanel Margin="22,18,22,14">
+      <c:PageHeader DockPanel.Dock="Top" />
+      <ScrollViewer DockPanel.Dock="Top" MaxHeight="470" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,14">
+        <StackPanel Spacing="14">
+          <Border Classes="card">
+            <StackPanel Spacing="10">
+              <c:CardHead Icon="MusicNoteOutline" Title="Дорожки исходника" Caption="{Binding TracksCaption}" Margin="0" />
+              <ItemsControl ItemsSource="{Binding SourceTracks}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="p:AudioTrackRowViewModel">
+                    <Border Classes="box" Padding="10,2,12,2">
+                      <CheckBox IsChecked="{Binding IsSelected}" MinHeight="30">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding Number}" Classes="cyan b" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding Language}" Classes="dim sm" VerticalAlignment="Center" />
+                        </StackPanel>
+                      </CheckBox>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <CheckBox x:Name="ExternalBox" Content="добавить внешние аудио серии (папки «Audio only», озвучки рядом)" IsChecked="{Binding UseExternal}" />
+                <Panel Width="16" Height="16" IsVisible="{Binding IsAnalyzing}" VerticalAlignment="Center">
+                  <Ellipse Classes="spinTrack" />
+                  <Arc Classes="spin" />
+                </Panel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
 
-        <ItemsControl x:Name="SetsList" ItemsSource="{Binding Sets}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="p:AudioSetViewModel">
-              <Border Classes="card" Margin="0,0,0,10">
-                <StackPanel Spacing="4">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="2">
-                      <TextBlock Classes="h2" Text="{Binding Header}" />
-                      <TextBlock Classes="muted small" Text="{Binding Difference}" TextWrapping="Wrap" IsVisible="{Binding HasDifference}" />
-                    </StackPanel>
-                    <Button Grid.Column="1" Content="взять из набора 1" Command="{Binding CopyFromMainCommand}" IsVisible="{Binding !IsMain}" VerticalAlignment="Top" />
-                  </Grid>
-                  <ItemsControl ItemsSource="{Binding Slots}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate DataType="p:AudioSlotRowViewModel">
-                        <Grid ColumnDefinitions="28,*,220,100,72,Auto" Margin="0,2">
-                          <TextBlock Text="{Binding Position}" VerticalAlignment="Center" FontWeight="SemiBold" />
-                          <TextBlock Grid.Column="1" Text="{Binding Source}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                     ToolTip.Tip="{Binding Source}" Margin="0,0,8,0" />
-                          <ComboBox Grid.Column="2" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Title}"
-                                    PlaceholderText="{Binding TitlePlaceholder}"
-                                    ItemsSource="{Binding $parent[UserControl].((p:AudioMuxPageViewModel)DataContext).Voices}" />
-                          <ComboBox Grid.Column="3" IsEditable="True" HorizontalAlignment="Stretch" Margin="6,0,0,0" Text="{Binding Language}"
-                                    PlaceholderText="язык"
-                                    ItemsSource="{Binding $parent[UserControl].((p:AudioMuxPageViewModel)DataContext).LanguageCodes}" />
-                          <TextBlock Grid.Column="4" Text="по умолч." Classes="muted small" VerticalAlignment="Center" Margin="8,0,0,0"
-                                     IsVisible="{Binding IsDefault}" />
-                          <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="6,0,0,0">
-                            <Button Classes="icon" ToolTip.Tip="Выше" CommandParameter="{Binding}"
-                                    Command="{Binding $parent[ItemsControl].((p:AudioSetViewModel)DataContext).MoveUpCommand}">
-                              <mi:MaterialIcon Kind="ArrowUp" />
-                            </Button>
-                            <Button Classes="icon" ToolTip.Tip="Ниже" CommandParameter="{Binding}"
-                                    Command="{Binding $parent[ItemsControl].((p:AudioSetViewModel)DataContext).MoveDownCommand}">
-                              <mi:MaterialIcon Kind="ArrowDown" />
-                            </Button>
-                          </StackPanel>
-                        </Grid>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
-    </ScrollViewer>
-    <c:PlanPreviewView DataContext="{Binding Preview}" />
+          <ItemsControl x:Name="SetsList" ItemsSource="{Binding Sets}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="14" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="p:AudioSetViewModel">
+                <Border Classes="card">
+                  <StackPanel Spacing="6">
+                    <c:CardHead Icon="PlaylistMusicOutline" Title="{Binding Header}" Margin="0,0,0,2">
+                      <Button Classes="sm" Content="взять из набора 1" Command="{Binding CopyFromMainCommand}" IsVisible="{Binding !IsMain}" />
+                    </c:CardHead>
+                    <TextBlock Classes="dim sm" Text="{Binding Difference}" TextWrapping="Wrap" IsVisible="{Binding HasDifference}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Slots}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Spacing="5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="p:AudioSlotRowViewModel">
+                          <Border Classes="box" Padding="8,5">
+                            <Grid ColumnDefinitions="28,*,220,100,82,Auto">
+                              <TextBlock Text="{Binding Position}" Classes="cyan b" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="1" Text="{Binding Source}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                         ToolTip.Tip="{Binding Source}" Margin="4,0,8,0" />
+                              <ComboBox Grid.Column="2" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Title}"
+                                        PlaceholderText="{Binding TitlePlaceholder}"
+                                        ItemsSource="{Binding $parent[UserControl].((p:AudioMuxPageViewModel)DataContext).Voices}" />
+                              <ComboBox Grid.Column="3" IsEditable="True" HorizontalAlignment="Stretch" Margin="6,0,0,0" Text="{Binding Language}"
+                                        PlaceholderText="язык"
+                                        ItemsSource="{Binding $parent[UserControl].((p:AudioMuxPageViewModel)DataContext).LanguageCodes}" />
+                              <Border Grid.Column="4" Classes="badge accent" HorizontalAlignment="Center" IsVisible="{Binding IsDefault}">
+                                <TextBlock Text="по умолч." />
+                              </Border>
+                              <StackPanel Grid.Column="5" Orientation="Horizontal">
+                                <Button Classes="icon" ToolTip.Tip="Выше" CommandParameter="{Binding}"
+                                        Command="{Binding $parent[ItemsControl].((p:AudioSetViewModel)DataContext).MoveUpCommand}">
+                                  <mi:MaterialIcon Kind="ArrowUp" />
+                                </Button>
+                                <Button Classes="icon" ToolTip.Tip="Ниже" CommandParameter="{Binding}"
+                                        Command="{Binding $parent[ItemsControl].((p:AudioSetViewModel)DataContext).MoveDownCommand}">
+                                  <mi:MaterialIcon Kind="ArrowDown" />
+                                </Button>
+                              </StackPanel>
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
+      <c:PlanPreviewView DataContext="{Binding Preview}" />
+    </DockPanel>
   </DockPanel>
 </UserControl>

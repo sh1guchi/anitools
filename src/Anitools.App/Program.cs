@@ -36,11 +36,15 @@ internal static class Program
             .LogToTrace();
 
     /// <summary>
-    /// Встроенный Inter по умолчанию: кириллица выглядит одинаково на Windows
-    /// и в headless-тестах на Linux. Общая настройка для приложения и тестов.
+    /// Шрифт как у Anime Uploader: Segoe UI на Windows, встроенный Inter в остальных системах (и в headless-тестах
+    /// на Linux) и для символов, которых в Segoe UI нет. Общая настройка для приложения и тестов.
     /// </summary>
     internal static AppBuilder UseAnitoolsFonts(this AppBuilder builder) =>
         builder
             .WithInterFont()
-            .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" });
+            .With(new FontManagerOptions
+            {
+                DefaultFamilyName = OperatingSystem.IsWindows() ? "Segoe UI" : "fonts:Inter#Inter",
+                FontFallbacks = [new FontFallback { FontFamily = new FontFamily("fonts:Inter#Inter") }],
+            });
 }
