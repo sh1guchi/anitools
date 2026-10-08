@@ -54,6 +54,9 @@
       <GradientStop Offset="1" Color="#FF5F37D4" />
     </LinearGradientBrush>
     <FontFamily x:Key="MonoFont">Cascadia Mono, Cascadia Code, Consolas, Menlo, monospace</FontFamily>
+    <!-- Fluent ставит Inter первым («fonts:Inter#Inter, $Default»); берём шрифт по умолчанию из Program.UseAnitoolsFonts:
+         Segoe UI на Windows, как у Anime Uploader, Inter — в остальных системах -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">$Default</FontFamily>
 
     <!-- Fluent: те же токены для стандартных элементов -->
     <CornerRadius x:Key="ControlCornerRadius">7</CornerRadius>
