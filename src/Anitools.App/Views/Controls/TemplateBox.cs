@@ -327,13 +327,13 @@ public sealed class TemplateBox : TextBox
         var menu = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
         if (token.Kind == TemplateTokenKind.Variable)
         {
-            menu.Items.Add(TemplateMenus.Head(Describe(markup, index)));
+            menu.Items.Add(Menus.Head(Describe(markup, index)));
             menu.Items.Add(Item("Удалить", null, () => RemovePill(Markup(Source), index), danger: true));
             var others = (Variables ?? []).Where(v => v.Name != token.Value).ToList();
             if (others.Count > 0)
             {
                 menu.Items.Add(new Separator());
-                menu.Items.Add(TemplateMenus.Head("Заменить на"));
+                menu.Items.Add(Menus.Head("Заменить на"));
                 foreach (var v in others)
                 {
                     menu.Items.Add(Item(v.Token, v.Label, () => Replace(token.Start, token.End, v.Token)));
@@ -345,14 +345,14 @@ public sealed class TemplateBox : TextBox
             var condition = token.Kind == TemplateTokenKind.Condition ? index : markup.Pairs.GetValueOrDefault(index, -1);
             if (condition < 0)
             {
-                menu.Items.Add(TemplateMenus.Head("Лишний {/} — условие не открыто"));
+                menu.Items.Add(Menus.Head("Лишний {/} — условие не открыто"));
                 menu.Items.Add(Item("Удалить", null, () => RemovePill(Markup(Source), index), danger: true));
             }
             else
             {
                 var open = markup.Tokens[condition];
                 var current = open.NotEqual is null ? open.Value : $"{open.Value}≠{open.NotEqual}";
-                menu.Items.Add(TemplateMenus.Head("Показывать, только…"));
+                menu.Items.Add(Menus.Head("Показывать, только…"));
                 var options = (Conditions ?? []).ToList();
                 if (options.All(c => c.Expression != current))
                 {
@@ -384,7 +384,7 @@ public sealed class TemplateBox : TextBox
     }
 
     private MenuItem Item(string text, string? hint, Action action, bool check = false, bool danger = false) =>
-        TemplateMenus.Item(text, hint, () =>
+        Menus.Item(text, hint, () =>
         {
             action();
             Focus();

@@ -196,11 +196,9 @@
             </Grid>
           </Button>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0">
+            <!-- меню собирается в коде по нажатию (MainWindow.ShowRecentMenu) -->
             <Button x:Name="RecentButton" Classes="icon sm" IsEnabled="{Binding HasRecentFolders}" ToolTip.Tip="Недавние папки">
               <mi:MaterialIcon Kind="History" />
-              <Button.Flyout>
-                <MenuFlyout Placement="RightEdgeAlignedBottom" />
-              </Button.Flyout>
             </Button>
             <Button Classes="icon sm" Command="{Binding OpenFolderInExplorerCommand}" IsEnabled="{Binding HasFolder}"
                     ToolTip.Tip="Открыть рабочую папку в проводнике">

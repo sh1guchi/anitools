@@ -5,8 +5,11 @@ using Material.Icons.Avalonia;
 
 namespace Anitools.App.Views.Controls;
 
-/// <summary>Пункты всплывающих меню редактора шаблонов (как popMenu в app.js: заголовок, пункт с пояснением, галочка).</summary>
-internal static class TemplateMenus
+/// <summary>
+/// Пункты всплывающих меню (как popMenu в app.js: заголовок, пункт с пояснением, галочка). Меню собирается
+/// целиком до показа: пункты, добавленные в Opening, Avalonia 12 не показывает — меню выходит пустой полоской.
+/// </summary>
+internal static class Menus
 {
     /// <summary>Серый заголовок группы — не нажимается.</summary>
     public static MenuItem Head(string text) => new()

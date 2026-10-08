@@ -211,7 +211,7 @@ public sealed partial class TemplateEditor : UserControl
     {
         var menu = new MenuFlyout();
         var current = Text ?? "";
-        menu.Items.Add(TemplateMenus.Head("Готовые"));
+        menu.Items.Add(Menus.Head("Готовые"));
         foreach (var preset in BuiltInPresets ?? [])
         {
             menu.Items.Add(Item(preset.Name, preset.Template, () => Box.ReplaceAll(preset.Template), preset.Template == current));
@@ -221,7 +221,7 @@ public sealed partial class TemplateEditor : UserControl
         if (own.Count > 0)
         {
             menu.Items.Add(new Separator());
-            menu.Items.Add(TemplateMenus.Head("Свои"));
+            menu.Items.Add(Menus.Head("Свои"));
             foreach (var preset in own)
             {
                 menu.Items.Add(Item(preset.Name, preset.Template, () => Box.ReplaceAll(preset.Template), preset.Template == current));
@@ -235,7 +235,7 @@ public sealed partial class TemplateEditor : UserControl
             var delete = new MenuItem { Header = "Удалить свой пресет", Foreground = Box.Palette.Red };
             foreach (var preset in own)
             {
-                delete.Items.Add(TemplateMenus.Item(preset.Name, preset.Template, () => DeletePresetCommand?.Execute(preset)));
+                delete.Items.Add(Menus.Item(preset.Name, preset.Template, () => DeletePresetCommand?.Execute(preset)));
             }
 
             menu.Items.Add(delete);
@@ -248,7 +248,7 @@ public sealed partial class TemplateEditor : UserControl
     {
         var menu = new MenuFlyout();
         var collapsed = Box.SelectionStart == Box.SelectionEnd;
-        menu.Items.Add(TemplateMenus.Head(collapsed ? "Пустой блок с условием — допишите текст внутрь" : "Выделенное покажу, только…"));
+        menu.Items.Add(Menus.Head(collapsed ? "Пустой блок с условием — допишите текст внутрь" : "Выделенное покажу, только…"));
         foreach (var condition in Conditions ?? [])
         {
             menu.Items.Add(Item(condition.Label, condition.Token, () => Box.WrapInCondition(condition.Expression)));
@@ -260,7 +260,7 @@ public sealed partial class TemplateEditor : UserControl
     private MenuFlyout VariableMenu()
     {
         var menu = new MenuFlyout();
-        menu.Items.Add(TemplateMenus.Head("Вставить там, где каретка"));
+        menu.Items.Add(Menus.Head("Вставить там, где каретка"));
         foreach (var variable in Variables ?? [])
         {
             menu.Items.Add(Item(variable.Token, variable.Label, () => Box.InsertVariable(variable.Name)));
@@ -269,7 +269,7 @@ public sealed partial class TemplateEditor : UserControl
         if (Formatted is { Count: > 0 } formatted)
         {
             menu.Items.Add(new Separator());
-            menu.Items.Add(TemplateMenus.Head("Для имён как у релизов: To.Be.Hero.X.S01E01"));
+            menu.Items.Add(Menus.Head("Для имён как у релизов: To.Be.Hero.X.S01E01"));
             foreach (var variable in formatted)
             {
                 menu.Items.Add(Item(variable.Token, variable.Label, () => Box.InsertVariable(variable.Name)));
@@ -280,5 +280,5 @@ public sealed partial class TemplateEditor : UserControl
     }
 
     private MenuItem Item(string text, string? hint, Action action, bool check = false) =>
-        TemplateMenus.Item(text, hint, action, check, accent: Box.Palette.Accent);
+        Menus.Item(text, hint, action, check, accent: Box.Palette.Accent);
 }
