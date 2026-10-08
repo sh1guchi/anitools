@@ -254,6 +254,15 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
+          <!-- вышла новая версия: скачать установщик и обновиться -->
+          <Button x:Name="UpdateButton" DockPanel.Dock="Right" Classes="primary sm" Margin="12,0,0,0" Command="{Binding InstallUpdateCommand}"
+                  IsVisible="{Binding Update, Converter={x:Static ObjectConverters.IsNotNull}}" ToolTip.Tip="Вышла новая версия anitools">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <mi:MaterialIcon Kind="Download" />
+              <TextBlock x:Name="UpdateText" Text="{Binding UpdateText}" />
+            </StackPanel>
+          </Button>
+
           <Button x:Name="JobPill" DockPanel.Dock="Right" Classes="jobPill" Command="{Binding ShowJobsCommand}" Margin="12,0,0,0"
                   IsVisible="{Binding CurrentJob, Converter={x:Static ObjectConverters.IsNotNull}}"
                   ToolTip.Tip="{Binding CurrentJob.Short, FallbackValue=''}">
@@ -288,16 +297,35 @@
         </DockPanel>
       </Border>
 
-      <!-- Предупреждение: папка не найдена, настройки не прочитались -->
-      <Border Grid.Row="1" Classes="banner" IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
-        <Grid ColumnDefinitions="Auto,*,Auto">
-          <mi:MaterialIcon Kind="AlertOutline" VerticalAlignment="Center" Margin="0,0,12,0" />
-          <SelectableTextBlock x:Name="FolderMessageText" Grid.Column="1" Text="{Binding FolderMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
-          <Button Grid.Column="2" Classes="icon sm" Command="{Binding DismissFolderMessageCommand}" ToolTip.Tip="Скрыть" Margin="8,0,0,0">
-            <mi:MaterialIcon Kind="Close" />
-          </Button>
-        </Grid>
-      </Border>
+      <StackPanel Grid.Row="1">
+        <!-- Предупреждение: папка не найдена, настройки не прочитались -->
+        <Border Classes="banner" IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <mi:MaterialIcon Kind="AlertOutline" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <SelectableTextBlock x:Name="FolderMessageText" Grid.Column="1" Text="{Binding FolderMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="2" Classes="icon sm" Command="{Binding DismissFolderMessageCommand}" ToolTip.Tip="Скрыть" Margin="8,0,0,0">
+              <mi:MaterialIcon Kind="Close" />
+            </Button>
+          </Grid>
+        </Border>
+        <!-- Нет ffmpeg или MKVToolNix (первый запуск): поставить из программы -->
+        <Border x:Name="MissingToolsBanner" Classes="banner" IsVisible="{Binding MissingTools, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            <mi:MaterialIcon Kind="ToolboxOutline" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBlock x:Name="MissingToolsText" Grid.Column="1" Text="{Binding MissingToolsText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="2" Classes="primary sm" Command="{Binding InstallMissingToolsCommand}" Margin="12,0,0,0"
+                    ToolTip.Tip="Скачать последние версии и прописать пути (Настройки → Программы)">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <mi:MaterialIcon Kind="DownloadOutline" />
+                <TextBlock Text="{Binding MissingToolsButtonText}" />
+              </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Classes="icon sm" Command="{Binding DismissMissingToolsCommand}" ToolTip.Tip="Скрыть" Margin="8,0,0,0">
+              <mi:MaterialIcon Kind="Close" />
+            </Button>
+          </Grid>
+        </Border>
+      </StackPanel>
 
       <ContentControl x:Name="PageHost" Grid.Row="2" Content="{Binding CurrentPage}" />
 

@@ -38,9 +38,14 @@ public static partial class AniCommand
     /// </summary>
     public static bool CloseParentConsole()
     {
-        if (!OperatingSystem.IsWindows() || !AttachConsole(AttachParentProcess))
+        if (!OperatingSystem.IsWindows())
         {
             return false;
+        }
+
+        if (!AttachConsole(AttachParentProcess))
+        {
+            return Trace($"AttachConsole: ошибка {Marshal.GetLastPInvokeError()}");
         }
 
         try
@@ -48,16 +53,34 @@ public static partial class AniCommand
             using var input = CreateFile("CONIN$", GenericRead | GenericWrite, FileShareRead | FileShareWrite, 0, OpenExisting, 0, 0);
             if (input.IsInvalid)
             {
-                return false;
+                return Trace($"CONIN$: ошибка {Marshal.GetLastPInvokeError()}");
             }
 
             var keys = KeyPresses("exit\r");
-            return WriteConsoleInput(input, keys, (uint)keys.Length, out var written) && written == keys.Length;
+            var ok = WriteConsoleInput(input, keys, (uint)keys.Length, out var written) && written == keys.Length;
+            return Trace(ok ? "exit набран" : $"WriteConsoleInput: ошибка {Marshal.GetLastPInvokeError()}, записано {written}", ok);
         }
         finally
         {
             FreeConsole();
         }
+    }
+
+    /// <summary>Что вышло с закрытием консоли — в файл из ANITOOLS_ANI_TRACE (для проверки в CI); иначе ничего.</summary>
+    private static bool Trace(string message, bool result = false)
+    {
+        if (Environment.GetEnvironmentVariable("ANITOOLS_ANI_TRACE") is { Length: > 0 } path)
+        {
+            try
+            {
+                File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+
+        return result;
     }
 
     /// <summary>Нажатия клавиш для консоли: на каждый символ — «нажата» и «отпущена»; «\r» — Enter.</summary>

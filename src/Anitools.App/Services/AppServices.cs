@@ -34,6 +34,7 @@ public sealed class AppServices : IDisposable
         _settings = loaded.Settings;
         SettingsError = loaded.Error;
         Installer = OperatingSystem.IsWindows() ? new ToolInstaller(http) : null;
+        Updates = new UpdateChecker(http);
         RefreshTools();
     }
 
@@ -53,6 +54,37 @@ public sealed class AppServices : IDisposable
 
     /// <summary>Установка ffmpeg, MKVToolNix, ImDisk из настроек; null — не Windows (сборки только под Windows).</summary>
     public ToolInstaller? Installer { get; set; }
+
+    /// <summary>Новые версии anitools на GitHub.</summary>
+    public UpdateChecker Updates { get; set; }
+
+    /// <summary>
+    /// Поставлен установщиком (рядом его unins000.exe) — обновляется сам; exe без установки — только ссылкой на выпуск.
+    /// </summary>
+    public bool IsInstalled { get; set; } = File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+
+    /// <summary>Куда скачивается установщик обновления.</summary>
+    public string UpdatesFolder { get; set; } = Path.Combine(Path.GetTempPath(), "anitools-update");
+
+    /// <summary>
+    /// Запустить установщик обновления тихо (окно хода установки видно, вопросов нет); он закроет anitools, заменит
+    /// файлы и откроет программу снова. false — не запустился.
+    /// </summary>
+    public Func<string, bool> RunInstaller { get; set; } = setup =>
+    {
+        try
+        {
+            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(setup, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS")
+            {
+                UseShellExecute = true,
+            });
+            return process is not null;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    };
 
     public ErrorLogWriter Logs { get; }
 

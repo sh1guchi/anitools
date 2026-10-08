@@ -16,4 +16,7 @@ public interface IShell
 
     /// <summary>Всплывающее уведомление: «Запущено…», «Переименовано: 3.», итог задачи; исчезает само.</summary>
     void Toast(string text, ToastKind kind = ToastKind.Info);
+
+    /// <summary>Проверить обновления (кнопка в настройках — с ответом уведомлением).</summary>
+    Task CheckUpdatesAsync(bool manual);
 }

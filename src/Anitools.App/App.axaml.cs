@@ -27,6 +27,8 @@ public sealed class App : Application
             window.DataContext = viewModel;
             desktop.MainWindow = window;
             _ = viewModel.CheckToolsAsync();
+            _ = viewModel.CheckUpdatesLaterAsync(TimeSpan.FromSeconds(5));
+            viewModel.ExitRequested += () => desktop.Shutdown(); // установщик обновления запущен
 
             // ani в другой папке: вторая копия передаёт папку сюда и выходит
             Instance?.StartListening(request => Dispatcher.UIThread.Post(() =>

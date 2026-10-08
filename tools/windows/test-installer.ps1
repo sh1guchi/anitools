@@ -36,6 +36,7 @@ function Test-Ani([string]$shell, [string[]]$arguments, [string]$folder) {
     } 60 "$shell`: anitools открылся в папке «$folder»"
     if (-not $console.WaitForExit(30000)) {
         $console.Kill()
+        if (Test-Path $env:ANITOOLS_ANI_TRACE) { Get-Content $env:ANITOOLS_ANI_TRACE | ForEach-Object { Write-Host "  ani: $_" } }
         Fail "$shell`: консоль после ani не закрылась"
     }
     if (-not (Get-Process ani -ErrorAction SilentlyContinue)) {
@@ -60,6 +61,7 @@ Write-Host "✓ установка: $app, ani.exe — ссылка на Anitools
 
 # 2. ani в папке с пробелами и кириллицей; эта консоль PATH из реестра ещё не видит — как новая консоль
 $env:Path = "$app;$env:Path"
+$env:ANITOOLS_ANI_TRACE = Join-Path $env:RUNNER_TEMP "ani-trace.txt"
 $folder = (New-Item -ItemType Directory -Force (Join-Path $env:RUNNER_TEMP "ani тест папка")).FullName
 Test-Ani "cmd.exe" @("/k", "ani") $folder
 Test-Ani "powershell.exe" @("-NoExit", "-NoProfile", "-Command", "ani") $folder

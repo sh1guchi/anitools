@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Anitools.Core;
 using Anitools.Core.Install;
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Operations.Hardsub;
@@ -352,6 +353,17 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     [ObservableProperty]
     public partial string SubShiftSeconds { get; set; } = "";
 
+    /// <summary>Команда ani закрывает консоль, из которой её набрали.</summary>
+    [ObservableProperty]
+    public partial bool CloseConsoleAfterAni { get; set; }
+
+    /// <summary>Раз в день проверять, не вышла ли новая версия.</summary>
+    [ObservableProperty]
+    public partial bool CheckUpdates { get; set; }
+
+    /// <summary>«anitools 1.0.0».</summary>
+    public string VersionText => $"{AppInfo.Name} {AppInfo.Version}";
+
     public bool IsRamDisk
     {
         get => WorkDirMode == WorkDirMode.RamDisk;
@@ -382,6 +394,18 @@ public sealed partial class SettingsPageViewModel : PageViewModel
 
         return Task.CompletedTask;
     }
+
+    /// <summary>Поставить по очереди то, без чего не работает почти ничего: FFmpeg и MKVToolNix, если их нет.</summary>
+    public async Task InstallMissingAsync()
+    {
+        foreach (var package in Packages.Where(p => p.Package != ToolPackage.ImDisk && !p.Rows.All(r => r.IsFound)).ToList())
+        {
+            await package.InstallCommand.ExecuteAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    private Task CheckUpdatesNowAsync() => Shell.CheckUpdatesAsync(manual: true);
 
     /// <summary>Программа поставилась: пути — в строки и сразу в настройки (остальные несохранённые поля не трогаются).</summary>
     /// <exception cref="IOException">Настройки не записались.</exception>
@@ -482,6 +506,8 @@ public sealed partial class SettingsPageViewModel : PageViewModel
                 Workers = Int(AudioConvertWorkers, "Файлов сразу (перекодирование)", errors, 1, 64),
             },
             SubShiftSeconds = Number(SubShiftSeconds, "Сдвиг субтитров", errors, -3600, 3600),
+            CloseConsoleAfterAni = CloseConsoleAfterAni,
+            CheckUpdates = CheckUpdates,
         };
         return errors.Count > 0 ? (null, errors) : (settings, errors);
     }
@@ -614,6 +640,8 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         AudioConvertFixTimestamps = s.AudioConvert.FixTimestamps;
         AudioConvertWorkers = Text(s.AudioConvert.Workers);
         SubShiftSeconds = Text(s.SubShiftSeconds);
+        CloseConsoleAfterAni = s.CloseConsoleAfterAni;
+        CheckUpdates = s.CheckUpdates;
     }
 
     private void SetMode(bool selected, WorkDirMode mode)
