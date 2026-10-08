@@ -1,4 +1,5 @@
 using Anitools.App.Startup;
+using Anitools.Core.Settings;
 using Anitools.Core.WorkDir;
 using Avalonia;
 using Avalonia.Media;
@@ -18,6 +19,16 @@ internal static class Program
         if (args is [ImDiskHelper.Argument, var pipe, var app] && int.TryParse(app, out var appProcessId))
         {
             return RunImDiskHelper(pipe, appProcessId);
+        }
+
+        // ani без аргументов — текущая папка консоли; консоль, из которой набрали ani, закрывается
+        if (AniCommand.IsAni(Environment.ProcessPath))
+        {
+            args = AniCommand.Arguments(args, Environment.ProcessPath, Environment.CurrentDirectory);
+            if (new SettingsStore(SettingsStore.DefaultPath).Load().Settings.CloseConsoleAfterAni)
+            {
+                AniCommand.CloseParentConsole();
+            }
         }
 
         var instance = SingleInstance.TryBecomePrimary(SingleInstance.DefaultName);
