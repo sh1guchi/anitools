@@ -359,7 +359,7 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         }
 
         var services = Shell.Services;
-        if (WorkDirMode == WorkDirMode.RamDisk && services.ImDiskAdmin is ElevatedImDisk elevated)
+        if (WorkDirMode == WorkDirMode.RamDisk && services.Imdisk is not null && services.ImDiskAdmin is ElevatedImDisk elevated)
         {
             // без прав администратора: разрешение Windows — сейчас, пока пользователь у экрана, а не когда дойдёт очередь
             try
