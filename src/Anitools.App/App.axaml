@@ -700,9 +700,10 @@
     <Style Selector="ListBox.nav ListBoxItem">
       <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Padding" Value="11,6" />
+      <!-- высота пункта не зависит от шрифта: в Segoe UI строка выше, чем в Inter -->
+      <Setter Property="Padding" Value="11,0" />
       <Setter Property="Margin" Value="0,1" />
-      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="MinHeight" Value="30" />
       <Setter Property="CornerRadius" Value="9" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="Template">
@@ -752,7 +753,8 @@
     <!-- недоступные пункты — заголовки разделов -->
     <Style Selector="ListBox.nav ListBoxItem:disabled">
       <Setter Property="Cursor" Value="Arrow" />
-      <Setter Property="Padding" Value="11,10,11,3" />
+      <Setter Property="Padding" Value="11,9,11,2" />
+      <Setter Property="MinHeight" Value="0" />
     </Style>
 
     <!-- ── Вращающийся кружок (.spin) ── -->

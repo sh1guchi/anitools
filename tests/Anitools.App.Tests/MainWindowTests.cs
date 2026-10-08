@@ -2,6 +2,7 @@ using Anitools.App.ViewModels;
 using Anitools.App.ViewModels.Pages;
 using Anitools.App.Views;
 using Anitools.Core.Jobs;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -29,6 +30,25 @@ public sealed class MainWindowTests
         Assert.Equal(["ВИДЕО", "АУДИО", "СУБТИТРЫ", "ШРИФТЫ", "ФАЙЛЫ"], vm.Navigation.OfType<NavHeader>().Select(h => h.Title));
         Assert.Same(vm.SettingsPage, vm.Navigation[^1]);
         Assert.Equal(18, vm.Navigation.OfType<PageViewModel>().Count());
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Whole_menu_fits_without_scrolling_in_default_window()
+    {
+        using var app = new AppFixture();
+        var vm = app.CreateViewModel();
+        var window = new MainWindow { DataContext = vm };
+        window.Show();
+        AppFixture.Flush();
+
+        // последний инструмент («Переименовать») целиком виден без прокрутки — и в Inter, и в Segoe UI на Windows
+        var list = window.FindControl<ListBox>("NavList")!;
+        var scroll = list.GetVisualDescendants().OfType<ScrollViewer>().First();
+        var last = list.ContainerFromIndex(list.ItemCount - 1);
+        Assert.NotNull(last);
+        var bottom = last.TranslatePoint(new Point(0, last.Bounds.Height), scroll)!.Value.Y;
+        Assert.True(bottom <= scroll.Viewport.Height + 0.5, $"меню не помещается: низ «{(vm.ToolNavigation[^1] as PageViewModel)?.Title}» {bottom:0} > {scroll.Viewport.Height:0}");
         window.Close();
     }
 
