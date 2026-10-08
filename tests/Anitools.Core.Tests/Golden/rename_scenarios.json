@@ -1,9 +1,6 @@
 {
   "function": "rename_scenarios",
   "description": "П.5: какие файлы и как переименовывает оригинал для папки и ответов на вопросы",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": {"name": "manual_base", "files": ["[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "[SubsPlease] Sousou no Frieren - 02 (1080p) [A1B2C3D4].mkv", "[SubsPlease] Sousou no Frieren - 10 (1080p) [ABCDEF12].mkv", "notes.txt", "run.bat", "Cover.jpg"], "shikimori": null, "answers": ["2", "Sousou no Frieren: Beyond Journey's End", null, "2", "1"], "options": {"base": "Sousou no Frieren: Beyond Journey's End", "start": 1, "suffix": null, "manual": null}}, "output": {"renames": [["[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "Sousou no Frieren - Beyond Journey's End - 01.mkv"], ["[SubsPlease] Sousou no Frieren - 02 (1080p) [A1B2C3D4].mkv", "Sousou no Frieren - Beyond Journey's End - 02.mkv"], ["[SubsPlease] Sousou no Frieren - 10 (1080p) [ABCDEF12].mkv", "Sousou no Frieren - Beyond Journey's End - 10.mkv"]], "shikimori_paths": []}},
     {"input": {"name": "offset_and_suffix", "files": ["Title - 12.надписи.ass", "Title - 13.надписи.ass", "Title - 11.надписи.ass"], "shikimori": null, "answers": ["2", "Overlord IV", "12", "1", ".надписи", "1"], "options": {"base": "Overlord IV", "start": 12, "suffix": ".надписи", "manual": null}}, "output": {"renames": [["Title - 12.надписи.ass", "Overlord IV - 01.надписи.ass"], ["Title - 13.надписи.ass", "Overlord IV - 02.надписи.ass"]], "shikimori_paths": []}},

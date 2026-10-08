@@ -15,7 +15,7 @@ public static class TrackIdList
         var ids = new List<int>();
         foreach (var raw in text.Split(','))
         {
-            var part = PyText.Strip(raw);
+            var part = TextUtils.Strip(raw);
             if (part.Length == 0)
             {
                 continue;
@@ -24,8 +24,8 @@ public static class TrackIdList
             if (part.Contains('-', StringComparison.Ordinal))
             {
                 var pieces = part.Split('-', 2);
-                var lo = ToInt(PyText.Strip(pieces[0]));
-                var hi = ToInt(PyText.Strip(pieces[1]));
+                var lo = ToInt(TextUtils.Strip(pieces[0]));
+                var hi = ToInt(TextUtils.Strip(pieces[1]));
                 if (lo > hi)
                 {
                     (lo, hi) = (hi, lo);
@@ -51,5 +51,5 @@ public static class TrackIdList
         return ids.Where(seen.Add).ToList();
     }
 
-    private static int ToInt(string s) => (int)PyText.ParseInt(s);
+    private static int ToInt(string s) => (int)TextUtils.ParseInt(s);
 }

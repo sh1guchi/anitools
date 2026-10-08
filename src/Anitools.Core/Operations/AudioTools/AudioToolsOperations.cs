@@ -48,11 +48,11 @@ public static class AudioShiftOperation
         }
 
         var outputFolder = Path.Combine(folder, OutputFolderName);
-        var seconds = PyText.FloatStr(Math.Abs(options.Seconds)); // как str() в оригинале: «1.0»
+        var seconds = TextUtils.FloatStr(Math.Abs(options.Seconds)); // как str() в оригинале: «1.0»
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
-            var output = Path.Combine(outputFolder, PyText.Stem(name) + ".mka");
+            var output = Path.Combine(outputFolder, TextUtils.Stem(name) + ".mka");
             if (MediaFiles.IsDone(output))
             {
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже готово", Outputs = [output] };
@@ -169,7 +169,7 @@ public static class AudioConvertOperation
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
-            var output = Path.Combine(outputFolder, PyText.Stem(name) + ext);
+            var output = Path.Combine(outputFolder, TextUtils.Stem(name) + ext);
             if (MediaFiles.IsDone(output))
             {
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже готово", Outputs = [output] };

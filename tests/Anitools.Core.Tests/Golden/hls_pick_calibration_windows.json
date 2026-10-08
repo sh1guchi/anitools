@@ -1,9 +1,6 @@
 {
   "function": "hls_pick_calibration_windows",
   "description": "Начала калибровочных окон, сек (py:4077)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": {"rates": [7837151.4], "count": 10}, "output": [0]},
     {"input": {"rates": [4012468.136, 18557437.74], "count": 10}, "output": [0, 6]},

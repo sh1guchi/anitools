@@ -16,7 +16,7 @@ public static partial class MkaNames
     public static int? TrackNumber(string name)
     {
         var m = TrackNumberRegex().Match(name);
-        return m.Success ? (int)PyText.ParseInt(m.Groups[1].Value) : null;
+        return m.Success ? (int)TextUtils.ParseInt(m.Groups[1].Value) : null;
     }
 
     /// <summary>Сортировка _natural_key: по номеру «N. » (без номера — в конец), затем по имени в нижнем регистре.</summary>
@@ -31,7 +31,7 @@ public static partial class MkaNames
             (_, null) => -1,
             _ => na.Value.CompareTo(nb.Value),
         };
-        return byNumber != 0 ? byNumber : PyText.CompareCodePoints(PyText.Lower(a), PyText.Lower(b));
+        return byNumber != 0 ? byNumber : TextUtils.CompareCodePoints(TextUtils.Lower(a), TextUtils.Lower(b));
     });
 
     /// <summary>
@@ -47,7 +47,7 @@ public static partial class MkaNames
         }
 
         var top = parts[0];
-        var label = PyText.Strip(StripTrackNumber(top));
+        var label = TextUtils.Strip(StripTrackNumber(top));
         return (label.Length > 0 ? label : top, TrackNumber(top));
     }
 
@@ -56,13 +56,13 @@ public static partial class MkaNames
     {
         var name = StripTrackNumber(FileName(fileName));
         var episode = Anitomy.Parse(name).EpisodeNumber;
-        if (episode is not null && PyText.Strip(episode).Length > 0)
+        if (episode is not null && TextUtils.Strip(episode).Length > 0)
         {
-            var s = PyText.Strip(episode);
+            var s = TextUtils.Strip(episode);
             return IsDigits(s) ? s.PadLeft(2, '0') : s;
         }
 
-        var stem = PyText.Stem(name);
+        var stem = TextUtils.Stem(name);
         foreach (var pattern in new[] { EpisodeMarkerRegex(), EpisodeAfterDashRegex(), EpisodeInBracketsRegex() })
         {
             var m = pattern.Match(stem);
@@ -87,7 +87,7 @@ public static partial class MkaNames
                 : SanitizeName(title);
         }
 
-        var stem = PyText.Stem(name);
+        var stem = TextUtils.Stem(name);
         var s = TrailingTagRegex().Replace(stem, "", 1).Trim(' ', '-', '_', '.');
         return SanitizeName(s.Length > 0 ? s : stem);
     }
@@ -98,7 +98,7 @@ public static partial class MkaNames
     /// </summary>
     public static string StripTrailingEpisode(string? label, string? episode)
     {
-        var s = PyText.Strip(label ?? "");
+        var s = TextUtils.Strip(label ?? "");
         if (episode is null)
         {
             return s;
@@ -108,7 +108,7 @@ public static partial class MkaNames
         try
         {
             var trimmed = episode.TrimStart('0');
-            number = (long)PyText.ParseInt(trimmed.Length > 0 ? trimmed : "0");
+            number = (long)TextUtils.ParseInt(trimmed.Length > 0 ? trimmed : "0");
         }
         catch (Exception ex) when (ex is FormatException or OverflowException)
         {
@@ -116,7 +116,7 @@ public static partial class MkaNames
         }
 
         var m = TrailingNumberRegex().Match(s);
-        if (m.Success && PyText.ParseInt(m.Groups[1].Value) == number)
+        if (m.Success && TextUtils.ParseInt(m.Groups[1].Value) == number)
         {
             var cut = s[..m.Index].Trim(' ', '-', '_', '.');
             return cut.Length > 0 ? cut : s;
@@ -128,15 +128,15 @@ public static partial class MkaNames
     /// <summary>Метка озвучки по тайтлу дорожки или имени (voice_label без папки): тайтл → последний [тег] → остаток имени.</summary>
     public static string LabelFromFile(string fileName, string? title, string episodeBase)
     {
-        var stem = StripTrackNumber(PyText.Stem(FileName(fileName)));
+        var stem = StripTrackNumber(TextUtils.Stem(FileName(fileName)));
         string candidate;
         if (title is { Length: > 0 })
         {
-            candidate = PyText.Strip(title);
+            candidate = TextUtils.Strip(title);
         }
         else if (BracketTagRegex().Matches(stem) is { Count: > 0 } tags)
         {
-            candidate = PyText.Strip(tags[^1].Groups[1].Value);
+            candidate = TextUtils.Strip(tags[^1].Groups[1].Value);
         }
         else
         {
@@ -155,7 +155,7 @@ public static partial class MkaNames
     /// <summary>Имя файла без недопустимых символов (_sanitize_name); пусто → «output».</summary>
     public static string SanitizeName(string name)
     {
-        var s = PyText.Strip(UnsafeNameRegex().Replace(name, "_")).TrimEnd('.');
+        var s = TextUtils.Strip(UnsafeNameRegex().Replace(name, "_")).TrimEnd('.');
         return s.Length > 0 ? s : "output";
     }
 
@@ -164,22 +164,22 @@ public static partial class MkaNames
     /// <summary>str.isdigit() для номеров серий: только десятичные цифры (у Anitomy других не бывает).</summary>
     private static bool IsDigits(string s) => s.Length > 0 && s.All(char.IsDigit);
 
-    [GeneratedRegex(@"^(\d+)\." + PyText.Space + "*")]
+    [GeneratedRegex(@"^(\d+)\." + TextUtils.Space + "*")]
     private static partial Regex TrackNumberRegex();
 
-    [GeneratedRegex(@"(?:^|[" + PyText.SpaceChars + @"_\-\.])(?:e|ep|episode|серия|с)" + PyText.Space + @"*(\d{1,4})(?=[" + PyText.SpaceChars + @"_\-\.\[\]\(\)]|$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?:^|[" + TextUtils.SpaceChars + @"_\-\.])(?:e|ep|episode|серия|с)" + TextUtils.Space + @"*(\d{1,4})(?=[" + TextUtils.SpaceChars + @"_\-\.\[\]\(\)]|$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex EpisodeMarkerRegex();
 
-    [GeneratedRegex(@"[" + PyText.SpaceChars + @"_\-]" + PyText.Space + @"*(\d{1,4})(?=" + PyText.Space + @"*(?:\[|\(|$|[" + PyText.SpaceChars + @"_\-\.]))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"[" + TextUtils.SpaceChars + @"_\-]" + TextUtils.Space + @"*(\d{1,4})(?=" + TextUtils.Space + @"*(?:\[|\(|$|[" + TextUtils.SpaceChars + @"_\-\.]))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex EpisodeAfterDashRegex();
 
     [GeneratedRegex(@"\[(\d{1,4})\]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex EpisodeInBracketsRegex();
 
-    [GeneratedRegex(PyText.Space + @"*[\[\(][^\]\)]*[\]\)]" + PyText.Space + "*$")]
+    [GeneratedRegex(TextUtils.Space + @"*[\[\(][^\]\)]*[\]\)]" + TextUtils.Space + "*$")]
     private static partial Regex TrailingTagRegex();
 
-    [GeneratedRegex(@"[" + PyText.SpaceChars + @"\-_.]+0*(\d{1,4})$")]
+    [GeneratedRegex(@"[" + TextUtils.SpaceChars + @"\-_.]+0*(\d{1,4})$")]
     private static partial Regex TrailingNumberRegex();
 
     [GeneratedRegex(@"[\[\(]([^\]\)]+)[\]\)]")]

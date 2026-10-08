@@ -105,7 +105,7 @@ public static partial class SubtitleShift
         }
     }
 
-    private static long Int(string s) => (long)PyText.ParseInt(s);
+    private static long Int(string s) => (long)TextUtils.ParseInt(s);
 
     private static (string, string, string) Split3(string time, char separator)
     {
@@ -113,7 +113,7 @@ public static partial class SubtitleShift
         return parts.Length == 3 ? (parts[0], parts[1], parts[2]) : throw new FormatException($"Не время: {time}");
     }
 
-    [GeneratedRegex(@"(\d{2}:\d{2}:\d{2},\d{3})" + PyText.Space + "*-->" + PyText.Space + @"*(\d{2}:\d{2}:\d{2},\d{3})")]
+    [GeneratedRegex(@"(\d{2}:\d{2}:\d{2},\d{3})" + TextUtils.Space + "*-->" + TextUtils.Space + @"*(\d{2}:\d{2}:\d{2},\d{3})")]
     private static partial Regex SrtTimesRegex();
 
     [GeneratedRegex(@"Dialogue: (\d+,)(\d:\d{2}:\d{2}\.\d{2}),(\d:\d{2}:\d{2}\.\d{2}),(.*)")]

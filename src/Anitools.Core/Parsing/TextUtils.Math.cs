@@ -1,7 +1,7 @@
 namespace Anitools.Core.Parsing;
 
 /// <summary>Арифметика с плавающей точкой «как в CPython» — чтобы расчёты битрейта совпадали до бита.</summary>
-internal static partial class PyText
+internal static partial class TextUtils
 {
     /// <summary>
     /// sum() по числам с плавающей точкой: с Python 3.12 — компенсированное суммирование Ноймайера

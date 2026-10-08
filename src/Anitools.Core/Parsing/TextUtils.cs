@@ -10,7 +10,7 @@ namespace Anitools.Core.Parsing;
 /// splitext/stem, порядок сортировки. Проверено на всём диапазоне Unicode (Python 3.13):
 /// \w = [\p{L}\p{N}_], \d = \p{Nd}, isalnum() = буква или цифра любого вида.
 /// </summary>
-internal static partial class PyText
+internal static partial class TextUtils
 {
     // ── Фрагменты для регулярок .NET ──
     // \w в Python: буква или цифра любого вида (L*, N*) или '_'.

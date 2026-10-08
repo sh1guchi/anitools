@@ -13,7 +13,7 @@ public static partial class LanguageGuess
     /// </summary>
     public static string? Detect(string? text)
     {
-        var low = PyText.Lower(text ?? "");
+        var low = TextUtils.Lower(text ?? "");
         if (Japanese.Any(k => low.Contains(k, StringComparison.Ordinal)) || JpWordRegex().IsMatch(low))
         {
             return "jpn";
@@ -27,9 +27,9 @@ public static partial class LanguageGuess
         return null;
     }
 
-    [GeneratedRegex(PyText.WordStart + "jp" + PyText.WordEnd, RegexOptions.CultureInvariant)]
+    [GeneratedRegex(TextUtils.WordStart + "jp" + TextUtils.WordEnd, RegexOptions.CultureInvariant)]
     private static partial Regex JpWordRegex();
 
-    [GeneratedRegex(PyText.WordStart + "eng?" + PyText.WordEnd, RegexOptions.CultureInvariant)]
+    [GeneratedRegex(TextUtils.WordStart + "eng?" + TextUtils.WordEnd, RegexOptions.CultureInvariant)]
     private static partial Regex EngWordRegex();
 }

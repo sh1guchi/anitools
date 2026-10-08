@@ -1,9 +1,6 @@
 {
   "function": "process_output_filename",
   "description": "Имя выходного файла в п.1–4: '_' → пробел (py:1113)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "output": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv"},
     {"input": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv", "output": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv"},

@@ -31,7 +31,7 @@ public sealed partial record ShikimoriQuery(IReadOnlyList<string> Kinds, string 
     public static IReadOnlyList<string> SearchVariants(string query)
     {
         var variants = new List<string> { query };
-        var plain = PyText.Strip(SpaceRunRegex().Replace(PunctuationRegex().Replace(query, " "), " "));
+        var plain = TextUtils.Strip(SpaceRunRegex().Replace(PunctuationRegex().Replace(query, " "), " "));
         if (plain != query)
         {
             variants.Add(plain);
@@ -68,12 +68,12 @@ public sealed partial record ShikimoriQuery(IReadOnlyList<string> Kinds, string 
     }
 
     // \s+(OVA|ONA|Special|Movie)$
-    [GeneratedRegex(@"[" + PyText.SpaceChars + @"]+(OVA|ONA|Special|Movie)$", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"[" + TextUtils.SpaceChars + @"]+(OVA|ONA|Special|Movie)$", RegexOptions.CultureInvariant)]
     private static partial Regex SpecialSuffixRegex();
 
     [GeneratedRegex(@"[!?:;,.'""~()\[\]]", RegexOptions.CultureInvariant)]
     private static partial Regex PunctuationRegex();
 
-    [GeneratedRegex(@"[" + PyText.SpaceChars + @"]+", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"[" + TextUtils.SpaceChars + @"]+", RegexOptions.CultureInvariant)]
     private static partial Regex SpaceRunRegex();
 }

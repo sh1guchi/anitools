@@ -1,9 +1,6 @@
 {
   "function": "subtitle_track_by_title",
   "description": "Дорожка субтитров серии по тайтлу эталона (py:2798) → [id, ext] | null",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "fixtures": {
     "ru_signs_full_en": [[2, {"id": 2, "name": "Надписи", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [3, {"id": 3, "name": "Полные", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [4, {"id": 4, "name": "English", "codec_id": "S_TEXT/UTF8", "language": "eng", "language_ietf": "en"}]],
     "other_order": [[3, {"id": 3, "name": "Полные", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [4, {"id": 4, "name": "Надписи [Studio]", "codec_id": "S_TEXT/ASS", "language": "rus", "language_ietf": "ru"}], [5, {"id": 5, "name": "English", "codec_id": "S_HDMV/PGS", "language": "eng", "language_ietf": "en"}]],

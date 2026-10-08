@@ -1,17 +1,11 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using Anitools.Tests.Shared;
 
 namespace Anitools.Core.Tests;
 
-/// <summary>
-/// Эталон из Golden/*.json — ответы оригинала reference/python/anitools.py,
-/// снятые tools/gen_golden.py. Формат описан в Golden/README.md.
-/// </summary>
+/// <summary>Эталон из Golden/*.json — входы и ожидаемые ответы. Формат описан в Golden/README.md.</summary>
 internal sealed class GoldenFile
 {
-    public const string ReferenceSource = "reference/python/anitools.py";
-
     private GoldenFile(string name, JsonElement root, IReadOnlyList<GoldenCase> cases)
     {
         Name = name;
@@ -48,28 +42,7 @@ internal sealed class GoldenFile
             .ToList();
         return new GoldenFile(name, root, cases);
     }
-
-    /// <summary>SHA-256 оригинала с переводами строк LF — так же, как считает gen_golden.py.</summary>
-    public static string ReferenceSha256() => Sha256Of(ReferenceSource);
-
-    /// <summary>SHA-256 файла репозитория (путь через «/») с переводами строк LF.</summary>
-    public static string Sha256Of(string relativePath)
-    {
-        var bytes = File.ReadAllBytes(RepoRoot.Combine(relativePath.Split('/')));
-        var lf = new List<byte>(bytes.Length);
-        for (var i = 0; i < bytes.Length; i++)
-        {
-            if (bytes[i] == (byte)'\r' && i + 1 < bytes.Length && bytes[i + 1] == (byte)'\n')
-            {
-                continue;
-            }
-
-            lf.Add(bytes[i]);
-        }
-
-        return Convert.ToHexStringLower(SHA256.HashData(lf.ToArray()));
-    }
 }
 
-/// <summary>Один случай: вход и либо ответ, либо имя исключения Python (ValueError…).</summary>
+/// <summary>Один случай: вход и либо ответ, либо имя ошибки (ValueError — неверный ввод и т.п.).</summary>
 internal sealed record GoldenCase(JsonElement Input, JsonElement? Output, string? Error, JsonElement Raw);

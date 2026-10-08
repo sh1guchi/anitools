@@ -1,9 +1,10 @@
 # anitools
 
-Перенос anitools (Python + rich, консоль) на C# с GUI на Avalonia.
+Программа для Windows, которая готовит аниме-релизы из папки с сериями: ремукс и дорожки, сборка озвучек
+в .mka, субтитры и шрифты, HLS для сайта (360p…4K в zip), хардсаб, сдвиги звука и субтитров, переименование
+серий по шаблонам. Наберите `ani` в консоли в папке с сериями — anitools откроется на ней.
 
-- План и полное описание поведения: [docs/PLAN.md](docs/PLAN.md)
-- Оригинал (не менять): [reference/python/](reference/python/)
+- Устройство программы и принятые решения: [docs/PLAN.md](docs/PLAN.md)
 
 ![anitools](docs/screenshots/main-window.png)
 
@@ -45,13 +46,13 @@
 |---|---|
 | `src/Anitools.Core` | вся логика, без UI (.NET 10) |
 | `src/Anitools.App` | GUI на Avalonia, собирается в `Anitools.exe` |
-| `tests/Anitools.Core.Tests` | тесты ядра + golden-эталоны из оригинала (`Golden/`) |
+| `tests/Anitools.Core.Tests` | тесты ядра + эталоны: входы и ожидаемые ответы (`Golden/`) |
 | `tests/Anitools.App.Tests` | headless-тесты окон и скриншоты |
-| `tools/gen_golden.py` | снимает эталоны с `reference/python/anitools.py` |
+| `installer`, `tools/windows` | установщик (Inno Setup), сборка exe и проверка установки |
 
 ## Сборка и тесты
 
-Нужен .NET 10 SDK (и Python 3.11+ — только для перегенерации эталонов).
+Нужен .NET 10 SDK.
 
 ```bash
 dotnet build
@@ -66,13 +67,8 @@ dotnet run --project src/Anitools.App -- "D:\anime\Папка с сериями"
 ANITOOLS_UPDATE_SCREENSHOTS=1 dotnet test tests/Anitools.App.Tests
 ```
 
-Эталоны:
-
-```bash
-pip install fonttools==4.60.1        # нужен для эталонов шрифтов
-python3 tools/gen_golden.py          # перегенерировать
-python3 tools/gen_golden.py --check  # проверить, что актуальны
-```
+Эталоны в `tests/Anitools.Core.Tests/Golden/` — зафиксированные входы и ожидаемые ответы; меняются вместе
+с поведением программы (формат — в [Golden/README.md](tests/Anitools.Core.Tests/Golden/README.md)).
 
 ## Выпуск версии
 
@@ -83,13 +79,13 @@ python3 tools/gen_golden.py --check  # проверить, что актуаль
 
 ## Статус
 
-- [x] Этап 1 — скелет решения, пустое окно, golden-эталоны
+- [x] Этап 1 — скелет решения, пустое окно, эталоны
 - [x] Этап 2 — чистая логика (anitomy, номера серий, названия…)
 - [x] Этап 3 — запуск ffmpeg/MKVToolNix, разбор медиа, операции «Только видео», «Только аудио», «Обработка аудио», «Субтитры», «Ремукс»
 - [x] Этап 4 — переименование по номеру серии, поиск названия на Shikimori, откат переименования
 - [x] Этап 5 — HLS: 360p…4K в zip + озвучки, подбор качества, резюм, RAM-диск ImDisk
 - [x] Этап 6 — доп. инструменты: сборка озвучек в .mka, шрифты для .ass и из видео, хардсаб, сдвиги, чистка .ass, перекодирование аудио
-- [x] Этап 7 — GUI: все экраны (п.1–7 и доп. инструменты), очередь задач, настройки, запуск командой `ani`,
+- [x] Этап 7 — GUI: все экраны, очередь задач, настройки, запуск командой `ani`,
   скриншоты — в [docs/screenshots/](docs/screenshots/)
 - [x] После этапа 7 — оформление как у Anime Uploader, всплывающие уведомления, запуск exe ≈ втрое быстрее
   (ReadyToRun), AVI в обычном ремуксе

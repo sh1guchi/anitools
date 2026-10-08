@@ -61,7 +61,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
 
     /// <summary>Все .ass папки (без учёта регистра расширения), по порядку sorted(Path) на Windows.</summary>
     public static IReadOnlyList<string> ListAssFiles(string folder) =>
-        [.. MediaFiles.List(folder, [".ass"]).OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, [".ass"]).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 
     public async Task<FontsCollectResult> CollectAsync(IReadOnlyList<string> assFiles, FontsCollectOptions options, CancellationToken cancellationToken = default)
     {
@@ -90,7 +90,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
             }
         }
 
-        var fontNames = unique.Values.OrderBy(PyText.CaseFold, PyText.CodePointComparer).ToList();
+        var fontNames = unique.Values.OrderBy(TextUtils.CaseFold, TextUtils.CodePointComparer).ToList();
         if (fontNames.Count == 0)
         {
             return new FontsCollectResult(null, [], [], [], [], run.Log);
@@ -273,7 +273,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
                     return;
                 }
 
-                var (stem, ext) = PyText.SplitExt(fileName);
+                var (stem, ext) = TextUtils.SplitExt(fileName);
                 var n = 2;
                 while (Fonts.Any(f => f.Name == $"{stem}_{n}{ext}"))
                 {
@@ -304,7 +304,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
                 {
                 }
 
-                output = Path.Combine(options.CustomDir, $"{PyText.Stem(fileName)}_{n}{MediaFiles.Suffix(fileName)}");
+                output = Path.Combine(options.CustomDir, $"{TextUtils.Stem(fileName)}_{n}{MediaFiles.Suffix(fileName)}");
             }
 
             try
@@ -371,7 +371,7 @@ public sealed class FontIndex
                     Add(_byFamily, n, file);
                 }
 
-                Add(_byStem, FontText.Normalize(PyText.Stem(Path.GetFileName(file))), file);
+                Add(_byStem, FontText.Normalize(TextUtils.Stem(Path.GetFileName(file))), file);
             }
         }
     }
@@ -405,7 +405,7 @@ public sealed class FontIndex
         var pb = b.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
         for (var i = 0; i < Math.Min(pa.Length, pb.Length); i++)
         {
-            var c = PyText.CompareCodePoints(PyText.Lower(pa[i]), PyText.Lower(pb[i]));
+            var c = TextUtils.CompareCodePoints(TextUtils.Lower(pa[i]), TextUtils.Lower(pb[i]));
             if (c != 0)
             {
                 return c;

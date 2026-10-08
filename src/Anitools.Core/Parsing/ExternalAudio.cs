@@ -17,7 +17,7 @@ public static class ExternalAudio
         {
             if (cand.StartsWith(baseName, StringComparison.Ordinal) && cand.Length > baseName.Length
                 && Rune.DecodeFromUtf16(cand.AsSpan(baseName.Length), out var next, out _) == OperationStatus.Done
-                && !PyText.IsAlnum(next))
+                && !TextUtils.IsAlnum(next))
             {
                 return true;
             }

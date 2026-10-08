@@ -1,9 +1,6 @@
 {
   "function": "sub_shift_times",
   "description": "Сдвиг одной метки времени SRT/ASS (subtitle_delay+1s.py: shift_time_srt/ass)",
-  "source": "reference/python/extra/subtitle_delay+1s.py",
-  "source_sha256": "4a58ab757dad9a4ec9ad7b13bfa7eaa5b7e9b50e198aff99551778e6e239d4bf",
-  "python": "3.13.16",
   "cases": [
     {"input": {"kind": "srt", "time": "00:00:01,000", "shift": 1.0}, "output": "00:00:02,000"},
     {"input": {"kind": "srt", "time": "00:00:01,000", "shift": -1.0}, "output": "00:00:00,000"},

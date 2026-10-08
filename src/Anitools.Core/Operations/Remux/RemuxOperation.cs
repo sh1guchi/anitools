@@ -34,7 +34,7 @@ public static class RemuxOperation
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
-            var output = Path.Combine(outputFolder, PyText.Stem(name) + ext);
+            var output = Path.Combine(outputFolder, TextUtils.Stem(name) + ext);
             if (MediaFiles.IsDone(output))
             {
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже конвертирован", Outputs = [output] };

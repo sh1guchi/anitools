@@ -28,12 +28,12 @@ public sealed class VideoFontsOperation(IProcessRunner runner, ToolPaths tools, 
 
     /// <summary>Шрифт ли вложение: тип содержит «font» или расширение шрифта.</summary>
     public static bool IsFont(MkvAttachment attachment) =>
-        PyText.Lower(attachment.ContentType).Contains("font", StringComparison.Ordinal)
-        || FontExtensions.Contains(MediaFiles.Suffix(PyText.Lower(attachment.FileName)), StringComparer.Ordinal);
+        TextUtils.Lower(attachment.ContentType).Contains("font", StringComparison.Ordinal)
+        || FontExtensions.Contains(MediaFiles.Suffix(TextUtils.Lower(attachment.FileName)), StringComparer.Ordinal);
 
     /// <summary>Видео папки — по порядку sorted(Path) оригинала (имена в нижнем регистре по кодам символов).</summary>
     public static IReadOnlyList<string> ListVideos(string folder) =>
-        [.. MediaFiles.List(folder, VideoExtensions).OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, VideoExtensions).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 
     public async Task<VideoFontsResult> ExecuteAsync(string folder, IProgress<(int Index, int Count, string Video)>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -78,7 +78,7 @@ public sealed class VideoFontsOperation(IProcessRunner runner, ToolPaths tools, 
                     var result = await runner.RunAsync(new ProcessSpec(mkvextract, args), cancellationToken).ConfigureAwait(false);
                     if (result.ExitCode > 1 || !File.Exists(tmp))
                     {
-                        logs.WriteProcessError(PyText.Stem(Path.GetFileName(video)), result.StandardOutput + "\n" + result.StandardErrorTail, [mkvextract, .. args], result.ExitCode);
+                        logs.WriteProcessError(TextUtils.Stem(Path.GetFileName(video)), result.StandardOutput + "\n" + result.StandardErrorTail, [mkvextract, .. args], result.ExitCode);
                         errors.Add((video, $"не удалось извлечь {attachment.FileName} (id={attachment.Id})"));
                         continue;
                     }

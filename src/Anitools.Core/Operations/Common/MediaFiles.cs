@@ -22,7 +22,7 @@ public static class MediaFiles
     }
 
     /// <summary>Path(name).suffix из Python: «.mkv», у «.mkv» и «x.» — пусто.</summary>
-    public static string Suffix(string name) => name[PyText.Stem(name).Length..];
+    public static string Suffix(string name) => name[TextUtils.Stem(name).Length..];
 
     /// <summary>name.rsplit('.', 1)[0] — имя без последнего расширения, как в п.2–4.</summary>
     public static string WithoutLastExtension(string name)

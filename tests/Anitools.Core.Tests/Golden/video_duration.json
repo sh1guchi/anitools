@@ -1,9 +1,6 @@
 {
   "function": "video_duration",
   "description": "Длительность (py:2235): ffprobe format=duration → ffmpeg 'Duration:' → 3600",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": {"stdout": "1425.024000\n", "stderr": ""}, "commands": [["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": 1425.024},
     {"input": {"stdout": "  23.976  \n", "stderr": ""}, "commands": [["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "D:\\anime\\Sousou no Frieren\\[SubsPlease] Sousou no Frieren - 01 (1080p).mkv"]], "output": 23.976},

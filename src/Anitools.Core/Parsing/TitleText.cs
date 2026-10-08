@@ -9,7 +9,7 @@ namespace Anitools.Core.Parsing;
 /// </summary>
 public static partial class TitleText
 {
-    private const string S = PyText.SpaceChars;
+    private const string S = TextUtils.SpaceChars;
 
     /// <summary>Тип релиза из anitomy → метка группы (_SPECIAL_LABELS): OVA/ONA/спешлы/фильмы идут отдельным тайтлом.</summary>
     public static IReadOnlyDictionary<string, string> SpecialLabels { get; } = new Dictionary<string, string>
@@ -44,18 +44,18 @@ public static partial class TitleText
         var title = Anitomy.Parse(filename).AnimeTitle;
         if (!string.IsNullOrEmpty(title))
         {
-            return PyText.Strip(title);
+            return TextUtils.Strip(title);
         }
 
-        var stem = PyText.Strip(BracketedRegex().Replace(PyText.Stem(filename), ""));
+        var stem = TextUtils.Strip(BracketedRegex().Replace(TextUtils.Stem(filename), ""));
         var m = TitleBeforeDashNumberRegex().Match(stem);
         if (m.Success)
         {
-            return PyText.Strip(m.Groups[1].Value);
+            return TextUtils.Strip(m.Groups[1].Value);
         }
 
         m = TitleBeforeTrailingNumberRegex().Match(stem);
-        return m.Success ? PyText.Strip(m.Groups[1].Value) : PyText.Strip(stem);
+        return m.Success ? TextUtils.Strip(m.Groups[1].Value) : TextUtils.Strip(stem);
     }
 
     /// <summary>Название группы для HLS (_parse_anime_group, py:2425): тайтл + « OVA» / « Movie» / …, если файл — спешл.</summary>
@@ -63,7 +63,7 @@ public static partial class TitleText
     {
         var title = AnimeTitle(filename);
         var type = Anitomy.Parse(filename).AnimeType ?? "";
-        return SpecialLabels.TryGetValue(PyText.Lower(type), out var kind) && title.Length > 0 ? $"{title} {kind}" : title;
+        return SpecialLabels.TryGetValue(TextUtils.Lower(type), out var kind) && title.Length > 0 ? $"{title} {kind}" : title;
     }
 
     /// <summary>Номер сезона по названию (_title_season, py:496): «X 2», «X Season 3», «X 2nd Season», «X III»; иначе 1.</summary>
@@ -71,7 +71,7 @@ public static partial class TitleText
     {
         var n = (name ?? "").Split(": ")[0];
         n = SeasonPartSuffixRegex().Replace(n, "");
-        n = PyText.Strip(SeasonKindSuffixRegex().Replace(n, ""));
+        n = TextUtils.Strip(SeasonKindSuffixRegex().Replace(n, ""));
         var m = SeasonWordRegex().Match(n);
         if (!m.Success)
         {
@@ -85,7 +85,7 @@ public static partial class TitleText
 
         if (m.Success)
         {
-            return (int)PyText.ParseInt(m.Groups[1].Value);
+            return (int)TextUtils.ParseInt(m.Groups[1].Value);
         }
 
         m = RomanSeasonSuffixRegex().Match(n);
@@ -98,16 +98,16 @@ public static partial class TitleText
     /// </summary>
     public static string CleanForSearch(string title)
     {
-        title = PyText.Strip(CleanPtRegex().Replace(title, ""));
-        title = PyText.Strip(CleanPartRegex().Replace(title, ""));
-        title = PyText.Strip(CleanSeasonRegex().Replace(title, ""));
-        title = PyText.Strip(CleanOrdinalSeasonRegex().Replace(title, ""));
-        title = PyText.Strip(CleanRomanRegex().Replace(title, ""));
-        return PyText.Strip(CleanArabicRegex().Replace(title, ""));
+        title = TextUtils.Strip(CleanPtRegex().Replace(title, ""));
+        title = TextUtils.Strip(CleanPartRegex().Replace(title, ""));
+        title = TextUtils.Strip(CleanSeasonRegex().Replace(title, ""));
+        title = TextUtils.Strip(CleanOrdinalSeasonRegex().Replace(title, ""));
+        title = TextUtils.Strip(CleanRomanRegex().Replace(title, ""));
+        return TextUtils.Strip(CleanArabicRegex().Replace(title, ""));
     }
 
     /// <summary>Нормализация для сравнения названий (_norm_title, py:510): нижний регистр, всё кроме букв и цифр → пробел.</summary>
-    public static string Normalize(string? s) => PyText.Strip(NotAlnumRunRegex().Replace(PyText.Lower(s ?? ""), " "));
+    public static string Normalize(string? s) => TextUtils.Strip(NotAlnumRunRegex().Replace(TextUtils.Lower(s ?? ""), " "));
 
     /// <summary>Название для имени файла Windows (_filename_safe_title, py:657): «X 2: Sub» → «X 2 - Sub», «Re:Zero» → «Re Zero».</summary>
     public static string FileNameSafe(string name)
@@ -118,7 +118,7 @@ public static partial class TitleText
     }
 
     /// <summary>Имя папки тайтла/серии/озвучки в HLS (_sanitize_folder, py:3779): \/:*?"&lt;&gt;| → _, пробелы по краям — прочь.</summary>
-    public static string SanitizeFolder(string name) => PyText.Strip(HlsForbiddenRegex().Replace(name, "_"));
+    public static string SanitizeFolder(string name) => TextUtils.Strip(HlsForbiddenRegex().Replace(name, "_"));
 
     /// <summary>
     /// Имя папки дорожки в «Только аудио» (sanitize_folder_name, py:1188): запрещённые и управляющие → _,
@@ -126,7 +126,7 @@ public static partial class TitleText
     /// </summary>
     public static string SanitizeTrackFolder(string name)
     {
-        var clean = PyText.Strip(TrackForbiddenRegex().Replace(name, "_")).Trim('.');
+        var clean = TextUtils.Strip(TrackForbiddenRegex().Replace(name, "_")).Trim('.');
         return clean.Length > 0 ? clean : "audio_track";
     }
 
@@ -151,10 +151,10 @@ public static partial class TitleText
     [GeneratedRegex(@"[" + S + @"]+(?:OVA|ONA|Movie|Specials?)[" + S + @"]*$", I)]
     private static partial Regex SeasonKindSuffixRegex();
 
-    [GeneratedRegex(PyText.WordStart + @"Seasons?[" + S + @"]*(\d{1,2})" + PyText.WordEnd, I)]
+    [GeneratedRegex(TextUtils.WordStart + @"Seasons?[" + S + @"]*(\d{1,2})" + TextUtils.WordEnd, I)]
     private static partial Regex SeasonWordRegex();
 
-    [GeneratedRegex(PyText.WordStart + @"(\d{1,2})(?:st|nd|rd|th)[" + S + @"]+Season" + PyText.WordEnd, I)]
+    [GeneratedRegex(TextUtils.WordStart + @"(\d{1,2})(?:st|nd|rd|th)[" + S + @"]+Season" + TextUtils.WordEnd, I)]
     private static partial Regex OrdinalSeasonRegex();
 
     [GeneratedRegex(@"[" + S + @"](\d{1,2})$", C)]

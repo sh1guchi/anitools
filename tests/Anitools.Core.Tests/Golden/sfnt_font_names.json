@@ -1,9 +1,6 @@
 {
   "function": "sfnt_font_names",
   "description": "Имена и начертание из таблицы name, кириллица в cmap (ass_fonts.py: read_font_names, face_info, has_cyrillic через fontTools); вход — байты в base64",
-  "source": "reference/python/extra/ass_fonts.py",
-  "source_sha256": "ef2ba8381e6a31c6560f76716cee93cbb1045a7ffc258044adb14d8fa23c11f8",
-  "python": "3.13.16",
   "cases": [
     {"input": {"name": "arial_cyr", "ext": ".ttf", "base64": "AAEAAAADACAAAQAQY21hcAAAAAAAAAA8AAAARG1heHAAAAAAAAAAgAAAAAZuYW1lAAAAAAAAAIgAAACBAAAAAQADAAEAAAAMAAQAOAAAAAoACAACAAIAQQBhBBYENv//AAAAQQBhBBYENv///8D/ofvt+84AAQAAAAAAAAAAAAAAAFAAAAUAAAAAAAUAQgADAAEECQABAAoAAAADAAEECQAEAAoACgADAAEECQAGAA4AFAADAAEECQAFABgAIgABAAAAAAABAAUAOgBBAHIAaQBhAGwAQQByAGkAYQBsAEEAcgBpAGEAbABNAFQAVgBlAHIAcwBpAG8AbgAgADcALgAwADBBcmlhbAAAAA=="}, "output": {"primary": ["arial", "arialmt"], "fallback": [], "face": "arialmt", "version": 7.0, "cyrillic": true}},
     {"input": {"name": "arial_old_latin", "ext": ".ttf", "base64": "AAEAAAADACAAAQAQY21hcAAAAAAAAAA8AAAANG1heHAAAAAAAAAAcAAAAAZuYW1lAAAAAAAAAHgAAABwAAAAAQADAAEAAAAMAAQAKAAAAAYABAABAAIAQQBh//8AAABBAGH////A/6EAAQAAAAAAAAAAUAAAAwAAAAAABAA2AAMAAQQJAAEACgAAAAMAAQQJAAQACgAKAAMAAQQJAAYADgAUAAMAAQQJAAUAGAAiAEEAcgBpAGEAbABBAHIAaQBhAGwAQQByAGkAYQBsAE0AVABWAGUAcgBzAGkAbwBuACAANgAuADkAMA=="}, "output": {"primary": ["arial", "arialmt"], "fallback": [], "face": "arialmt", "version": 6.9, "cyrillic": false}},

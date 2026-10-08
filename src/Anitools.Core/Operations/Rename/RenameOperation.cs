@@ -84,7 +84,7 @@ public static partial class RenameOperation
             .Select(Path.GetFileName)
             .OfType<string>()
             .Where(n => !n.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
-            .Order(PyText.CodePointComparer)
+            .Order(TextUtils.CodePointComparer)
             .ToList();
 
     /// <summary>Подсказка для поиска на Shikimori: тайтл из первого видео (если видео нет — из первого файла).</summary>
@@ -93,7 +93,7 @@ public static partial class RenameOperation
         var videos = files.Where(f => HintVideoExtensions.Contains(MediaFiles.Suffix(f), StringComparer.OrdinalIgnoreCase)).ToList();
         var first = (videos.Count > 0 ? videos : files)[0];
         var title = TitleText.AnimeTitle(first);
-        return title.Length > 0 ? title : PyText.Stem(first);
+        return title.Length > 0 ? title : TextUtils.Stem(first);
     }
 
     /// <summary>Сезон из имён видео («S2», «2nd Season» — как его видит anitomy), если он есть; иначе пусто.</summary>
@@ -117,8 +117,8 @@ public static partial class RenameOperation
 
         try
         {
-            var adjusted = PyText.ParseInt(raw) - (numberingStart - 1);
-            return adjusted > 0 ? PyText.Pad2(adjusted) : null;
+            var adjusted = TextUtils.ParseInt(raw) - (numberingStart - 1);
+            return adjusted > 0 ? TextUtils.Pad2(adjusted) : null;
         }
         catch (FormatException)
         {
@@ -183,7 +183,7 @@ public static partial class RenameOperation
                 continue;
             }
 
-            var (stem, ext) = PyText.SplitExt(file);
+            var (stem, ext) = TextUtils.SplitExt(file);
             AnitomyResult? parsed = null;
             var info = media.TryGetValue(file, out var own) && own.VideoStreams.Count > 0 ? own
                 : episode is not null && episodeMedia.TryGetValue(episode, out var video) ? video
@@ -257,7 +257,7 @@ public static partial class RenameOperation
 
         try
         {
-            return PyText.Pad2(PyText.ParseInt(typed));
+            return TextUtils.Pad2(TextUtils.ParseInt(typed));
         }
         catch (FormatException)
         {

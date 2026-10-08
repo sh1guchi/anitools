@@ -6,7 +6,7 @@ using System.Collections.Frozen;
 
 namespace Anitools.Core.Parsing;
 
-internal static partial class PyText
+internal static partial class TextUtils
 {
     /// <summary>Символы, у которых str.casefold() отличается от str.lower().</summary>
     private static readonly FrozenDictionary<int, string> CaseFoldExceptions = new Dictionary<int, string>

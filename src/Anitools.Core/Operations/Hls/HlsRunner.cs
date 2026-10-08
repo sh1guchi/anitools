@@ -178,7 +178,7 @@ public sealed class HlsEpisodeProcessor(IProcessRunner runner, ToolPaths tools, 
 
         private string Source => episode.Source.Path;
 
-        private string LogPrefix => PyText.Stem(episode.Source.Name);
+        private string LogPrefix => TextUtils.Stem(episode.Source.Name);
 
         public async Task<HlsEpisodeResult> ExecuteAsync()
         {

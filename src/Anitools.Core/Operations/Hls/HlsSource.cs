@@ -37,7 +37,7 @@ public sealed class AudioLayout : IEquatable<AudioLayout>
     public string Key { get; }
 
     public static AudioLayout Of(IReadOnlyList<HlsAudioTrack> tracks) =>
-        new([.. tracks.Select(t => (PyText.Lower(PyText.Strip(t.Title)), PyText.Lower(t.Language)))]);
+        new([.. tracks.Select(t => (TextUtils.Lower(TextUtils.Strip(t.Title)), TextUtils.Lower(t.Language)))]);
 
     public bool Equals(AudioLayout? other) => other is not null && Key == other.Key;
 
@@ -138,7 +138,7 @@ public static class VoiceAssignment
                 continue;
             }
 
-            var folder = TitleText.SanitizeFolder(PyText.Strip(name));
+            var folder = TitleText.SanitizeFolder(TextUtils.Strip(name));
             if (folder.Length == 0)
             {
                 folder = $"Track{track.Index + 1}";

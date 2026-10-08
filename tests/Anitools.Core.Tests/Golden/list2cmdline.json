@@ -1,9 +1,6 @@
 {
   "function": "list2cmdline",
   "description": "Командная строка для логов ошибок (subprocess.list2cmdline, py:846)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": ["ffmpeg", "-nostdin", "-y", "-i", "D:\\anime\\Sousou no Frieren\\Frieren - 01.mkv", "-map", "0:v:0"], "output": "ffmpeg -nostdin -y -i \"D:\\anime\\Sousou no Frieren\\Frieren - 01.mkv\" -map 0:v:0"},
     {"input": ["mkvextract", "tracks", "D:\\a b\\x.mkv", "3:D:\\a b\\надписи\\x.надписи.ass"], "output": "mkvextract tracks \"D:\\a b\\x.mkv\" \"3:D:\\a b\\надписи\\x.надписи.ass\""},

@@ -1,9 +1,6 @@
 {
   "function": "external_audio_matches",
   "description": "Внешний аудиофайл относится к серии base (py:1707)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
   "cases": [
     {"input": {"filename": "Title - 05.AniLibria.TV.mka", "base_name": "Title - 05"}, "output": true},
     {"input": {"filename": "Title - 05.mka", "base_name": "Title - 05"}, "output": true},

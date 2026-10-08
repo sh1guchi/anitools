@@ -96,7 +96,7 @@ public static class MkaMuxOperation
             try
             {
                 var audio = (await probe.ProbeAsync(full, cancellationToken).ConfigureAwait(false)).AudioStreams;
-                var title = audio.Count > 0 && audio[0].Title is { } t && PyText.Strip(t).Length > 0 ? PyText.Strip(t) : null;
+                var title = audio.Count > 0 && audio[0].Title is { } t && TextUtils.Strip(t).Length > 0 ? TextUtils.Strip(t) : null;
                 sources.Add(new MkaSource(rel, full, title, Math.Max(1, audio.Count)));
             }
             catch (MediaProbeException)
@@ -204,7 +204,7 @@ public static class MkaMuxOperation
         for (var input = 0; input < files.Count; input++)
         {
             var file = files[input];
-            var title = options.Titles is not null && options.Titles.TryGetValue(file.Label, out var t) && PyText.Strip(t).Length > 0 ? PyText.Strip(t) : file.Label;
+            var title = options.Titles is not null && options.Titles.TryGetValue(file.Label, out var t) && TextUtils.Strip(t).Length > 0 ? TextUtils.Strip(t) : file.Label;
             var language = options.Language is null
                 ? null
                 : LanguageGuess.Detect(file.Title ?? "") ?? LanguageGuess.Detect($"{file.Label} {title}") ?? DefaultLanguage(options.Language);
@@ -230,5 +230,5 @@ public static class MkaMuxOperation
         return args;
     }
 
-    private static string DefaultLanguage(string language) => PyText.Strip(language) is { Length: > 0 } l ? l : "rus";
+    private static string DefaultLanguage(string language) => TextUtils.Strip(language) is { Length: > 0 } l ? l : "rus";
 }

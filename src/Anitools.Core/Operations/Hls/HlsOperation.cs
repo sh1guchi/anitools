@@ -102,7 +102,7 @@ public static class HlsOperation
     /// по кодам символов («[Group] …» раньше «Hellsing …», в отличие от порядка NTFS в п.1–4).
     /// </summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
-        [.. MediaFiles.List(folder, Extensions).OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, Extensions).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 
     /// <summary>Видео верхнего уровня, их дорожки (ffprobe) и группы по тайтлам.</summary>
     /// <exception cref="PlanException">В папке нет видео.</exception>
@@ -208,19 +208,19 @@ public static class HlsOperation
     /// </summary>
     private static string EpisodeName(string fileName, HashSet<string> used)
     {
-        var name = TitleText.SanitizeFolder(PyText.Stem(fileName));
-        if (used.Contains(PyText.Lower(name)))
+        var name = TitleText.SanitizeFolder(TextUtils.Stem(fileName));
+        if (used.Contains(TextUtils.Lower(name)))
         {
-            name = TitleText.SanitizeFolder($"{PyText.Stem(fileName)}.{MediaFiles.Suffix(fileName).TrimStart('.')}");
+            name = TitleText.SanitizeFolder($"{TextUtils.Stem(fileName)}.{MediaFiles.Suffix(fileName).TrimStart('.')}");
         }
 
         var unique = name;
-        for (var n = 2; used.Contains(PyText.Lower(unique)); n++)
+        for (var n = 2; used.Contains(TextUtils.Lower(unique)); n++)
         {
             unique = $"{name}_{n}";
         }
 
-        used.Add(PyText.Lower(unique));
+        used.Add(TextUtils.Lower(unique));
         return unique;
     }
 }

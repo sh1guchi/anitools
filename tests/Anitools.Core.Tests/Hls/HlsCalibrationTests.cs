@@ -91,10 +91,10 @@ public sealed class HlsCalibrationTests
     public void Python_float_sum_is_compensated()
     {
         // Простое накопление дало бы 0: 1e100 «съедает» единицы
-        Assert.Equal(2.0, PyText.Sum([1e100, 1.0, -1e100, 1.0]));
-        Assert.Equal(0.30000000000000004, PyText.Sum([0.1, 0.2]));
-        Assert.Equal(2.0, PyText.FloorDiv(17.999999999999996, 6));
-        Assert.Equal(-1.0, PyText.FloorDiv(-0.5, 6));
+        Assert.Equal(2.0, TextUtils.Sum([1e100, 1.0, -1e100, 1.0]));
+        Assert.Equal(0.30000000000000004, TextUtils.Sum([0.1, 0.2]));
+        Assert.Equal(2.0, TextUtils.FloorDiv(17.999999999999996, 6));
+        Assert.Equal(-1.0, TextUtils.FloorDiv(-0.5, 6));
     }
 
     private static double[] Doubles(JsonElement list) => [.. list.EnumerateArray().Select(v => v.GetDouble())];

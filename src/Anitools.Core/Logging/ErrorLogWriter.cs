@@ -43,7 +43,7 @@ public sealed partial class ErrorLogWriter(string directory, Func<DateTime>? clo
         }
 
         text.Append("\n--- output (stdout+stderr, tail) ---\n");
-        var trimmed = PyText.Strip(output ?? "");
+        var trimmed = TextUtils.Strip(output ?? "");
         text.Append(trimmed.Length > 0 ? trimmed + "\n" : "(процесс не вывел ничего — возможно, был прерван снаружи)\n");
 
         try

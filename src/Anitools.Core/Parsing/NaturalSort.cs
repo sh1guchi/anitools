@@ -13,7 +13,7 @@ public static partial class NaturalSort
     public static (BigInteger? Number, string Lower) Key(string name)
     {
         var m = TrackNumberPrefixRegex().Match(name);
-        return (m.Success ? PyText.ParseInt(m.Value.Split('.')[0]) : null, PyText.Lower(name));
+        return (m.Success ? TextUtils.ParseInt(m.Value.Split('.')[0]) : null, TextUtils.Lower(name));
     }
 
     public static int Compare(string? a, string? b)
@@ -31,7 +31,7 @@ public static partial class NaturalSort
             return na is null ? 1 : nb is null ? -1 : na.Value.CompareTo(nb.Value);
         }
 
-        return PyText.CompareCodePoints(la, lb);
+        return TextUtils.CompareCodePoints(la, lb);
     }
 
     public static IComparer<string?> Comparer { get; } = Comparer<string?>.Create(Compare);
@@ -43,6 +43,6 @@ public static partial class NaturalSort
     public static string StripTrackNumber(string name) => TrackNumberPrefixRegex().Replace(name, "", 1);
 
     // ^\d+\.\s* — префикс номера дорожки, который пишет «Только аудио»: «2. Show - 01.Title.mka»
-    [GeneratedRegex(@"^\d+\.[" + PyText.SpaceChars + "]*", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^\d+\.[" + TextUtils.SpaceChars + "]*", RegexOptions.CultureInvariant)]
     private static partial Regex TrackNumberPrefixRegex();
 }

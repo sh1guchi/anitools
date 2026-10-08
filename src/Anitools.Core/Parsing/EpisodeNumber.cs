@@ -9,19 +9,19 @@ namespace Anitools.Core.Parsing;
 /// </summary>
 public static partial class EpisodeNumber
 {
-    private const string S = PyText.SpaceChars;
+    private const string S = TextUtils.SpaceChars;
 
     /// <summary>extract_episode_number_smart: Title.NN_MMM → anitomy → <see cref="ExtractAdvanced"/> → <see cref="ExtractBasic"/>.</summary>
     public static string? Extract(string filename)
     {
-        var basename = PyText.SplitExt(filename).Root;
+        var basename = TextUtils.SplitExt(filename).Root;
 
         // Приоритет 0: паттерн Title.NN_MMM (сезон/арк + серия) — например HunterHunter.11_001.
         // Без этого anitomy ошибочно берёт NN как номер серии
         var m = SeasonUnderscoreEpisodeRegex().Match(basename);
         if (m.Success)
         {
-            return PyText.Pad2(PyText.ParseInt(m.Groups[1].Value));
+            return TextUtils.Pad2(TextUtils.ParseInt(m.Groups[1].Value));
         }
 
         return FromAnitomy(filename) ?? ExtractAdvanced(filename) ?? ExtractBasic(filename);
@@ -30,7 +30,7 @@ public static partial class EpisodeNumber
     /// <summary>extract_episode_number_advanced: anitomy, затем наборы регулярок; номер должен быть больше 0.</summary>
     public static string? ExtractAdvanced(string filename)
     {
-        var basename = PyText.SplitExt(filename).Root.Replace(".надписи", "", StringComparison.Ordinal);
+        var basename = TextUtils.SplitExt(filename).Root.Replace(".надписи", "", StringComparison.Ordinal);
 
         if (FromAnitomy(filename) is { } fromAnitomy)
         {
@@ -42,7 +42,7 @@ public static partial class EpisodeNumber
             var m = regex.Match(basename);
             if (m.Success && handler(m) is { } n && n > 0)
             {
-                return PyText.Pad2(n);
+                return TextUtils.Pad2(n);
             }
         }
 
@@ -52,28 +52,28 @@ public static partial class EpisodeNumber
     /// <summary>extract_episode_number: старый список регулярок, затем первое число в имени.</summary>
     public static string? ExtractBasic(string filename)
     {
-        var basename = PyText.SplitExt(filename).Root.Replace(".надписи", "", StringComparison.Ordinal);
+        var basename = TextUtils.SplitExt(filename).Root.Replace(".надписи", "", StringComparison.Ordinal);
 
         foreach (var (regex, handler) in BasicPatterns)
         {
             var m = regex.Match(basename);
             if (m.Success && handler(m) is { } n)
             {
-                return PyText.Pad2(n);
+                return TextUtils.Pad2(n);
             }
         }
 
         // Fallback: первое число в имени файла
         var first = FirstNumberRegex().Match(basename);
-        return first.Success ? PyText.Pad2(PyText.ParseInt(first.Groups[1].Value)) : null;
+        return first.Success ? TextUtils.Pad2(TextUtils.ParseInt(first.Groups[1].Value)) : null;
     }
 
     private static string? FromAnitomy(string filename) =>
-        Anitomy.Parse(filename).EpisodeNumber is { Length: > 0 } ep ? PyText.Pad2(PyText.ParseInt(ep)) : null;
+        Anitomy.Parse(filename).EpisodeNumber is { Length: > 0 } ep ? TextUtils.Pad2(TextUtils.ParseInt(ep)) : null;
 
-    private static BigInteger Group(Match m, int group) => PyText.ParseInt(m.Groups[group].Value);
+    private static BigInteger Group(Match m, int group) => TextUtils.ParseInt(m.Groups[group].Value);
 
-    private static bool IsDecimal(string s) => s.Length > 0 && s.EnumerateRunes().All(r => PyText.DecimalDigitValue(r) >= 0);
+    private static bool IsDecimal(string s) => s.Length > 0 && s.EnumerateRunes().All(r => TextUtils.DecimalDigitValue(r) >= 0);
 
     private static readonly string[] Roman20 =
         ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];

@@ -191,7 +191,7 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
         }
 
         var processOutput = string.Join('\n', new[] { capturedText, result.StandardOutput, result.StandardErrorTail }.Where(s => !string.IsNullOrWhiteSpace(s)));
-        var log = logs.WriteProcessError(PyText.Stem(Path.GetFileName(item.Source)), processOutput, [exe, .. spec.Arguments], result.ExitCode);
+        var log = logs.WriteProcessError(TextUtils.Stem(Path.GetFileName(item.Source)), processOutput, [exe, .. spec.Arguments], result.ExitCode);
         DeleteOutputs(item);
         return new ItemResult(item, ItemOutcome.Failed, $"{command.Tool.ToString().ToLowerInvariant()} вернул код {result.ExitCode}", log);
     }

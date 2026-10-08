@@ -21,7 +21,7 @@ public sealed class MkaMuxTests
                 ["track_num"] = MkaNames.TrackNumber(name),
                 ["parse_episode"] = MkaNames.ParseEpisode(name),
                 ["episode_base"] = MkaNames.EpisodeBase(name),
-                ["natural_key"] = new object?[] { MkaNames.TrackNumber(name), PyText.Lower(name) },
+                ["natural_key"] = new object?[] { MkaNames.TrackNumber(name), TextUtils.Lower(name) },
             };
         });
 

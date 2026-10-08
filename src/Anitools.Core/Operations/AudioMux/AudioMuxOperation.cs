@@ -430,7 +430,7 @@ public static class AudioMuxOperation
         try
         {
             var titles = (await probe.ProbeAsync(path, ct).ConfigureAwait(false)).AudioStreams
-                .Select(s => PyText.Strip(s.Title ?? "")).ToList();
+                .Select(s => TextUtils.Strip(s.Title ?? "")).ToList();
             return titles.Count > 0 ? titles : [""];
         }
         catch (MediaProbeException)

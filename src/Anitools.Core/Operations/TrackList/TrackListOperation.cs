@@ -31,7 +31,7 @@ public static class TrackListOperation
 
     /// <summary>Файлы папки по sorted(os.listdir()) оригинала — по кодам символов.</summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
-        [.. MediaFiles.List(folder, Extensions).OrderBy(p => Path.GetFileName(p), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, Extensions).OrderBy(p => Path.GetFileName(p), TextUtils.CodePointComparer)];
 
     /// <summary>Аудиодорожки (probe_tracks): каналы — раскладка («5.1(side)»), иначе «N ch».</summary>
     public static IReadOnlyList<TrackRow> Rows(MediaInfo info) =>
@@ -89,7 +89,7 @@ public static class TrackListOperation
     /// <summary>Чья озвучка: язык дорожки, а если он не английский и не японский — догадка по тайтлу.</summary>
     public static VoiceGroup Group(TrackRow row)
     {
-        var language = PyText.Lower(row.Language ?? "");
+        var language = TextUtils.Lower(row.Language ?? "");
         var guessed = language switch
         {
             "eng" or "en" => "eng",

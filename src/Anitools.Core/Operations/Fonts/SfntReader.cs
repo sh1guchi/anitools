@@ -57,7 +57,7 @@ public static partial class SfntReader
     public static (string Face, double Version) FaceInfo(byte[] data)
     {
         var names = ReadNames(data, [4, 5, 6]);
-        var face = string.Join('|', (names[6].Count > 0 ? names[6] : names[4]).Order(PyText.CodePointComparer));
+        var face = string.Join('|', (names[6].Count > 0 ? names[6] : names[4]).Order(TextUtils.CodePointComparer));
         var versions = names[5].Select(v => VersionRegex().Match(v)).Where(m => m.Success)
             .Select(m => double.Parse(AsciiDigits(m.Groups[1].Value), NumberStyles.Float, CultureInfo.InvariantCulture));
         return (face, versions.DefaultIfEmpty(0.0).Max());
@@ -157,7 +157,7 @@ public static partial class SfntReader
                 continue;
             }
 
-            if (PyText.Strip(text).Length > 0)
+            if (TextUtils.Strip(text).Length > 0)
             {
                 set.Add(FontText.FontKey(text));
             }

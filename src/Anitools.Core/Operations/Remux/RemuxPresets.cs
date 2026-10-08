@@ -27,7 +27,7 @@ public static class RemuxPresets
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
-            var output = Path.Combine(folder, PyText.SplitExt(name).Root + ".mkv");
+            var output = Path.Combine(folder, TextUtils.SplitExt(name).Root + ".mkv");
             return MediaFiles.IsDone(output)
                 ? new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже есть .mkv", Outputs = [output] }
                 : new PlanItem

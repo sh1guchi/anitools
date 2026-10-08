@@ -61,7 +61,7 @@ public static class AssEditOperation
             }
         }
 
-        var values = examples.Keys.Order(PyText.CodePointComparer).Select(v => new AssFieldValue(v, examples[v])).ToList();
+        var values = examples.Keys.Order(TextUtils.CodePointComparer).Select(v => new AssFieldValue(v, examples[v])).ToList();
         return new AssEditInspection(folder, field, readable, values, unreadable);
     }
 
@@ -142,7 +142,7 @@ public static class AssEditOperation
         }
 
         var parts = line.Split(',');
-        return parts.Length > (int)field ? PyText.Strip(parts[(int)field]) : null;
+        return parts.Length > (int)field ? TextUtils.Strip(parts[(int)field]) : null;
     }
 
     /// <summary>Строки с их переводами («\r\n», «\n», «\r» или пусто у последней).</summary>

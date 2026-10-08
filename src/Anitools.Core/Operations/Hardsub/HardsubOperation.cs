@@ -57,8 +57,8 @@ public static class HardsubOperation
     {
         // sorted(Path(".").iterdir()) оригинала: имена в нижнем регистре по кодам символов
         var pairs = MediaFiles.List(folder, VideoExtensions)
-            .OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)
-            .Select(video => (Video: video, Ass: Path.Combine(folder, PyText.SplitExt(Path.GetFileName(video)).Root + ".ass")))
+            .OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)
+            .Select(video => (Video: video, Ass: Path.Combine(folder, TextUtils.SplitExt(Path.GetFileName(video)).Root + ".ass")))
             .Where(p => File.Exists(p.Ass))
             .ToList();
         if (pairs.Count == 0)
@@ -70,7 +70,7 @@ public static class HardsubOperation
         var items = pairs.Select(p =>
         {
             var name = Path.GetFileName(p.Video);
-            var (stem, ext) = PyText.SplitExt(name);
+            var (stem, ext) = TextUtils.SplitExt(name);
             var part = Path.Combine(OutputFolderName, $"{stem}.part{ext}"); // .part перед расширением — иначе ffmpeg не поймёт контейнер
             var output = Path.Combine(folder, OutputFolderName, name);
             List<string> args =

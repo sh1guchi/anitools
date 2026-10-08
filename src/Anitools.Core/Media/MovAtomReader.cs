@@ -150,7 +150,7 @@ public static class MovAtomReader
             }
         }
 
-        if (name is null && !string.IsNullOrEmpty(hdlrName) && !GenericHandlers.Contains(PyText.Lower(hdlrName)))
+        if (name is null && !string.IsNullOrEmpty(hdlrName) && !GenericHandlers.Contains(TextUtils.Lower(hdlrName)))
         {
             name = hdlrName;
         }
@@ -166,7 +166,7 @@ public static class MovAtomReader
             var size = BinaryPrimitives.ReadUInt16BigEndian(data);
             if (size > 0 && size <= data.Length - 4)
             {
-                var txt = PyText.Strip(Utf8.GetString(data, 4, size).Trim('\0'));
+                var txt = TextUtils.Strip(Utf8.GetString(data, 4, size).Trim('\0'));
                 if (txt.Length > 0)
                 {
                     return txt;
@@ -174,7 +174,7 @@ public static class MovAtomReader
             }
         }
 
-        var raw = PyText.Strip(Utf8.GetString(data).Trim('\0'));
+        var raw = TextUtils.Strip(Utf8.GetString(data).Trim('\0'));
         return raw.Length > 0 ? raw : null;
     }
 
@@ -189,7 +189,7 @@ public static class MovAtomReader
         if (data[0] == data.Length - 1 || (data[0] < data.Length && data[^1] != 0))
         {
             var length = Math.Min(data[0], data.Length - 1);
-            var txt = PyText.Strip(Utf8.GetString(data, 1, length));
+            var txt = TextUtils.Strip(Utf8.GetString(data, 1, length));
             if (txt.Length > 0)
             {
                 return txt;
@@ -198,7 +198,7 @@ public static class MovAtomReader
 
         var text = Utf8.GetString(data);
         var zero = text.IndexOf('\0', StringComparison.Ordinal);
-        var head = PyText.Strip(zero >= 0 ? text[..zero] : text);
+        var head = TextUtils.Strip(zero >= 0 ? text[..zero] : text);
         return head.Length > 0 ? head : null;
     }
 

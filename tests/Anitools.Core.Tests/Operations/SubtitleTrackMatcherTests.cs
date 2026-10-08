@@ -48,7 +48,7 @@ public sealed class SubtitleTrackMatcherTests
     [Fact]
     public void Languages_match_original() =>
         GoldenAssert.All("sub_langs", input =>
-            SubtitleTrackMatcher.Languages(Track(0, input)).Order(PyText.CodePointComparer).ToList());
+            SubtitleTrackMatcher.Languages(Track(0, input)).Order(TextUtils.CodePointComparer).ToList());
 
     private static Dictionary<string, List<SubtitleTrack>> Fixtures(string golden) =>
         GoldenFile.Load(golden).Root.GetProperty("fixtures").EnumerateObject().ToDictionary(

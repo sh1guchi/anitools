@@ -24,20 +24,20 @@ public static partial class FontText
     private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
     /// <summary>Ключ сравнения имён (font_key): пробелы схлопнуты, casefold — libass сравнивает без учёта регистра.</summary>
-    public static string FontKey(string name) => PyText.CaseFold(string.Join(' ', SplitWhitespace(name)));
+    public static string FontKey(string name) => TextUtils.CaseFold(string.Join(' ', SplitWhitespace(name)));
 
     /// <summary>Имя файла шрифта для запасного поиска (normalize): без пробелов, «-» и «_», в нижнем регистре.</summary>
-    public static string Normalize(string s) => PyText.Lower(NormalizeRegex().Replace(s, ""));
+    public static string Normalize(string s) => TextUtils.Lower(NormalizeRegex().Replace(s, ""));
 
     /// <summary>Слаг для dafont/1001fonts (slugify): всё, кроме a–z и 0–9, → разделитель.</summary>
     public static string Slugify(string name, char separator) =>
-        SlugRegex().Replace(PyText.Lower(name), separator.ToString()).Trim(separator);
+        SlugRegex().Replace(TextUtils.Lower(name), separator.ToString()).Trim(separator);
 
     /// <summary>Имя файла для скачанного шрифта (safe_filename): без пробелов и недопустимых символов.</summary>
     public static string SafeFileName(string s) => SafeFileNameRegex().Replace(s, "");
 
     /// <summary>«@» в начале — вертикальный вариант того же шрифта (clean_font_name).</summary>
-    public static string CleanFontName(string name) => PyText.Strip(PyText.Strip(name).TrimStart('@'));
+    public static string CleanFontName(string name) => TextUtils.Strip(TextUtils.Strip(name).TrimStart('@'));
 
     /// <summary>Текст .ass (read_ass): BOM UTF-16 → UTF-16, иначе UTF-8 (BOM снимается), не UTF-8 — cp1251.</summary>
     public static string ReadAss(byte[] raw)
@@ -68,12 +68,12 @@ public static partial class FontText
         var names = new List<string>();
         var section = "";
         var fontnameIndex = 1;
-        foreach (var rawLine in PyText.SplitLines(text))
+        foreach (var rawLine in TextUtils.SplitLines(text))
         {
-            var line = PyText.Strip(rawLine);
+            var line = TextUtils.Strip(rawLine);
             if (line.StartsWith('['))
             {
-                section = PyText.Lower(line);
+                section = TextUtils.Lower(line);
                 continue;
             }
 
@@ -83,13 +83,13 @@ public static partial class FontText
                 continue;
             }
 
-            var key = PyText.Lower(PyText.Strip(line[..colon]));
+            var key = TextUtils.Lower(TextUtils.Strip(line[..colon]));
             var value = line[(colon + 1)..];
             if (section is "[v4+ styles]" or "[v4 styles]")
             {
                 if (key == "format")
                 {
-                    var fields = value.Split(',').Select(f => PyText.Lower(PyText.Strip(f))).ToList();
+                    var fields = value.Split(',').Select(f => TextUtils.Lower(TextUtils.Strip(f))).ToList();
                     if (fields.IndexOf("fontname") is >= 0 and var index)
                     {
                         fontnameIndex = index;
@@ -170,7 +170,7 @@ public static partial class FontText
         var start = -1;
         for (var i = 0; i <= s.Length; i++)
         {
-            var space = i == s.Length || PyText.IsSpace(s[i]);
+            var space = i == s.Length || TextUtils.IsSpace(s[i]);
             if (space && start >= 0)
             {
                 yield return s[start..i];
@@ -186,12 +186,12 @@ public static partial class FontText
     [GeneratedRegex(@"\\fn([^\\}]*)")]
     private static partial Regex FnTagRegex();
 
-    [GeneratedRegex("[" + PyText.SpaceChars + @"\-_]")]
+    [GeneratedRegex("[" + TextUtils.SpaceChars + @"\-_]")]
     private static partial Regex NormalizeRegex();
 
     [GeneratedRegex("[^a-z0-9]+")]
     private static partial Regex SlugRegex();
 
-    [GeneratedRegex(@"[<>:""/\\|?*" + PyText.SpaceChars + "]+")]
+    [GeneratedRegex(@"[<>:""/\\|?*" + TextUtils.SpaceChars + "]+")]
     private static partial Regex SafeFileNameRegex();
 }

@@ -179,7 +179,7 @@ public sealed class CqCalibrator
             var result = await _runner.RunAsync(new ProcessSpec(_ffmpeg, args), cancellationToken).ConfigureAwait(false);
             if (!result.Succeeded)
             {
-                _logs?.WriteProcessError(PyText.Stem(Path.GetFileName(input)), result.StandardErrorTail, [_ffmpeg, .. args], result.ExitCode);
+                _logs?.WriteProcessError(TextUtils.Stem(Path.GetFileName(input)), result.StandardErrorTail, [_ffmpeg, .. args], result.ExitCode);
                 return null;
             }
 

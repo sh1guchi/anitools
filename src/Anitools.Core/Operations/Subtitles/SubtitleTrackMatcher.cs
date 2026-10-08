@@ -15,7 +15,7 @@ public static class SubtitleTrackMatcher
     /// <summary>Чем похожа дорожка по тайтлу: «Надписи / Signs» → надписи, «Полные / Full / Субтитры» → сабы, иначе null.</summary>
     public static SubtitleKind? GuessKind(string trackName)
     {
-        var name = PyText.Lower(trackName);
+        var name = TextUtils.Lower(trackName);
         return SignsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Signs
             : SubsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Subs
             : null;
@@ -61,10 +61,10 @@ public static class SubtitleTrackMatcher
         var set = new HashSet<string>(StringComparer.Ordinal);
         foreach (var l in new[] { track.Language, track.LanguageIetf })
         {
-            var s = PyText.Strip(l ?? "");
-            if (s.Length > 0 && PyText.Lower(s) != "und")
+            var s = TextUtils.Strip(l ?? "");
+            if (s.Length > 0 && TextUtils.Lower(s) != "und")
             {
-                set.Add(PyText.CaseFold(s));
+                set.Add(TextUtils.CaseFold(s));
             }
         }
 
@@ -77,11 +77,11 @@ public static class SubtitleTrackMatcher
     /// </summary>
     public static (int Id, string Extension)? FindByTitle(IReadOnlyList<SubtitleTrack> tracks, string refTitle)
     {
-        var r = PyText.CaseFold(PyText.Strip(refTitle));
-        var exact = tracks.Where(t => PyText.CaseFold(PyText.Strip(t.Name)) == r).ToList();
+        var r = TextUtils.CaseFold(TextUtils.Strip(refTitle));
+        var exact = tracks.Where(t => TextUtils.CaseFold(TextUtils.Strip(t.Name)) == r).ToList();
         if (exact.Count != 1)
         {
-            exact = tracks.Where(t => PyText.CaseFold(t.Name).Contains(r, StringComparison.Ordinal)).ToList();
+            exact = tracks.Where(t => TextUtils.CaseFold(t.Name).Contains(r, StringComparison.Ordinal)).ToList();
             if (exact.Count != 1)
             {
                 return null;
@@ -108,8 +108,8 @@ public static class SubtitleTrackMatcher
 
         if (same.Count > 1)
         {
-            var refName = PyText.CaseFold(PyText.Strip(reference.Name));
-            var byName = same.Where(t => PyText.CaseFold(PyText.Strip(t.Name)) == refName).ToList();
+            var refName = TextUtils.CaseFold(TextUtils.Strip(reference.Name));
+            var byName = same.Where(t => TextUtils.CaseFold(TextUtils.Strip(t.Name)) == refName).ToList();
             if (byName.Count == 1)
             {
                 same = byName;

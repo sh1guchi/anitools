@@ -104,10 +104,10 @@ public sealed class HlsScenarioTests
         {
             using var zip = ZipFile.OpenRead(zipPath);
             Assert.All(zip.Entries, e => Assert.Equal(e.Length, e.CompressedLength));
-            zips[Relative(zipPath, dir.Path)] = [.. zip.Entries.Select(e => e.FullName).Order(PyText.CodePointComparer)];
+            zips[Relative(zipPath, dir.Path)] = [.. zip.Entries.Select(e => e.FullName).Order(TextUtils.CodePointComparer)];
         }
 
-        var files = Directory.EnumerateFiles(dir.Path, "*", SearchOption.AllDirectories).Select(p => Relative(p, dir.Path)).Order(PyText.CodePointComparer).ToList();
+        var files = Directory.EnumerateFiles(dir.Path, "*", SearchOption.AllDirectories).Select(p => Relative(p, dir.Path)).Order(TextUtils.CodePointComparer).ToList();
         return new Dictionary<string, object> { ["commands"] = commands, ["statuses"] = statuses, ["zips"] = zips, ["files"] = files };
     }
 

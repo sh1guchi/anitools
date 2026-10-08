@@ -23,8 +23,8 @@ public sealed class FontsTests
             var (face, version) = SfntReader.FaceInfo(data);
             return new Dictionary<string, object>
             {
-                ["primary"] = names.Primary.Order(PyText.CodePointComparer).ToList(),
-                ["fallback"] = names.Fallback.Order(PyText.CodePointComparer).ToList(),
+                ["primary"] = names.Primary.Order(TextUtils.CodePointComparer).ToList(),
+                ["fallback"] = names.Fallback.Order(TextUtils.CodePointComparer).ToList(),
                 ["face"] = face,
                 ["version"] = version,
                 ["cyrillic"] = SfntReader.HasCyrillic(data, input.GetProperty("ext").GetString()!),
@@ -50,7 +50,7 @@ public sealed class FontsTests
     [Fact]
     public void Ass_font_names_match_original() =>
         GoldenAssert.All("ass_font_names", input =>
-            FontText.ParseFontNames(FontText.ReadAss(Convert.FromBase64String(input.GetProperty("base64").GetString()!))).Order(PyText.CodePointComparer));
+            FontText.ParseFontNames(FontText.ReadAss(Convert.FromBase64String(input.GetProperty("base64").GetString()!))).Order(TextUtils.CodePointComparer));
 
     [Fact]
     public void Fonts_from_zip_match_original() =>
@@ -145,7 +145,7 @@ public sealed class FontsTests
         var zip = result.ZipPath is null ? [] : ZipEntries(result.ZipPath);
         var custom = Directory.EnumerateFiles(root.Combine("custom"), "*", SearchOption.AllDirectories)
             .Select(p => new object[] { Path.GetRelativePath(root.Combine("custom"), p).Replace('\\', '/'), Sha16(File.ReadAllBytes(p)) })
-            .OrderBy(p => (string)p[0], PyText.CodePointComparer)
+            .OrderBy(p => (string)p[0], TextUtils.CodePointComparer)
             .ToList();
         return new Dictionary<string, object>
         {
