@@ -21,6 +21,10 @@ internal static class Screenshots
     /// <summary>Рендерит кадр окна, сохраняет PNG и возвращает кадр для проверок.</summary>
     public static WriteableBitmap Capture(TopLevel topLevel, string name)
     {
+        // Первый кадр может нести старое положение элементов, у которых только что сменился размер (кнопка
+        // «Запустить (12)» после «Запустить»): он отбрасывается, снимается следующий
+        topLevel.CaptureRenderedFrame();
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         var frame = topLevel.CaptureRenderedFrame()
             ?? throw new InvalidOperationException("Headless-платформа не отрисовала кадр");
         System.IO.Directory.CreateDirectory(Directory);

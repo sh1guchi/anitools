@@ -37,7 +37,12 @@ public sealed partial class MainWindowViewModel
     [NotifyPropertyChangedFor(nameof(MissingToolsText))]
     public partial string? MissingTools { get; set; }
 
-    public string MissingToolsText => MissingTools is null ? "" : $"Не найдены {MissingTools} — без них большинство инструментов не работает.";
+    public string MissingToolsText => MissingTools switch
+    {
+        null => "",
+        var several when several.Contains(" и ", StringComparison.Ordinal) => $"Не найдены {several} — без них большинство инструментов не работает.",
+        var one => $"Не найден {one} — без него большинство инструментов не работает.",
+    };
 
     /// <summary>Ставить программы умеем (Windows) — кнопка «Установить», иначе — «Настройки».</summary>
     public bool CanInstallTools => Services.Installer is not null;

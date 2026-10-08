@@ -63,8 +63,9 @@ Write-Host "✓ установка: $app, ani.exe — ссылка на Anitools
 $env:Path = "$app;$env:Path"
 $env:ANITOOLS_ANI_TRACE = Join-Path $env:RUNNER_TEMP "ani-trace.txt"
 $folder = (New-Item -ItemType Directory -Force (Join-Path $env:RUNNER_TEMP "ani тест папка")).FullName
-Test-Ani "cmd.exe" @("/k", "ani") $folder
 Test-Ani "powershell.exe" @("-NoExit", "-NoProfile", "-Command", "ani") $folder
+# «cmd /k ani» ждал бы окно, как батник; набранный вручную ani cmd не ждёт — так же, как «start /b»
+Test-Ani "cmd.exe" @("/k", "start", '""', "/b", "ani") $folder
 
 # 3. Удаление: файлы и PATH чистые (удаляльщик перезапускает себя из TEMP — ждём, пока файлы исчезнут)
 Start-Process (Join-Path $app "unins000.exe") -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait

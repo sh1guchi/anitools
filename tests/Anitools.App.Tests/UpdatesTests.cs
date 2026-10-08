@@ -109,7 +109,7 @@ public sealed class UpdatesTests
         await vm.CheckToolsAsync();
 
         Assert.Equal("ffmpeg", vm.MissingTools);
-        Assert.Equal("Не найдены ffmpeg — без них большинство инструментов не работает.", vm.MissingToolsText);
+        Assert.Equal("Не найден ffmpeg — без него большинство инструментов не работает.", vm.MissingToolsText);
         Assert.Equal("Установить", vm.MissingToolsButtonText);
 
         await vm.InstallMissingToolsCommand.ExecuteAsync(null);
@@ -131,6 +131,7 @@ public sealed class UpdatesTests
         await vm.CheckToolsAsync();
 
         Assert.Equal("ffmpeg и MKVToolNix", vm.MissingTools);
+        Assert.Equal("Не найдены ffmpeg и MKVToolNix — без них большинство инструментов не работает.", vm.MissingToolsText);
         Assert.Equal("Настройки", vm.MissingToolsButtonText);
         await vm.InstallMissingToolsCommand.ExecuteAsync(null);
         Assert.Same(vm.SettingsPage, vm.SelectedNav);

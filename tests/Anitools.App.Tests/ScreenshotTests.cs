@@ -5,6 +5,7 @@ using Anitools.Core.Jobs;
 using Anitools.Core.Shikimori;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 
 namespace Anitools.App.Tests;
 
@@ -248,6 +249,24 @@ public sealed class ScreenshotTests
         var frame = Screenshots.Capture(dialog, "shikimori");
         Assert.True(Screenshots.CountColors(frame) > 50);
         dialog.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task Update_and_missing_tools()
+    {
+        // Первый запуск на чистом ПК: нет MKVToolNix, а на GitHub уже есть версия новее
+        using var app = new AppFixture().WithFiles([.. Episodes]);
+        File.Delete(Path.Combine(app.Root, "bin", "mkvmerge"));
+        app.Services.RefreshTools();
+        var (vm, window) = await OpenAsync(app);
+        vm.Update = new Anitools.Core.Install.ReleaseInfo("1.1.0", "https://github.com/sh1guchi/anitools/releases/tag/v1.1.0", null, null, null);
+        await AppFixture.WaitUntilAsync(() => vm.VideoOnlyPage.Preview.Rows.Count == 12, "план");
+        AppFixture.Flush();
+
+        // «Запустить (12)» целиком в своей колонке (был случай, когда кнопка уезжала за край окна)
+        var run = window.GetVisualDescendants().OfType<Button>().First(b => b.Name == "RunButton" && b.IsEffectivelyVisible);
+        Assert.True(run.Bounds.Width >= run.DesiredSize.Width && run.Bounds.Right <= ((Control)run.GetVisualParent()!).Bounds.Width, $"кнопка {run.Bounds}");
+        Capture(window, "main-window-update");
     }
 
     [AvaloniaFact]

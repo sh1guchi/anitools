@@ -632,6 +632,12 @@
       <Setter Property="BorderThickness" Value="0,1,0,0" />
       <Setter Property="Background" Value="{StaticResource Bg2Brush}" />
     </Style>
+    <!-- Кнопка запуска постоянной ширины: «Запустить» → «Запустить (12)» не меняет её размер. Иначе Avalonia
+         изредка не перемеряет колонку Auto после роста кнопки, и она уезжает за край окна (видно было с плашкой
+         «Не найдены …» под шапкой) -->
+    <Style Selector="Border.pageBar Button.primary.lg">
+      <Setter Property="MinWidth" Value="200" />
+    </Style>
     <Style Selector="Border.pageBar TextBlock.barTitle">
       <Setter Property="FontSize" Value="15" />
       <Setter Property="FontWeight" Value="SemiBold" />
