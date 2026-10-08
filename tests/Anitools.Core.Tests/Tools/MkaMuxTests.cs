@@ -7,11 +7,11 @@ using Anitools.Core.Tests.Fixtures;
 
 namespace Anitools.Core.Tests.Tools;
 
-/// <summary>Сборка озвучек в .mka — по эталонам mka_muxer.py (с нашим Anitomy вместо пакета anitopy).</summary>
+/// <summary>Сборка озвучек в .mka — по эталонам (имена разбирает встроенный Anitomy).</summary>
 public sealed class MkaMuxTests
 {
     [Fact]
-    public void Names_match_original() =>
+    public void Names_match_golden() =>
         GoldenAssert.All("mka_names", input =>
         {
             var name = input.GetString()!;
@@ -21,17 +21,17 @@ public sealed class MkaMuxTests
                 ["track_num"] = MkaNames.TrackNumber(name),
                 ["parse_episode"] = MkaNames.ParseEpisode(name),
                 ["episode_base"] = MkaNames.EpisodeBase(name),
-                ["natural_key"] = new object?[] { MkaNames.TrackNumber(name), PyText.Lower(name) },
+                ["natural_key"] = new object?[] { MkaNames.TrackNumber(name), TextUtils.Lower(name) },
             };
         });
 
     [Fact]
-    public void Trailing_episode_in_label_matches_original() =>
+    public void Trailing_episode_in_label_matches_golden() =>
         GoldenAssert.All("mka_strip_trailing_episode", input =>
             MkaNames.StripTrailingEpisode(input.GetProperty("label").GetString(), input.GetProperty("ep").GetString()));
 
     [Fact]
-    public void Voice_folder_matches_original() =>
+    public void Voice_folder_matches_golden() =>
         GoldenAssert.All("mka_voice_folder", input =>
         {
             var (label, number) = MkaNames.VoiceFolder(input.GetString()!);
@@ -39,7 +39,7 @@ public sealed class MkaMuxTests
         });
 
     [Fact]
-    public void Language_guess_matches_original() =>
+    public void Language_guess_matches_golden() =>
         GoldenAssert.All("mka_detect_lang", input => LanguageGuess.Detect(input.ValueKind == JsonValueKind.Null ? null : input.GetString()));
 
     [Fact]
@@ -49,9 +49,9 @@ public sealed class MkaMuxTests
         Assert.Equal(["1. z.mka", "2. y.mka", "10. x.mka", "A.mka", "b.mka"], names.Order(MkaNames.NaturalComparer));
     }
 
-    /// <summary>Сценарии оригинала (mka_scenarios): та же папка и те же решения — те же команды ffmpeg.</summary>
+    /// <summary>Сценарии из эталона (mka_scenarios): та же папка и те же решения — те же команды ffmpeg.</summary>
     [Fact]
-    public void Scenarios_issue_the_same_commands_as_original() =>
+    public void Scenarios_issue_the_same_commands_as_golden() =>
         GoldenAssert.All("mka_scenarios", input => RunAsync(input).GetAwaiter().GetResult());
 
     private static async Task<object> RunAsync(JsonElement input)
@@ -91,7 +91,7 @@ public sealed class MkaMuxTests
             Language = options.GetProperty("language").GetString(),
         });
 
-        // Оригинал запускает ffmpeg по порядку и на ошибке идёт дальше — команды те же, что в плане
+        // Команды запускаются по порядку, ошибка не останавливает остальные — сверяются команды плана
         var commands = plan.Items.Where(i => i.Status == PlanItemStatus.Run)
             .Select(i => (IReadOnlyList<string>)["ffmpeg", .. i.Command!.Arguments.Select(a => a.Replace('\\', '/').Replace(dir.Path.Replace('\\', '/'), "{root}", StringComparison.Ordinal))])
             .ToList();

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace Anitools.Core.Shikimori;
 
 /// <summary>
-/// API Shikimori (py:443–655): поиск тайтла и оригинальное название по ID. На 429 (лимит 5 запросов/с) и сбои
+/// API Shikimori: поиск тайтла и оригинальное название по ID. На 429 (лимит 5 запросов/с) и сбои
 /// сети — до 3 попыток с паузой (429 — 1.5 с × номер попытки, остальное — 1 с); 404 — «нет такого».
 /// </summary>
 public sealed partial class ShikimoriClient
@@ -55,7 +55,7 @@ public sealed partial class ShikimoriClient
     }
 
     /// <summary>
-    /// Поиск с запасными запросами (_search_shikimori_smart): как есть → без знаков препинания → первые три слова;
+    /// Поиск с запасными запросами: как есть → без знаков препинания → первые три слова;
     /// первый непустой результат.
     /// </summary>
     public async Task<IReadOnlyList<ShikimoriAnime>> SmartSearchAsync(string query, CancellationToken ct = default)
@@ -228,7 +228,7 @@ public sealed partial class ShikimoriClient
         return list;
     }
 
-    /// <summary>urllib.parse.quote: всё, кроме букв, цифр, «_.-~» и «/», — %XX в UTF-8.</summary>
+    /// <summary>Кодирование для адреса: всё, кроме латиницы, цифр, «_.-~» и «/», — %XX в UTF-8.</summary>
     public static string Quote(string text)
     {
         var sb = new StringBuilder();

@@ -4,7 +4,7 @@ using Anitools.Core.Parsing;
 namespace Anitools.Core.Operations.Hls;
 
 /// <summary>
-/// Аудиодорожка для озвучек HLS (_get_audio_track_ids_for_episode, py:3754): номер среди аудио (0:a:N),
+/// Аудиодорожка для озвучек HLS: номер среди аудио (0:a:N),
 /// тайтл (иначе язык, иначе «Track N»), язык (иначе und) и число каналов (0 — неизвестно).
 /// </summary>
 public sealed record HlsAudioTrack(int Index, string Title, string Language, int Channels)
@@ -20,7 +20,7 @@ public sealed record HlsAudioTrack(int Index, string Title, string Language, int
 }
 
 /// <summary>
-/// Раскладка аудио файла (_audio_layout, py:3784): пары (тайтл без пробелов по краям в нижнем регистре, язык).
+/// Раскладка аудио файла: пары (тайтл без пробелов по краям в нижнем регистре, язык).
 /// Файлы с одинаковой раскладкой делят одно назначение озвучек.
 /// </summary>
 public sealed class AudioLayout : IEquatable<AudioLayout>
@@ -37,7 +37,7 @@ public sealed class AudioLayout : IEquatable<AudioLayout>
     public string Key { get; }
 
     public static AudioLayout Of(IReadOnlyList<HlsAudioTrack> tracks) =>
-        new([.. tracks.Select(t => (PyText.Lower(PyText.Strip(t.Title)), PyText.Lower(t.Language)))]);
+        new([.. tracks.Select(t => (TextUtils.Lower(TextUtils.Strip(t.Title)), TextUtils.Lower(t.Language)))]);
 
     public bool Equals(AudioLayout? other) => other is not null && Key == other.Key;
 
@@ -47,7 +47,7 @@ public sealed class AudioLayout : IEquatable<AudioLayout>
 }
 
 /// <summary>
-/// NVDEC декодирует кадр не больше определённого размера (_needs_cpu_decode, py:3910–3929).
+/// NVDEC декодирует кадр не больше определённого размера.
 /// H.264 — только до 4096 даже на RTX 40; кодек не из списка считаем поддерживаемым (упадёт — повтор на CPU).
 /// </summary>
 public static class NvdecLimits
@@ -78,7 +78,7 @@ public static class NvdecLimits
     }
 }
 
-/// <summary>Озвучки (_VOICE_OPTIONS, py:3670): список для выбора в п.3 и п.7.</summary>
+/// <summary>Войс-лист по умолчанию: озвучки для выбора в «Только аудио», «Сборке аудио», HLS и сборке .mka.</summary>
 public static class VoiceList
 {
     public static IReadOnlyList<string> Default { get; } =
@@ -109,7 +109,7 @@ public static class VoiceList
 /// <summary>Выбор для одной дорожки: название озвучки или null — дорожку не брать (комментарии и т.п.).</summary>
 public sealed record VoiceChoice(int TrackIndex, string? Name);
 
-/// <summary>Назначение озвучек дорожкам (_select_audio_voices_multi_res, py:3789).</summary>
+/// <summary>Назначение озвучек дорожкам.</summary>
 public static class VoiceAssignment
 {
     /// <summary>Что предлагается при ручном вводе: тайтл дорожки, приведённый к имени папки, или «TrackN».</summary>
@@ -138,7 +138,7 @@ public static class VoiceAssignment
                 continue;
             }
 
-            var folder = TitleText.SanitizeFolder(PyText.Strip(name));
+            var folder = TitleText.SanitizeFolder(TextUtils.Strip(name));
             if (folder.Length == 0)
             {
                 folder = $"Track{track.Index + 1}";

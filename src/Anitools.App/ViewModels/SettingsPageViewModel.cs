@@ -330,7 +330,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     [ObservableProperty]
     public partial string AudioShiftWorkers { get; set; } = "";
 
-    /// <summary>Сдвиг аудио с перекодированием в AAC (как в оригинале); по умолчанию — без.</summary>
+    /// <summary>Сдвиг аудио с перекодированием в AAC; по умолчанию — без.</summary>
     [ObservableProperty]
     public partial bool AudioShiftReencode { get; set; }
 

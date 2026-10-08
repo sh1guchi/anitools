@@ -6,7 +6,7 @@ namespace Anitools.Core.Tests.Media;
 public sealed class MovAtomReaderTests
 {
     [Fact]
-    public void ReadAudioTitles_matches_original() =>
+    public void ReadAudioTitles_matches_golden() =>
         GoldenAssert.All("mov_audio_titles", input =>
         {
             if (input.GetProperty("base64").GetString() is not { } base64)
@@ -19,7 +19,7 @@ public sealed class MovAtomReaderTests
         });
 
     [Fact]
-    public void Generic_handlers_match_original() =>
+    public void Generic_handlers_match_golden() =>
         Assert.Equal(
             Parsing.AnitomyTests.Constant("_MOV_GENERIC_HANDLERS").EnumerateArray().Select(v => v.GetString()),
             MovAtomReader.GenericHandlers);

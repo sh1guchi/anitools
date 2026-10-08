@@ -65,7 +65,7 @@ public sealed partial class AudioSlotRowViewModel : ObservableObject
         }
     }
 
-    /// <summary>Как язык по умолчанию в оригинале: по подписи, своему и настоящему тайтлу, иначе rus.</summary>
+    /// <summary>Язык по умолчанию: по подписи, своему и настоящему тайтлу, иначе rus.</summary>
     private string GuessLanguage(string title) =>
         LanguageGuess.Detect(string.Join(" ", new[] { Slot.Label, title, Slot.HasTitle ? Slot.DefaultTitle : null }.Where(t => !string.IsNullOrEmpty(t))))
         ?? AudioMuxPageViewModel.DefaultLanguage;
@@ -180,7 +180,7 @@ public sealed partial class AudioSetViewModel : ObservableObject
 }
 
 /// <summary>
-/// П.3 «Сборка аудио» (§4.5): видео + выбранные дорожки исходника + внешние аудио серии → «Processed Audio».
+/// «Сборка аудио» (§4.5): видео + выбранные дорожки исходника + внешние аудио серии → «Processed Audio».
 /// Серии с разным набором дорожек — разные наборы, у каждого свой порядок, тайтлы и язык (§2.8 #6).
 /// </summary>
 public sealed partial class AudioMuxPageViewModel(IShell shell) : PageViewModel(shell, "Сборка аудио", MaterialIconKind.PlaylistMusic)
@@ -297,7 +297,7 @@ public sealed partial class AudioMuxPageViewModel(IShell shell) : PageViewModel(
         }
     }
 
-    /// <summary>Внешние файлы и дорожки каждой серии → наборы; настройки наборов — по умолчанию (как в оригинале).</summary>
+    /// <summary>Внешние файлы и дорожки каждой серии → наборы; настройки наборов — по умолчанию.</summary>
     private async Task AnalyzeAsync(CancellationToken cancellationToken)
     {
         if (_source is not { } source)

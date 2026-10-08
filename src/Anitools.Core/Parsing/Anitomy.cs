@@ -5,13 +5,13 @@ using System.Text.RegularExpressions;
 namespace Anitools.Core.Parsing;
 
 /// <summary>
-/// Разбор имени аниме-файла — порт встроенного anitomy оригинала (py:41–434) один в один.
+/// Разбор имени аниме-файла (по мотивам anitomy): группа, тайтл, сезон, серия, тип релиза и технические теги.
 /// <c>Anitomy.Parse("[Group] Title - 05 [1080p].mkv")</c> → тайтл «Title», серия «5», группа «Group», …
-/// Все значения — строки (номера без ведущих нулей), как в оригинале.
+/// Все значения — строки (номера без ведущих нулей).
 /// </summary>
 public static partial class Anitomy
 {
-    /// <summary>Словари ключевых слов (_AT_KEYWORDS) — в том же порядке, что в оригинале.</summary>
+    /// <summary>Словари ключевых слов: вид токена → слова (сравниваются без учёта регистра).</summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> Keywords { get; } = new Dictionary<string, IReadOnlyList<string>>
     {
         ["anime_type"] =
@@ -102,7 +102,7 @@ public static partial class Anitomy
     };
 
     private static readonly FrozenDictionary<string, FrozenSet<string>> Lower =
-        Keywords.ToFrozenDictionary(k => k.Key, k => k.Value.Select(PyText.Lower).ToFrozenSet(StringComparer.Ordinal));
+        Keywords.ToFrozenDictionary(k => k.Key, k => k.Value.Select(TextUtils.Lower).ToFrozenSet(StringComparer.Ordinal));
 
     private static readonly FrozenSet<string> AllKeywords =
         new[] { "anime_type", "audio_term", "video_term", "video_resolution", "source", "subtitles", "file_extension", "language" }
@@ -111,7 +111,7 @@ public static partial class Anitomy
 
     private static readonly string[] ResolutionWords = ["4K", "UHD", "FHD", "HD", "SD"];
 
-    /// <summary>Разбирает имя файла. Пустая строка → пустой результат (как {} в оригинале).</summary>
+    /// <summary>Разбирает имя файла. Пустая строка → пустой результат.</summary>
     public static AnitomyResult Parse(string? inputName)
     {
         if (string.IsNullOrEmpty(inputName))
@@ -119,12 +119,12 @@ public static partial class Anitomy
             return AnitomyResult.Empty;
         }
 
-        var filename = PyText.Strip(inputName);
+        var filename = TextUtils.Strip(inputName);
         string? fileExtension = null;
         var ext = ExtensionRegex().Match(filename);
-        if (ext.Success && Lower["file_extension"].Contains(PyText.Lower(ext.Groups[1].Value)))
+        if (ext.Success && Lower["file_extension"].Contains(TextUtils.Lower(ext.Groups[1].Value)))
         {
-            fileExtension = PyText.Lower(ext.Groups[1].Value);
+            fileExtension = TextUtils.Lower(ext.Groups[1].Value);
             filename = filename[..^ext.Length];
         }
 
@@ -182,7 +182,7 @@ public static partial class Anitomy
 
             if (words.Count == 1 && IsNumeric(words[0]) && !Has(bracketEpCandidate))
             {
-                var n = PyText.ParseInt(words[0]);
+                var n = TextUtils.ParseInt(words[0]);
                 if (n > 0 && n < 2000)
                 {
                     bracketEpCandidate = words[0];
@@ -199,7 +199,7 @@ public static partial class Anitomy
                     : [wRaw];
                 foreach (var w in parts)
                 {
-                    var wl = PyText.Lower(w);
+                    var wl = TextUtils.Lower(w);
                     if (!Has(found.VideoResolution) && LooksLikeResolution(w) && !IsNumeric(w))
                     {
                         found.VideoResolution = w;
@@ -245,7 +245,7 @@ public static partial class Anitomy
             }
 
             // Первая скобочная группа в самом начале имени и не техническая — release group
-            if (isFirst && startsWithBracket && !isTechnical && !Has(found.ReleaseGroup) && PyText.Len(combined) < 30)
+            if (isFirst && startsWithBracket && !isTechnical && !Has(found.ReleaseGroup) && TextUtils.Len(combined) < 30)
             {
                 found.ReleaseGroup = combined;
             }
@@ -306,7 +306,7 @@ public static partial class Anitomy
         while (i < flat.Count)
         {
             var (v, afterDash) = flat[i];
-            var vl = PyText.Lower(v);
+            var vl = TextUtils.Lower(v);
             (string Value, bool AfterDash)? nxt = i + 1 < flat.Count ? flat[i + 1] : null;
             Match m;
 
@@ -314,8 +314,8 @@ public static partial class Anitomy
             m = SeasonEpisodeRegex().Match(v);
             if (m.Success)
             {
-                found.AnimeSeason = PyText.IntString(m.Groups[1].Value);
-                found.EpisodeNumber = PyText.IntString(m.Groups[2].Value);
+                found.AnimeSeason = TextUtils.IntString(m.Groups[1].Value);
+                found.EpisodeNumber = TextUtils.IntString(m.Groups[2].Value);
                 epIdx = i;
                 used.Add(i);
                 i++;
@@ -326,7 +326,7 @@ public static partial class Anitomy
             m = SeasonRegex().Match(v);
             if (m.Success)
             {
-                found.AnimeSeason = PyText.IntString(m.Groups[1].Value);
+                found.AnimeSeason = TextUtils.IntString(m.Groups[1].Value);
                 used.Add(i);
                 i++;
                 continue;
@@ -334,9 +334,9 @@ public static partial class Anitomy
 
             // "2nd Season"
             m = OrdinalRegex().Match(v);
-            if (m.Success && nxt is { } n1 && PyText.Lower(n1.Value) == "season" && !Has(found.AnimeSeason))
+            if (m.Success && nxt is { } n1 && TextUtils.Lower(n1.Value) == "season" && !Has(found.AnimeSeason))
             {
-                found.AnimeSeason = PyText.IntString(m.Groups[1].Value);
+                found.AnimeSeason = TextUtils.IntString(m.Groups[1].Value);
                 used.Add(i);
                 used.Add(i + 1);
                 i += 2;
@@ -346,7 +346,7 @@ public static partial class Anitomy
             // Season 2 (номер после " - " — это уже серия: "2nd Season - 05")
             if (Lower["season_prefix"].Contains(vl) && nxt is { } n2 && IsNumeric(n2.Value) && !n2.AfterDash)
             {
-                found.AnimeSeason = PyText.IntString(n2.Value);
+                found.AnimeSeason = TextUtils.IntString(n2.Value);
                 used.Add(i);
                 used.Add(i + 1);
                 i += 2;
@@ -357,7 +357,7 @@ public static partial class Anitomy
             m = PrefixedEpisodeRegex().Match(v);
             if (m.Success && !Has(found.EpisodeNumber))
             {
-                found.EpisodeNumber = PyText.IntString(m.Groups[1].Value);
+                found.EpisodeNumber = TextUtils.IntString(m.Groups[1].Value);
                 epIdx = i;
                 used.Add(i);
                 i++;
@@ -367,7 +367,7 @@ public static partial class Anitomy
             // Ep 01, Episode 5
             if (Lower["episode_prefix"].Contains(vl) && !Has(found.EpisodeNumber) && nxt is { } n3 && IsNumeric(n3.Value))
             {
-                found.EpisodeNumber = PyText.IntString(n3.Value);
+                found.EpisodeNumber = TextUtils.IntString(n3.Value);
                 // "OVA 2", "Movie 3" — это ещё и тип релиза
                 if (!Has(found.AnimeType) && Lower["anime_type"].Contains(vl))
                 {
@@ -385,7 +385,7 @@ public static partial class Anitomy
             m = VersionedEpisodeRegex().Match(v);
             if (m.Success && !Has(found.EpisodeNumber))
             {
-                found.EpisodeNumber = PyText.IntString(m.Groups[1].Value);
+                found.EpisodeNumber = TextUtils.IntString(m.Groups[1].Value);
                 found.ReleaseVersion = "v" + m.Groups[2].Value;
                 epIdx = i;
                 used.Add(i);
@@ -397,8 +397,8 @@ public static partial class Anitomy
             m = EpisodeRangeRegex().Match(v);
             if (m.Success && !Has(found.EpisodeNumber))
             {
-                found.EpisodeNumber = PyText.IntString(m.Groups[1].Value);
-                found.EpisodeNumberAlt = PyText.IntString(m.Groups[2].Value);
+                found.EpisodeNumber = TextUtils.IntString(m.Groups[1].Value);
+                found.EpisodeNumberAlt = TextUtils.IntString(m.Groups[2].Value);
                 epIdx = i;
                 used.Add(i);
                 i++;
@@ -409,7 +409,7 @@ public static partial class Anitomy
             m = JapaneseEpisodeRegex().Match(v);
             if (m.Success && !Has(found.EpisodeNumber))
             {
-                found.EpisodeNumber = PyText.IntString(m.Groups[1].Value);
+                found.EpisodeNumber = TextUtils.IntString(m.Groups[1].Value);
                 epIdx = i;
                 used.Add(i);
                 i++;
@@ -444,7 +444,7 @@ public static partial class Anitomy
             // Число после " - " — серия (главный паттерн). "- 00" тоже серия (пролог)
             if (afterDash && IsNumeric(v) && i == lastDashNum && !Has(found.EpisodeNumber))
             {
-                var n = PyText.ParseInt(v);
+                var n = TextUtils.ParseInt(v);
                 if (n >= 0 && n < 2000)
                 {
                     found.EpisodeNumber = n.ToString(CultureInfo.InvariantCulture);
@@ -478,7 +478,7 @@ public static partial class Anitomy
             for (var k = flat.Count - 1; k > typeIdx; k--)
             {
                 var v = flat[k].Value;
-                if (IsNumeric(v) && !used.Contains(k) && PyText.ParseInt(v) is var n && n > 0 && n < 2000)
+                if (IsNumeric(v) && !used.Contains(k) && TextUtils.ParseInt(v) is var n && n > 0 && n < 2000)
                 {
                     found.EpisodeNumber = n.ToString(CultureInfo.InvariantCulture);
                     epIdx = k;
@@ -490,14 +490,14 @@ public static partial class Anitomy
 
         if (!Has(found.EpisodeNumber) && Has(bracketEpCandidate))
         {
-            found.EpisodeNumber = PyText.IntString(bracketEpCandidate!);
+            found.EpisodeNumber = TextUtils.IntString(bracketEpCandidate!);
         }
 
         // ── Шаг 4: название — всё, что до первого распознанного токена ──
         var firstUsed = used.Count > 0 ? used.Min() : flat.Count;
-        var title = PyText.Strip(string.Join(" ", Enumerable.Range(0, firstUsed).Where(k => !used.Contains(k)).Select(k => flat[k].Value)));
+        var title = TextUtils.Strip(string.Join(" ", Enumerable.Range(0, firstUsed).Where(k => !used.Contains(k)).Select(k => flat[k].Value)));
         title = TrailingSpaceRegex().Replace(title, "");
-        title = PyText.Strip(TrailingDashRegex().Replace(title, ""));
+        title = TextUtils.Strip(TrailingDashRegex().Replace(title, ""));
         if (!title.Contains(' ', StringComparison.Ordinal) && title.Contains('_', StringComparison.Ordinal))
         {
             title = title.Replace('_', ' ');
@@ -515,8 +515,8 @@ public static partial class Anitomy
             var after = Enumerable.Range(lastUsed + 1, Math.Max(0, flat.Count - lastUsed - 1))
                 .Where(k => !used.Contains(k) && !IsKeyword(flat[k].Value))
                 .Select(k => flat[k].Value);
-            var epTitle = PyText.Strip(LeadingDashRegex().Replace(PyText.Strip(string.Join(" ", after)), ""));
-            if (PyText.Len(epTitle) > 1)
+            var epTitle = TextUtils.Strip(LeadingDashRegex().Replace(TextUtils.Strip(string.Join(" ", after)), ""));
+            if (TextUtils.Len(epTitle) > 1)
             {
                 found.EpisodeTitle = epTitle;
             }
@@ -557,7 +557,7 @@ public static partial class Anitomy
 
     private readonly record struct Token(TokenType Type, string Value);
 
-    /// <summary>Разбивает строку на токены по разделителям и скобкам (_at_tokenize).</summary>
+    /// <summary>Разбивает строку на токены по разделителям и скобкам.</summary>
     private static List<Token> Tokenize(string filename)
     {
         var tokens = new List<Token>();
@@ -624,12 +624,12 @@ public static partial class Anitomy
     private static bool IsNumeric(string s) => NumericRegex().IsMatch(s);
 
     private static bool LooksLikeYear(string s) =>
-        IsNumeric(s) && s.Length == 4 && PyText.ParseInt(s) is var n && n >= 1950 && n <= 2050;
+        IsNumeric(s) && s.Length == 4 && TextUtils.ParseInt(s) is var n && n >= 1950 && n <= 2050;
 
     private static bool LooksLikeResolution(string s) =>
         ResolutionPRegex().IsMatch(s) || ResolutionXRegex().IsMatch(s) || ResolutionWords.Contains(s.ToUpperInvariant());
 
-    private static bool IsKeyword(string s) => AllKeywords.Contains(PyText.Lower(s));
+    private static bool IsKeyword(string s) => AllKeywords.Contains(TextUtils.Lower(s));
 
     private static bool Has(string? s) => !string.IsNullOrEmpty(s);
 
@@ -670,7 +670,7 @@ public static partial class Anitomy
         public string? FileChecksum { get; set; }
     }
 
-    // ── Регулярки оригинала (Python $ = .NET $: конец строки или перед последним \n) ──
+    // ── Регулярки ($ — конец строки или перед последним \n) ──
 
     [GeneratedRegex(@"\.([a-zA-Z0-9]{2,4})$", RegexOptions.CultureInvariant)]
     private static partial Regex ExtensionRegex();
@@ -711,13 +711,13 @@ public static partial class Anitomy
     [GeneratedRegex(@"\Av[0-9]\z", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex VersionRegex();
 
-    [GeneratedRegex(@"[" + PyText.SpaceChars + "_]+$", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"[" + TextUtils.SpaceChars + "_]+$", RegexOptions.CultureInvariant)]
     private static partial Regex TrailingSpaceRegex();
 
     [GeneratedRegex(@"[-–]+$", RegexOptions.CultureInvariant)]
     private static partial Regex TrailingDashRegex();
 
-    [GeneratedRegex(@"^[-–" + PyText.SpaceChars + "]+", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^[-–" + TextUtils.SpaceChars + "]+", RegexOptions.CultureInvariant)]
     private static partial Regex LeadingDashRegex();
 }
 
@@ -765,7 +765,7 @@ public sealed record AnitomyResult
 
     public string? FileChecksum { get; init; }
 
-    /// <summary>Словарь с ключами оригинала (file_name, anime_title, …) — только найденные поля.</summary>
+    /// <summary>Словарь с ключами в стиле anitomy (file_name, anime_title, …) — только найденные поля.</summary>
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
         var d = new Dictionary<string, string>();

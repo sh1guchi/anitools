@@ -1,9 +1,6 @@
 {
   "function": "operation_scenarios",
-  "description": "Операции 1–4, 6: команды, которые запускает оригинал для папки и ответов на вопросы",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "«Только видео», «Только аудио», «Сборка аудио», «Субтитры», «Ремукс»: команды для папки и выбранных настроек",
   "cases": [
     {"input": {"name": "video_only", "operation": "video_only", "files": ["Test Show - 01.mkv", "Test_Show_-_02.mkv", "Test Show - 03.MKV", "notes.txt", "cover.jpg"], "existing": ["Video only/Test Show - 01.mkv"], "media": {}, "answers": [], "options": {}}, "output": {"commands": [["ffmpeg", "-nostdin", "-y", "-i", "{root}/Test Show - 03.MKV", "-map", "0:v:0", "-c:v", "copy", "-an", "{root}/Video only/Test Show - 03.MKV"], ["ffmpeg", "-nostdin", "-y", "-i", "{root}/Test_Show_-_02.mkv", "-map", "0:v:0", "-c:v", "copy", "-an", "{root}/Video only/Test Show - 02.mkv"]]}},
     {"input": {"name": "audio_one_track", "operation": "audio_extract", "files": ["Test Show - 01.mkv", "Test Show - 02.mkv"], "existing": [], "media": {"Test Show - 01.mkv": "Test Show - 01.mkv", "Test Show - 02.mkv": "Test Show - 01.mkv"}, "answers": ["2"], "options": {"tracks": [1]}}, "output": {"commands": [["ffmpeg", "-nostdin", "-y", "-i", "{root}/Test Show - 01.mkv", "-map", "0:a:1", "-c:a", "copy", "{root}/Audio only/Test Show - 01.mka"], ["ffmpeg", "-nostdin", "-y", "-i", "{root}/Test Show - 02.mkv", "-map", "0:a:1", "-c:a", "copy", "{root}/Audio only/Test Show - 02.mka"]]}},

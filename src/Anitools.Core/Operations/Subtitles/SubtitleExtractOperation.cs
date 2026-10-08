@@ -29,10 +29,10 @@ public enum SubtitleKind
 /// <param name="ReferenceTrackId">ID дорожки (mkvmerge) в первом файле.</param>
 public sealed record SubtitleExtractOptions(int ReferenceTrackId, SubtitleMatchMode Mode = SubtitleMatchMode.ById, SubtitleKind Kind = SubtitleKind.Signs);
 
-/// <summary>Что есть в папке для п.4: файлы и дорожки субтитров первого из них.</summary>
+/// <summary>Что есть в папке для «Субтитров»: файлы и дорожки субтитров первого из них.</summary>
 public sealed record SubtitleSource(string Folder, IReadOnlyList<string> Files, IReadOnlyList<SubtitleTrack> Tracks);
 
-/// <summary>П.4 «Извлечь субтитры» (extract_subtitles, py:2841).</summary>
+/// <summary>«Субтитры»: дорожка субтитров из каждой серии — отдельным файлом (надписи и/или сабы).</summary>
 public static class SubtitleExtractOperation
 {
     public static async Task<SubtitleSource> InspectAsync(string folder, IMediaProbe probe, CancellationToken ct = default)

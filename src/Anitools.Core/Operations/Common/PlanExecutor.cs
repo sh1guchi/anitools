@@ -42,7 +42,7 @@ public sealed record OperationProgress(int ItemIndex, int ItemCount, PlanItem It
 /// </summary>
 public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools, ErrorLogWriter logs, IMediaProbe? probe = null)
 {
-    /// <param name="maxParallel">Сколько шагов выполнять одновременно (сдвиг и перекодирование аудио — по 6–8, как в оригинале).</param>
+    /// <param name="maxParallel">Сколько шагов выполнять одновременно (сдвиг и перекодирование аудио — по 6–8).</param>
     public async Task<OperationResult> ExecuteAsync(
         OperationPlan plan,
         IProgress<OperationProgress>? progress = null,
@@ -191,7 +191,7 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
         }
 
         var processOutput = string.Join('\n', new[] { capturedText, result.StandardOutput, result.StandardErrorTail }.Where(s => !string.IsNullOrWhiteSpace(s)));
-        var log = logs.WriteProcessError(PyText.Stem(Path.GetFileName(item.Source)), processOutput, [exe, .. spec.Arguments], result.ExitCode);
+        var log = logs.WriteProcessError(TextUtils.Stem(Path.GetFileName(item.Source)), processOutput, [exe, .. spec.Arguments], result.ExitCode);
         DeleteOutputs(item);
         return new ItemResult(item, ItemOutcome.Failed, $"{command.Tool.ToString().ToLowerInvariant()} вернул код {result.ExitCode}", log);
     }
@@ -209,7 +209,7 @@ public sealed partial class PlanExecutor(IProcessRunner runner, ToolPaths tools,
     {
         if (command.Tool == Tool.Ffmpeg)
         {
-            // Команда та же, что в оригинале, плюс машинный прогресс: время, скорость, битрейт
+            // Команда плана плюс машинный прогресс: время, скорость, битрейт
             var duration = probe is null ? null : await DurationAsync(item.Source, ct).ConfigureAwait(false);
             var parser = new FfmpegProgressParser(p => progress?.Report(new OperationProgress(
                 index, count, item, duration is > 0 ? p.Fraction(duration.Value) : null, p.Speed, p.Bitrate)));

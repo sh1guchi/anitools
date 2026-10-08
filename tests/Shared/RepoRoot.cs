@@ -1,6 +1,6 @@
 namespace Anitools.Tests.Shared;
 
-/// <summary>Корень репозитория (папка с Anitools.slnx) — для эталонов, оригинала и скриншотов.</summary>
+/// <summary>Корень репозитория (папка с Anitools.slnx) — для эталонов, фикстур и скриншотов.</summary>
 internal static class RepoRoot
 {
     private static readonly Lazy<string> Root = new(Find);

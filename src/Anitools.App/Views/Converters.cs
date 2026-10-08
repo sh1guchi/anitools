@@ -15,7 +15,7 @@ public static class Converters
 
     public static FuncValueConverter<string?, bool> IsNotEmpty { get; } = new(s => !string.IsNullOrEmpty(s));
 
-    /// <summary>0 серий у Shikimori — «ещё неизвестно»: пусто, как в оригинале.</summary>
+    /// <summary>0 серий у Shikimori — «ещё неизвестно»: пусто.</summary>
     public static FuncValueConverter<int, string> EmptyIfZero { get; } = new(n => n == 0 ? "" : n.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
     /// <summary>Формат «Перекодировать» в списке: «MKA · AAC», «MOV · AAC, только звук».</summary>

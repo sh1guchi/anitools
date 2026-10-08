@@ -10,13 +10,13 @@ public enum RemuxFormat
     Mkv,
 }
 
-/// <param name="CopySubtitles">Только для MKV: копировать субтитры (в оригинале по умолчанию — да).</param>
+/// <param name="CopySubtitles">Только для MKV: копировать субтитры (по умолчанию — да).</param>
 public sealed record RemuxOptions(RemuxFormat Format = RemuxFormat.Mp4, bool CopySubtitles = true);
 
-/// <summary>П.6 «Конвертировать видео» (convert_mkv_to_mp4, py:3520): ремукс без перекодирования в MP4 или MKV.</summary>
+/// <summary>«Ремукс»: смена контейнера без перекодирования — в MP4 или MKV.</summary>
 public static class RemuxOperation
 {
-    /// <summary>Папка называется так и для MKV — как в оригинале.</summary>
+    /// <summary>Папка называется так и для MKV.</summary>
     public const string OutputFolderName = "converted_mp4";
 
     public static IReadOnlyList<string> Extensions { get; } = [".mkv", ".mp4", ".avi", ".mov", ".ts", ".m2ts", ".webm", ".flv", ".wmv", ".vob", ".m4v"];
@@ -34,13 +34,13 @@ public static class RemuxOperation
         var items = files.Select(file =>
         {
             var name = Path.GetFileName(file);
-            var output = Path.Combine(outputFolder, PyText.Stem(name) + ext);
+            var output = Path.Combine(outputFolder, TextUtils.Stem(name) + ext);
             if (MediaFiles.IsDone(output))
             {
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже конвертирован", Outputs = [output] };
             }
 
-            // AVI: меток времени часто не хватает — генерируются, отрицательные сдвигаются к нулю (как avi_to_mkv.bat, §2.9.10)
+            // AVI: меток времени часто не хватает — генерируются, отрицательные сдвигаются к нулю (§2.9.10)
             var avi = string.Equals(Path.GetExtension(file), ".avi", StringComparison.OrdinalIgnoreCase);
             List<string> args = ["-nostdin"];
             if (avi)
@@ -48,7 +48,7 @@ public static class RemuxOperation
                 args.AddRange(["-fflags", "+genpts"]);
             }
 
-            // «-map 0:a?» вместо «0:a» оригинала: файлы без звука иначе падают (docs/PLAN.md §2.8 #7)
+            // «-map 0:a?», а не «0:a»: иначе файлы без звука падают (docs/PLAN.md §2.8 #7)
             args.AddRange(["-i", file, "-map", "0:v:0", "-map", "0:a?"]);
             if (options.Format == RemuxFormat.Mkv && options.CopySubtitles)
             {

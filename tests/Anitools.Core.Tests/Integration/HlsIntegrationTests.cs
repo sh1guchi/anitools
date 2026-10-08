@@ -8,7 +8,7 @@ using Anitools.Core.Tests.Fixtures;
 namespace Anitools.Core.Tests.Integration;
 
 /// <summary>
-/// П.7 на настоящем ffmpeg с профилем Software (libx264 + scale вместо видеокарты) и урезанной лестницей:
+/// HLS на настоящем ffmpeg с профилем Software (libx264 + scale вместо видеокарты) и урезанной лестницей:
 /// архивы, сегменты по 6 с с одинаковыми границами во всех качествах, озвучки, подбор CQ.
 /// </summary>
 [Trait("Category", "Integration")]

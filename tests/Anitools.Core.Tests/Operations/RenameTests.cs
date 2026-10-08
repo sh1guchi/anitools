@@ -9,7 +9,7 @@ namespace Anitools.Core.Tests.Operations;
 public sealed class RenameTests
 {
     [Fact]
-    public void Renames_like_original() =>
+    public void Renames_by_golden_scenarios() =>
         GoldenAssert.All("rename_scenarios", input =>
         {
             using var dir = new TempDir();
@@ -25,7 +25,7 @@ public sealed class RenameTests
             Dictionary<string, string>? manual = null;
             if (o.GetProperty("manual").ValueKind == JsonValueKind.Object)
             {
-                // null в сценарии — Enter: номер, который предлагает ручной режим оригинала
+                // null в сценарии — принять номер, который предлагает ручной режим
                 manual = o.GetProperty("manual").EnumerateObject().ToDictionary(
                     p => p.Name,
                     p => p.Value.ValueKind == JsonValueKind.Null ? RenameOperation.ManualSuggestion(p.Name, start) ?? "" : p.Value.GetString()!);
@@ -40,7 +40,7 @@ public sealed class RenameTests
             });
             var result = RenameOperation.Execute(dir.Path, rows, dir.Combine("_journal"));
 
-            // Подсказка для Shikimori → тот же поисковый запрос, что у оригинала
+            // Подсказка для Shikimori → тот же поисковый запрос, что в эталоне
             var paths = new List<string>();
             if (input.GetProperty("shikimori").ValueKind == JsonValueKind.String)
             {

@@ -6,7 +6,7 @@ namespace Anitools.Core.Jobs;
 /// <summary>План операции как задача очереди: ход работы по шагам, журнал итогов, сводка.</summary>
 public static class PlanJobs
 {
-    /// <param name="maxParallel">Сколько шагов сразу (сдвиг и перекодирование аудио — по 6–8, как в оригинале).</param>
+    /// <param name="maxParallel">Сколько шагов сразу (сдвиг и перекодирование аудио — по 6–8).</param>
     public static Func<JobContext, Task<JobOutcome>> Run(OperationPlan plan, PlanExecutor executor, int maxParallel = 1) => async context =>
     {
         context.Log($"{plan.Title}: {plan.Folder}");

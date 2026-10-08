@@ -1,9 +1,6 @@
 {
   "function": "hls_next_cq",
-  "description": "Следующий CQ по замерам (py:4089); сравнивать с допуском 1e-9",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Следующий CQ по замерам; сравнивать с допуском 1e-9",
   "cases": [
     {"input": {"history": [[26.0, 5000000.0]], "target": 3000000}, "output": 30.421793564997238},
     {"input": {"history": [[26.0, 3000000.0]], "target": 3000000}, "output": 26.0},

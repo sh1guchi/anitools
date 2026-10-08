@@ -7,11 +7,11 @@ using Anitools.Core.Tests.Parsing;
 
 namespace Anitools.Core.Tests.Hls;
 
-/// <summary>Команды ffmpeg для HLS, лимиты NVDEC, дорожки и константы — по эталонам оригинала.</summary>
+/// <summary>Команды ffmpeg для HLS, лимиты NVDEC, дорожки и константы — по эталонам.</summary>
 public sealed class HlsCommandTests
 {
     [Fact]
-    public void Video_input_args_match_original() =>
+    public void Video_input_args_match_golden() =>
         GoldenAssert.All("hls_video_input_args", input =>
         {
             var seek = input.GetProperty("seek") is { ValueKind: JsonValueKind.Array } s ? (s[0].GetDouble(), s[1].GetDouble()) : ((double, double)?)null;
@@ -21,12 +21,12 @@ public sealed class HlsCommandTests
         });
 
     [Fact]
-    public void Video_encode_args_match_original() =>
+    public void Video_encode_args_match_golden() =>
         GoldenAssert.All("hls_video_encode_args", input =>
             new HlsCommandBuilder(HlsSettings.Default).VideoEncodeArgs(input.GetProperty("vbr").GetInt64(), RateControlOf(input.GetProperty("rate_control"))));
 
     [Fact]
-    public void Video_command_matches_original() =>
+    public void Video_command_matches_golden() =>
         GoldenAssert.All("hls_video_cmd", input =>
         {
             var settings = HlsSettings.Default with { Ladder = Ladder(input.GetProperty("resolutions")) };
@@ -38,7 +38,7 @@ public sealed class HlsCommandTests
         });
 
     [Fact]
-    public void Audio_command_matches_original() =>
+    public void Audio_command_matches_golden() =>
         GoldenAssert.All("hls_audio_cmd", input =>
         {
             var voices = input.GetProperty("voices").EnumerateArray()
@@ -77,7 +77,7 @@ public sealed class HlsCommandTests
     }
 
     [Fact]
-    public void Cpu_decode_reason_matches_original() =>
+    public void Cpu_decode_reason_matches_golden() =>
         GoldenAssert.All("needs_cpu_decode", input =>
         {
             JsonElement stream;
@@ -88,7 +88,7 @@ public sealed class HlsCommandTests
             }
             catch (JsonException)
             {
-                return null; // оригинал: ffprobe не дал JSON → видеокарта справится
+                return null; // ffprobe не дал JSON → видеокарта справится
             }
 
             return stream.ValueKind == JsonValueKind.Object
@@ -100,7 +100,7 @@ public sealed class HlsCommandTests
         });
 
     [Fact]
-    public void Audio_tracks_and_layout_match_original()
+    public void Audio_tracks_and_layout_match_golden()
     {
         var failures = new List<string>();
         foreach (var c in GoldenFile.Load("audio_tracks_for_episode").Cases)
@@ -118,17 +118,17 @@ public sealed class HlsCommandTests
     }
 
     /// <summary>
-    /// C# берёт каналы из JSON ffprobe (поле channels), а не из CSV, как оригинал; сверяется то же правило:
+    /// Каналы берутся из JSON ffprobe (поле channels), а в эталоне — вывод CSV; сверяется то же правило:
     /// неизвестное число каналов → 0, порядок — порядок аудиодорожек.
     /// </summary>
     [Fact]
-    public void Unknown_channel_count_is_zero_like_original() =>
+    public void Unknown_channel_count_is_zero() =>
         GoldenAssert.All("audio_channels", input =>
         {
             var lines = input.ValueKind == JsonValueKind.String ? input.GetString()!.Split('\n').ToList() : [];
             if (lines.Count > 0 && lines[^1].Length == 0)
             {
-                lines.RemoveAt(lines.Count - 1); // splitlines(): последний перевод строки не даёт пустой строки
+                lines.RemoveAt(lines.Count - 1); // последний перевод строки не даёт пустой строки
             }
 
             var streams = lines.Select(l => l.Trim().Trim(','))
@@ -138,11 +138,11 @@ public sealed class HlsCommandTests
         });
 
     /// <summary>
-    /// Длительность — из format.duration того же JSON ffprobe. Запасной «ffmpeg -i» оригинала не нужен:
+    /// Длительность — из format.duration того же JSON ffprobe. Запасной «ffmpeg -i» из эталона не нужен:
     /// он читает ту же длительность контейнера и при «N/A» у ffprobe тоже пишет «Duration: N/A».
     /// </summary>
     [Fact]
-    public void Duration_from_ffprobe_matches_original()
+    public void Duration_from_ffprobe_matches_golden()
     {
         foreach (var c in GoldenFile.Load("video_duration").Cases)
         {
@@ -161,7 +161,7 @@ public sealed class HlsCommandTests
     }
 
     [Fact]
-    public void Defaults_match_original_constants()
+    public void Defaults_match_golden_constants()
     {
         var d = HlsSettings.Default;
         Assert.Equal(
@@ -208,7 +208,7 @@ public sealed class HlsCommandTests
         }
         catch (JsonException)
         {
-            return []; // оригинал: ffprobe не дал JSON → дорожек нет
+            return []; // ffprobe не дал JSON → дорожек нет
         }
 
         foreach (var stream in root?["streams"]?.AsArray() ?? new JsonArray())

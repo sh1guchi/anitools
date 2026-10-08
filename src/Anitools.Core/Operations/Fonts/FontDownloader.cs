@@ -6,7 +6,7 @@ using Anitools.Core.Operations.Common;
 
 namespace Anitools.Core.Operations.Fonts;
 
-/// <summary>Сервер ответил ошибкой (HTTPError в оригинале).</summary>
+/// <summary>Сервер ответил ошибкой или не ответил вовсе (тогда Status — null).</summary>
 public sealed class FontDownloadException(string url, HttpStatusCode? status, string message)
     : Exception(message)
 {
@@ -19,7 +19,7 @@ public sealed class FontDownloadException(string url, HttpStatusCode? status, st
 public sealed record FontSource(string Name, Func<string, CancellationToken, Task<IReadOnlyDictionary<string, byte[]>>> DownloadAsync);
 
 /// <summary>
-/// Скачивание шрифтов (ass_fonts.py): Google Fonts (все начертания семейства, .ttf/.otf), dafont (угаданный слаг и
+/// Скачивание шрифтов: Google Fonts (все начертания семейства, .ttf/.otf), dafont (угаданный слаг и
 /// слаги из поиска, до 4 архивов), 1001fonts. Из архивов берутся только файлы, чьё внутреннее имя совпало.
 /// </summary>
 public sealed partial class FontDownloader(HttpClient http)
@@ -38,10 +38,10 @@ public sealed partial class FontDownloader(HttpClient http)
 
     public static IReadOnlyList<string> FontExtensions { get; } = [".ttf", ".otf", ".ttc", ".otc"];
 
-    /// <summary>Источники по порядку (FONT_SOURCES).</summary>
+    /// <summary>Источники по порядку.</summary>
     public IReadOnlyList<FontSource> Sources => [new("Google Fonts", GoogleAsync), new("dafont", DafontAsync), new("1001fonts", Fonts1001Async)];
 
-    /// <summary>Шрифты из архива, чьё внутреннее имя совпадает с искомым (fonts_from_zip). Не архив — пусто.</summary>
+    /// <summary>Шрифты из архива, чьё внутреннее имя совпадает с искомым. Не архив — пусто.</summary>
     public static IReadOnlyDictionary<string, byte[]> FontsFromZip(byte[] data, string fontName)
     {
         var key = FontText.FontKey(fontName);
@@ -159,7 +159,7 @@ public sealed partial class FontDownloader(HttpClient http)
         return FontsFromZip(data, fontName);
     }
 
-    /// <summary>urllib.parse.quote_plus: пробел → «+», кроме букв, цифр и «_.-~» — %XX в UTF-8.</summary>
+    /// <summary>Кодирование для строки запроса: пробел → «+», всё, кроме латиницы, цифр и «_.-~», — %XX в UTF-8.</summary>
     public static string QuotePlus(string text)
     {
         var result = new StringBuilder();
@@ -214,7 +214,7 @@ public sealed partial class FontDownloader(HttpClient http)
 
     private static string DecodeUtf8(byte[] data) => new UTF8Encoding(false).GetString(data);
 
-    /// <summary>urlparse(url).path: без схемы, хоста, запроса и якоря.</summary>
+    /// <summary>Путь из адреса: без схемы, хоста, запроса и якоря.</summary>
     private static string UrlPath(string url)
     {
         var rest = url;

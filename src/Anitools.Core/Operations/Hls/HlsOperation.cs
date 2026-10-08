@@ -68,11 +68,11 @@ public sealed record HlsEpisode
     /// <summary>Готовые .mka: hls_multi\&lt;тайтл&gt;\audio\&lt;озвучка&gt;\&lt;серия&gt;.&lt;озвучка&gt;.mka.</summary>
     public IReadOnlyList<string> AudioPaths => [.. Voices.Select(v => Path.Combine(TitleOut, "audio", v.Folder, $"{EpisodeName}.{v.Folder}.mka"))];
 
-    /// <summary>Серия готова (резюм оригинала): zip есть и не пустой, все .mka на месте и не пустые.</summary>
+    /// <summary>Серия готова (резюм): zip есть и не пустой, все .mka на месте и не пустые.</summary>
     public bool IsDone => MediaFiles.IsDone(ZipPath) && AudioPaths.All(MediaFiles.IsDone);
 }
 
-/// <summary>План п.7: серии по порядку групп, у каждой — статус и причина.</summary>
+/// <summary>План HLS: серии по порядку групп, у каждой — статус и причина.</summary>
 public sealed record HlsPlan(string Folder, string OutputRoot, IReadOnlyList<HlsEpisode> Episodes)
 {
     public int RunCount => Episodes.Count(e => e.Status == PlanItemStatus.Run);
@@ -83,7 +83,7 @@ public sealed record HlsPlan(string Folder, string OutputRoot, IReadOnlyList<Hls
 }
 
 /// <summary>
-/// П.7 «HLS мульти-разрешение» (convert_videos_multi_res, py:4892): видео → архив &lt;серия&gt;.zip с качествами
+/// HLS: видео → архив &lt;серия&gt;.zip с качествами
 /// 360p…4K (сегменты по 6 с) + озвучки отдельными .mka. Здесь — разбор папки и план; выполнение — <see cref="HlsRunner"/>.
 /// </summary>
 public static class HlsOperation
@@ -98,11 +98,11 @@ public static class HlsOperation
     public static IReadOnlyList<string> Extensions { get; } = [".mp4", ".mkv", ".avi", ".m2ts", ".mov"];
 
     /// <summary>
-    /// Видео верхнего уровня по порядку sorted(Path) оригинала: на Windows это сравнение имён в нижнем регистре
-    /// по кодам символов («[Group] …» раньше «Hellsing …», в отличие от порядка NTFS в п.1–4).
+    /// Видео верхнего уровня по именам в нижнем регистре, по кодам символов («[Group] …» раньше «Hellsing …»,
+    /// в отличие от порядка NTFS у <see cref="MediaFiles.List"/>).
     /// </summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
-        [.. MediaFiles.List(folder, Extensions).OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, Extensions).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 
     /// <summary>Видео верхнего уровня, их дорожки (ffprobe) и группы по тайтлам.</summary>
     /// <exception cref="PlanException">В папке нет видео.</exception>
@@ -131,12 +131,12 @@ public static class HlsOperation
         return new HlsInspection(folder, files, GroupByTitle(files));
     }
 
-    /// <summary>Группы по тайтлу из имени (_parse_anime_group: название + OVA/ONA/Special/Movie), по первому появлению.</summary>
+    /// <summary>Группы по тайтлу из имени (<see cref="TitleText.AnimeGroup"/>: название + OVA/ONA/Special/Movie), по первому появлению.</summary>
     public static IReadOnlyList<HlsGroup> GroupByTitle(IReadOnlyList<HlsSourceFile> files) =>
         [.. files.GroupBy(f => TitleText.AnimeGroup(f.Name) is { Length: > 0 } title ? title : UntitledGroup)
             .Select(g => new HlsGroup(g.Key, [.. g]))];
 
-    /// <summary>Папка тайтла (_pick_shikimori): «{ID} - {название группы}» или просто название, если Shikimori пропущен.</summary>
+    /// <summary>Папка тайтла: «{ID} - {название группы}» или просто название, если Shikimori пропущен.</summary>
     public static string TitleFolder(long? shikimoriId, string groupTitle) =>
         TitleText.SanitizeFolder(shikimoriId is { } id ? $"{id} - {groupTitle}" : groupTitle);
 
@@ -144,7 +144,7 @@ public static class HlsOperation
     {
         var root = outputRoot ?? Path.Combine(inspection.Folder, OutputFolderName);
         var episodes = new List<HlsEpisode>();
-        // Имена папок серий — уникальны в пределах папки тайтла (в оригинале — в пределах группы)
+        // Имена папок серий — уникальны в пределах папки тайтла, а не группы
         var usedNames = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var options in groups)
         {
@@ -208,19 +208,19 @@ public static class HlsOperation
     /// </summary>
     private static string EpisodeName(string fileName, HashSet<string> used)
     {
-        var name = TitleText.SanitizeFolder(PyText.Stem(fileName));
-        if (used.Contains(PyText.Lower(name)))
+        var name = TitleText.SanitizeFolder(TextUtils.Stem(fileName));
+        if (used.Contains(TextUtils.Lower(name)))
         {
-            name = TitleText.SanitizeFolder($"{PyText.Stem(fileName)}.{MediaFiles.Suffix(fileName).TrimStart('.')}");
+            name = TitleText.SanitizeFolder($"{TextUtils.Stem(fileName)}.{MediaFiles.Suffix(fileName).TrimStart('.')}");
         }
 
         var unique = name;
-        for (var n = 2; used.Contains(PyText.Lower(unique)); n++)
+        for (var n = 2; used.Contains(TextUtils.Lower(unique)); n++)
         {
             unique = $"{name}_{n}";
         }
 
-        used.Add(PyText.Lower(unique));
+        used.Add(TextUtils.Lower(unique));
         return unique;
     }
 }

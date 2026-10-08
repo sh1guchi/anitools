@@ -36,7 +36,7 @@ public sealed class WindowsDriveSystem : IDriveSystem
     }
 }
 
-/// <summary>Буква для RAM-диска (_find_free_drive_letter, py:4578): первая свободная из R, затем Z → D.</summary>
+/// <summary>Буква для RAM-диска: первая свободная из R, затем Z → D.</summary>
 public static class DriveLetters
 {
     public const string Preference = "RZYXWVUTSQPONMLKJIHGFED";
@@ -56,7 +56,7 @@ public static class DriveLetters
 }
 
 /// <summary>
-/// Буквы созданных RAM-дисков (%TEMP%\anitools_ramdisk.json, JSON-массив — тот же файл, что у оригинала):
+/// Буквы созданных RAM-дисков (%TEMP%\anitools_ramdisk.json, JSON-массив):
 /// если приложение убили и диск не сняли, он снимается при следующем запуске HLS.
 /// </summary>
 public sealed class RamDiskStateFile(string path)
@@ -115,7 +115,7 @@ public sealed class RamDiskStateFile(string path)
 }
 
 /// <summary>
-/// Команды ImDisk (py:4563–4639). Создавать и снимать диски напрямую можно, только если приложение запущено от
+/// Команды ImDisk. Создавать и снимать диски напрямую можно, только если приложение запущено от
 /// администратора; иначе это делает <see cref="ElevatedImDisk"/>.
 /// </summary>
 public sealed class ImDisk(IProcessRunner runner, string? imdiskPath) : IImDiskAdmin
@@ -173,7 +173,7 @@ public sealed class ImDisk(IProcessRunner runner, string? imdiskPath) : IImDiskA
 }
 
 /// <summary>
-/// RAM-диск ImDisk под временные файлы HLS (_setup_work_dir, вариант 1): свободная буква, диск нужного размера,
+/// RAM-диск ImDisk под временные файлы HLS: свободная буква, диск нужного размера,
 /// рабочая папка &lt;буква&gt;:\anitools_tmp. Буква записывается в файл состояния, чтобы снять диск, даже если
 /// приложение убьют. Снимается при освобождении аренды.
 /// </summary>
@@ -240,7 +240,7 @@ public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile st
     }
 
     /// <summary>
-    /// Снимает RAM-диски, оставшиеся от аварийно завершённого запуска (_cleanup_orphan_ramdisks), и очищает
+    /// Снимает RAM-диски, оставшиеся от аварийно завершённого запуска, и очищает
     /// файл состояния. Буквы, которых в системе уже нет (перезагрузка, диск снял помощник), не трогаются — чтобы
     /// не спрашивать права администратора зря. Возвращает снятые буквы.
     /// </summary>

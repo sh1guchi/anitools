@@ -7,7 +7,7 @@ namespace Anitools.Core.Operations.Fonts;
 /// <summary>Где искать шрифты: своя папка (приоритет, туда же сохраняется скачанное) и системные папки.</summary>
 public sealed record FontsCollectOptions
 {
-    /// <summary>Своя папка со шрифтами (CUSTOM_FONTS_DIR); создаётся, если её нет.</summary>
+    /// <summary>Своя папка со шрифтами; создаётся, если её нет.</summary>
     public required string CustomDir { get; init; }
 
     /// <summary>%WINDIR%\Fonts и %LOCALAPPDATA%\Microsoft\Windows\Fonts.</summary>
@@ -50,7 +50,7 @@ public sealed record FontsCollectResult(
 }
 
 /// <summary>
-/// Шрифты для .ass → fonts.zip (ass_fonts.py): имена из стилей и тегов \fn, поиск по внутренним именам шрифтов —
+/// Шрифты для .ass → fonts.zip: имена из стилей и тегов \fn, поиск по внутренним именам шрифтов —
 /// своя папка → системные → скачивание. Одноимённые без кириллицы пропускаются, если есть кириллические;
 /// из копий одного начертания берётся одна (кириллица, новее, полнее). Архив — рядом с первым .ass.
 /// </summary>
@@ -59,9 +59,9 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
 {
     public const string ZipName = "fonts.zip";
 
-    /// <summary>Все .ass папки (без учёта регистра расширения), по порядку sorted(Path) на Windows.</summary>
+    /// <summary>Все .ass папки (без учёта регистра расширения), по именам в нижнем регистре, по кодам символов.</summary>
     public static IReadOnlyList<string> ListAssFiles(string folder) =>
-        [.. MediaFiles.List(folder, [".ass"]).OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)];
+        [.. MediaFiles.List(folder, [".ass"]).OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)];
 
     public async Task<FontsCollectResult> CollectAsync(IReadOnlyList<string> assFiles, FontsCollectOptions options, CancellationToken cancellationToken = default)
     {
@@ -90,7 +90,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
             }
         }
 
-        var fontNames = unique.Values.OrderBy(PyText.CaseFold, PyText.CodePointComparer).ToList();
+        var fontNames = unique.Values.OrderBy(TextUtils.CaseFold, TextUtils.CodePointComparer).ToList();
         if (fontNames.Count == 0)
         {
             return new FontsCollectResult(null, [], [], [], [], run.Log);
@@ -121,7 +121,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
         return new FontsCollectResult(zipPath, fontNames, [.. run.Fonts.Select(f => f.Name)], run.Saved, notFound, run.Log);
     }
 
-    /// <summary>Deflate, у записей атрибут «архивный» (0x20) и дата 1980-01-01 — как у оригинала.</summary>
+    /// <summary>Deflate, у записей атрибут «архивный» (0x20) и дата 1980-01-01.</summary>
     private static void WriteZip(string path, IReadOnlyList<(string Name, byte[] Data)> fonts)
     {
         using var stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
@@ -146,7 +146,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
 
         public List<string> Log { get; } = [];
 
-        /// <summary>take_local: найденные — в архив, ненайденные — в ответ.</summary>
+        /// <summary>Найденные на диске — в архив, ненайденные — в ответ.</summary>
         public List<string> TakeLocal(FontIndex index, IReadOnlyList<string> names)
         {
             var missing = new List<string>();
@@ -273,7 +273,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
                     return;
                 }
 
-                var (stem, ext) = PyText.SplitExt(fileName);
+                var (stem, ext) = TextUtils.SplitExt(fileName);
                 var n = 2;
                 while (Fonts.Any(f => f.Name == $"{stem}_{n}{ext}"))
                 {
@@ -304,7 +304,7 @@ public sealed class AssFontsCollector(IReadOnlyList<FontSource>? sources = null)
                 {
                 }
 
-                output = Path.Combine(options.CustomDir, $"{PyText.Stem(fileName)}_{n}{MediaFiles.Suffix(fileName)}");
+                output = Path.Combine(options.CustomDir, $"{TextUtils.Stem(fileName)}_{n}{MediaFiles.Suffix(fileName)}");
             }
 
             try
@@ -371,14 +371,14 @@ public sealed class FontIndex
                     Add(_byFamily, n, file);
                 }
 
-                Add(_byStem, FontText.Normalize(PyText.Stem(Path.GetFileName(file))), file);
+                Add(_byStem, FontText.Normalize(TextUtils.Stem(Path.GetFileName(file))), file);
             }
         }
     }
 
     /// <summary>
     /// Файлы шрифта: по основным именам, иначе по запасному (ID 16 — «Arial» у Arial Narrow), иначе по имени файла.
-    /// Порядок — как sorted(Path) на Windows.
+    /// Порядок — по частям пути в нижнем регистре, по кодам символов.
     /// </summary>
     public IReadOnlyList<string> Find(string fontName)
     {
@@ -398,14 +398,14 @@ public sealed class FontIndex
         set.Add(file);
     }
 
-    /// <summary>Пути по частям, в нижнем регистре, по кодам символов (PureWindowsPath).</summary>
+    /// <summary>Сравнение путей по частям, в нижнем регистре, по кодам символов.</summary>
     private static int ComparePaths(string a, string b)
     {
         var pa = a.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
         var pb = b.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
         for (var i = 0; i < Math.Min(pa.Length, pb.Length); i++)
         {
-            var c = PyText.CompareCodePoints(PyText.Lower(pa[i]), PyText.Lower(pb[i]));
+            var c = TextUtils.CompareCodePoints(TextUtils.Lower(pa[i]), TextUtils.Lower(pb[i]));
             if (c != 0)
             {
                 return c;

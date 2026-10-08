@@ -1,9 +1,6 @@
 {
   "function": "parse_anime_group",
-  "description": "Группа HLS: тайтл + OVA/ONA/Special/Movie (py:2425)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Группа HLS: тайтл + OVA/ONA/Special/Movie",
   "cases": [
     {"input": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "output": "Sousou no Frieren"},
     {"input": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv", "output": "Sousou no Frieren"},

@@ -48,7 +48,7 @@ public sealed class ToolPagesTests
         vm.SelectedNav = shift;
         await AppFixture.WaitUntilAsync(() => shift.Preview.Rows.Count == 2, "сдвиг");
 
-        // по умолчанию — без перекодирования (mkvmerge --sync), AAC — по выбору, как в оригинале
+        // по умолчанию — без перекодирования (mkvmerge --sync), AAC — по выбору
         Assert.False(shift.Reencode);
         Assert.Contains("-1:1000", shift.Preview.Plan!.Items[0].Command!.Arguments);
         Assert.Equal(Tool.Mkvmerge, shift.Preview.Plan!.Items[0].Command!.Tool);

@@ -4,7 +4,7 @@ using Anitools.Core.Tests.Fixtures;
 
 namespace Anitools.Core.Tests.Hls;
 
-/// <summary>П.7: группы по тайтлам, раскладки дорожек, озвучки, имена папок серий и «уже готово».</summary>
+/// <summary>HLS: группы по тайтлам, раскладки дорожек, озвучки, имена папок серий и «уже готово».</summary>
 public sealed class HlsPlanTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -30,7 +30,7 @@ public sealed class HlsPlanTests
 
         var inspection = await HlsOperation.InspectAsync(dir.Path, new NameFixtureProbe(media), Ct);
 
-        // Порядок — как sorted(Path) на Windows: по именам в нижнем регистре, «[» раньше букв
+        // Порядок — как у путей Windows: по именам в нижнем регистре, «[» раньше букв
         Assert.Equal([HlsOperation.UntitledGroup, "Frieren", "Hellsing Ultimate OVA"], inspection.Groups.Select(g => g.Title));
         var frieren = inspection.Groups[1];
         Assert.Equal(6, frieren.Files.Count);

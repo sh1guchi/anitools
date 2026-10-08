@@ -44,7 +44,7 @@ public sealed record MkvIdentification(IReadOnlyList<MkvTrack> Tracks, IReadOnly
     public bool IsMatroska => ContainerType is { } t && t.StartsWith("Matroska", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Дорожки субтитров как в оригинале (list_subtitle_tracks, py:2560): имя — track_name → тег name/title →
+    /// Дорожки субтитров: имя — track_name → тег name/title →
     /// «Язык: xxx» → «Субтитры N»; codec_id при отсутствии угадывается по названию кодека.
     /// </summary>
     public IReadOnlyList<SubtitleTrack> SubtitleTracks()
@@ -62,7 +62,7 @@ public sealed record MkvIdentification(IReadOnlyList<MkvTrack> Tracks, IReadOnly
             {
                 foreach (var (tagName, value) in t.SimpleTags)
                 {
-                    if (PyText.Lower(tagName) is "name" or "title")
+                    if (TextUtils.Lower(tagName) is "name" or "title")
                     {
                         name = value;
                         break;
@@ -73,7 +73,7 @@ public sealed record MkvIdentification(IReadOnlyList<MkvTrack> Tracks, IReadOnly
             var codecId = t.CodecId.Length > 0 ? t.CodecId : t.PropertiesCodecId;
             if (codecId.Length == 0)
             {
-                var codecName = PyText.Lower(t.Codec.Length > 0 ? t.Codec : t.PropertiesCodec);
+                var codecName = TextUtils.Lower(t.Codec.Length > 0 ? t.Codec : t.PropertiesCodec);
                 codecId = codecName.Contains("ass", StringComparison.Ordinal) || codecName.Contains("ssa", StringComparison.Ordinal) ? "S_TEXT/ASS"
                     : codecName.Contains("subrip", StringComparison.Ordinal) || codecName.Contains("srt", StringComparison.Ordinal) ? "S_TEXT/UTF8"
                     : codecName.Contains("pgs", StringComparison.Ordinal) || codecName.Contains("hdmv", StringComparison.Ordinal) ? "S_HDMV/PGS"

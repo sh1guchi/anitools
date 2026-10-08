@@ -4,7 +4,7 @@ using Anitools.Core.Parsing;
 namespace Anitools.Core.Operations.Subtitles;
 
 /// <summary>
-/// Выбор дорожки субтитров в каждой серии по эталонной дорожке первого файла (п.4):
+/// Выбор дорожки субтитров в каждой серии по эталонной дорожке первого файла («Субтитры»):
 /// по тайтлу или по языку. Результат — ID дорожки и расширение файла субтитров.
 /// </summary>
 public static class SubtitleTrackMatcher
@@ -15,7 +15,7 @@ public static class SubtitleTrackMatcher
     /// <summary>Чем похожа дорожка по тайтлу: «Надписи / Signs» → надписи, «Полные / Full / Субтитры» → сабы, иначе null.</summary>
     public static SubtitleKind? GuessKind(string trackName)
     {
-        var name = PyText.Lower(trackName);
+        var name = TextUtils.Lower(trackName);
         return SignsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Signs
             : SubsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Subs
             : null;
@@ -32,7 +32,7 @@ public static class SubtitleTrackMatcher
         return signs is null && subs is null ? (tracks.FirstOrDefault(), null) : (signs, subs);
     }
 
-    /// <summary>Расширение по codec_id mkvmerge (codec_id_to_ext, py:2783): ASS/SSA → .ass, UTF8/ASCII → .srt, PGS → .sup, VobSub → .sub.</summary>
+    /// <summary>Расширение по codec_id mkvmerge: ASS/SSA → .ass, UTF8/ASCII → .srt, PGS → .sup, VobSub → .sub.</summary>
     public static string CodecIdToExtension(string codecId)
     {
         var c = codecId.ToUpperInvariant();
@@ -55,16 +55,16 @@ public static class SubtitleTrackMatcher
         return c.Contains("VOBSUB", StringComparison.Ordinal) ? ".sub" : ".ass";
     }
 
-    /// <summary>Все обозначения языка дорожки без «und» ({«rus», «ru»}); пусто — язык не указан (_sub_langs, py:2814).</summary>
+    /// <summary>Все обозначения языка дорожки без «und» ({«rus», «ru»}); пусто — язык не указан.</summary>
     public static IReadOnlySet<string> Languages(SubtitleTrack track)
     {
         var set = new HashSet<string>(StringComparer.Ordinal);
         foreach (var l in new[] { track.Language, track.LanguageIetf })
         {
-            var s = PyText.Strip(l ?? "");
-            if (s.Length > 0 && PyText.Lower(s) != "und")
+            var s = TextUtils.Strip(l ?? "");
+            if (s.Length > 0 && TextUtils.Lower(s) != "und")
             {
-                set.Add(PyText.CaseFold(s));
+                set.Add(TextUtils.CaseFold(s));
             }
         }
 
@@ -72,16 +72,16 @@ public static class SubtitleTrackMatcher
     }
 
     /// <summary>
-    /// Дорожка с тем же тайтлом (_find_subtitle_track_by_title, py:2798): точное совпадение без учёта регистра
+    /// Дорожка с тем же тайтлом: точное совпадение без учёта регистра
     /// и пробелов по краям, если оно одно; иначе единственное вхождение подстроки; иначе null.
     /// </summary>
     public static (int Id, string Extension)? FindByTitle(IReadOnlyList<SubtitleTrack> tracks, string refTitle)
     {
-        var r = PyText.CaseFold(PyText.Strip(refTitle));
-        var exact = tracks.Where(t => PyText.CaseFold(PyText.Strip(t.Name)) == r).ToList();
+        var r = TextUtils.CaseFold(TextUtils.Strip(refTitle));
+        var exact = tracks.Where(t => TextUtils.CaseFold(TextUtils.Strip(t.Name)) == r).ToList();
         if (exact.Count != 1)
         {
-            exact = tracks.Where(t => PyText.CaseFold(t.Name).Contains(r, StringComparison.Ordinal)).ToList();
+            exact = tracks.Where(t => TextUtils.CaseFold(t.Name).Contains(r, StringComparison.Ordinal)).ToList();
             if (exact.Count != 1)
             {
                 return null;
@@ -92,7 +92,7 @@ public static class SubtitleTrackMatcher
     }
 
     /// <summary>
-    /// Дорожка на том же языке, что эталон (_find_subtitle_track_by_lang, py:2819). Если таких несколько
+    /// Дорожка на том же языке, что эталон. Если таких несколько
     /// (русские надписи и полные) — та, у которой совпал и тайтл, иначе та, что стоит на месте
     /// <paramref name="refPosition"/> среди дорожек этого языка.
     /// </summary>
@@ -108,8 +108,8 @@ public static class SubtitleTrackMatcher
 
         if (same.Count > 1)
         {
-            var refName = PyText.CaseFold(PyText.Strip(reference.Name));
-            var byName = same.Where(t => PyText.CaseFold(PyText.Strip(t.Name)) == refName).ToList();
+            var refName = TextUtils.CaseFold(TextUtils.Strip(reference.Name));
+            var byName = same.Where(t => TextUtils.CaseFold(TextUtils.Strip(t.Name)) == refName).ToList();
             if (byName.Count == 1)
             {
                 same = byName;

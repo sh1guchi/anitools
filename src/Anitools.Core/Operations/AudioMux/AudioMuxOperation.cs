@@ -35,7 +35,7 @@ public sealed record AudioSlot
     /// <summary>External: номер аудиодорожки внутри файла.</summary>
     public int Stream { get; init; }
 
-    /// <summary>Подпись как в оригинале: «Внутр. дорожка 1: AniLibria.TV», «Внешний файл: …».</summary>
+    /// <summary>Подпись: «Внутр. дорожка 1: AniLibria.TV», «Внешний файл: …».</summary>
     public required string Label { get; init; }
 
     /// <summary>Настоящий тайтл, а если его нет — «Track N» или имя файла.</summary>
@@ -48,7 +48,7 @@ public sealed record AudioSlot
 /// <summary>Слот в конкретной серии: какой вход ffmpeg (0 — видео, 1… — внешние файлы) и какая дорожка.</summary>
 public sealed record EpisodeSlot(string Key, int Input, int Stream, string? StreamTitle);
 
-/// <summary>Серия п.3: видео, все найденные внешние файлы (это входы ffmpeg 1…N) и слоты.</summary>
+/// <summary>Серия «Сборки аудио»: видео, все найденные внешние файлы (это входы ffmpeg 1…N) и слоты.</summary>
 public sealed record AudioMuxEpisode
 {
     public required string Video { get; init; }
@@ -68,11 +68,11 @@ public sealed record AudioSlotSet
 
     public required IReadOnlyList<AudioMuxEpisode> Episodes { get; init; }
 
-    /// <summary>Основной набор — тот, что у первой серии (как настраивал оригинал).</summary>
+    /// <summary>Основной набор — тот, что у первой серии.</summary>
     public bool IsMain { get; init; }
 }
 
-/// <summary>Папка для п.3: серии к обработке (первая — образец), её дорожки и уже готовые серии.</summary>
+/// <summary>Папка для «Сборки аудио»: серии к обработке (первая — образец), её дорожки и уже готовые серии.</summary>
 public sealed record AudioMuxSource(string Folder, IReadOnlyList<string> Videos, IReadOnlyList<string> Done, IReadOnlyList<AudioTrackInfo> Tracks);
 
 public sealed record AudioMuxAnalysis(AudioMuxSource Source, IReadOnlyList<int> TrackIds, IReadOnlyList<AudioSlotSet> Sets);
@@ -90,7 +90,7 @@ public sealed record AudioSlotSetConfig
     public IReadOnlyDictionary<string, string> Languages { get; init; } = new Dictionary<string, string>();
 
     /// <summary>
-    /// Как в оригинале: порядок исходный (или <paramref name="order"/>), тайтлы — <paramref name="titles"/> или настоящие,
+    /// По умолчанию: порядок исходный (или <paramref name="order"/>), тайтлы — <paramref name="titles"/> или настоящие,
     /// язык — угадан по подписи и тайтлу, иначе <paramref name="defaultLanguage"/> (null — язык не ставить).
     /// </summary>
     public static AudioSlotSetConfig Default(
@@ -136,14 +136,14 @@ public sealed record AudioSlotSetConfig
 }
 
 /// <summary>
-/// П.3 «Обработка аудио» (advanced_audio_processing, py:1783): видео + выбранные дорожки исходника + внешние
+/// «Сборка аудио»: видео + выбранные дорожки исходника + внешние
 /// аудиофайлы → новый файл без перекодирования, с заданным порядком, тайтлами, языком и дорожкой по умолчанию.
 /// </summary>
 public static class AudioMuxOperation
 {
     public const string OutputFolderName = "Processed Audio";
 
-    /// <summary>Внешние аудиофайлы (_find_external_audio).</summary>
+    /// <summary>Расширения внешних аудиофайлов.</summary>
     public static IReadOnlyList<string> AudioExtensions { get; } = [".mka", ".wav", ".mp3", ".ac3", ".dts", ".flac", ".aac", ".m4a"];
 
     public static async Task<AudioMuxSource> InspectAsync(string folder, IMediaProbe probe, CancellationToken ct = default)
@@ -312,7 +312,7 @@ public static class AudioMuxOperation
             }
         }
 
-        // как в оригинале — по порядку файлов, а не по наборам
+        // по порядку файлов, а не по наборам
         var order = analysis.Source.Done.Concat(analysis.Source.Videos).ToList();
         items.Sort((a, b) => order.IndexOf(a.Source).CompareTo(order.IndexOf(b.Source)));
         return new OperationPlan("Обработка аудио", analysis.Source.Folder, items);
@@ -378,7 +378,7 @@ public static class AudioMuxOperation
         Path.Combine(outputFolder, TitleText.OutputFileName(Path.GetFileName(video)));
 
     /// <summary>
-    /// Внешние аудио серии (_find_external_audio, py:1730): рекурсивно по рабочей папке, кроме выходной и папок
+    /// Внешние аудио серии: рекурсивно по рабочей папке, кроме выходной и папок
     /// на «.»; сначала файлы папки, потом подпапки; всё — натуральной сортировкой.
     /// </summary>
     public static IReadOnlyList<string> FindExternal(string folder, string baseName, string excludeFolder)
@@ -424,13 +424,13 @@ public static class AudioMuxOperation
         return ("", name);
     }
 
-    /// <summary>Тайтлы аудиодорожек внешнего файла ('' — нет тайтла); ffprobe не смог — одна дорожка без тайтла, как в оригинале.</summary>
+    /// <summary>Тайтлы аудиодорожек внешнего файла ('' — нет тайтла); ffprobe не смог — одна дорожка без тайтла.</summary>
     private static async Task<IReadOnlyList<string>> StreamTitlesAsync(IMediaProbe probe, string path, CancellationToken ct)
     {
         try
         {
             var titles = (await probe.ProbeAsync(path, ct).ConfigureAwait(false)).AudioStreams
-                .Select(s => PyText.Strip(s.Title ?? "")).ToList();
+                .Select(s => TextUtils.Strip(s.Title ?? "")).ToList();
             return titles.Count > 0 ? titles : [""];
         }
         catch (MediaProbeException)

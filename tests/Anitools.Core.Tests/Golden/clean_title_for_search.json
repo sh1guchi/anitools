@@ -1,9 +1,6 @@
 {
   "function": "clean_title_for_search",
-  "description": "Название без сезона/части для поиска на Shikimori (py:545)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Название без сезона/части для поиска на Shikimori",
   "cases": [
     {"input": "Sousou no Frieren", "output": "Sousou no Frieren"},
     {"input": "Sousou no Frieren 2nd Season", "output": "Sousou no Frieren"},

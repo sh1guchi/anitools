@@ -135,7 +135,7 @@ public sealed partial class HlsGroupViewModel : ObservableObject
 }
 
 /// <summary>
-/// П.7 «HLS» (§4.8): тайтлы (перегруппировка, Shikimori), озвучки по наборам дорожек, качество (постоянный CQ или
+/// «HLS» (§4.8): тайтлы (перегруппировка, Shikimori), озвучки по наборам дорожек, качество (постоянный CQ или
 /// подбор), временные файлы (RAM-диск / папка / рядом с выходом), выключение по завершении; запуск — после сводки.
 /// </summary>
 public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell, "HLS", MaterialIconKind.LayersTripleOutline)

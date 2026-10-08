@@ -25,7 +25,7 @@ public sealed partial class MissingFontViewModel(string name, IShell shell)
 }
 
 /// <summary>
-/// «Шрифты для .ass» (§4.11, ass_fonts.py): шрифты из стилей и \fn всех .ass папки → fonts.zip; ищутся в своей папке,
+/// «Шрифты для .ass» (§4.11): шрифты из стилей и \fn всех .ass папки → fonts.zip; ищутся в своей папке,
 /// в системе, потом скачиваются (Google Fonts, dafont, 1001fonts) и сохраняются в свою папку.
 /// </summary>
 public sealed partial class AssFontsPageViewModel(IShell shell) : PageViewModel(shell, "Шрифты для .ass", MaterialIconKind.FormatFont)
@@ -163,7 +163,7 @@ public sealed partial class AssFontsPageViewModel(IShell shell) : PageViewModel(
     }
 }
 
-/// <summary>«Шрифты из видео» (§4.11, extract_fonts.py): вложенные шрифты всех MKV папки → fonts.zip.</summary>
+/// <summary>«Шрифты из видео» (§4.11): вложенные шрифты всех MKV папки → fonts.zip.</summary>
 public sealed partial class VideoFontsPageViewModel(IShell shell) : PageViewModel(shell, "Шрифты из видео", MaterialIconKind.ArchiveArrowDownOutline)
 {
     public ObservableCollection<string> Videos { get; } = [];

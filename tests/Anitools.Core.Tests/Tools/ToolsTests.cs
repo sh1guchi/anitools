@@ -53,7 +53,7 @@ public sealed class ToolsTests
         Assert.EndsWith("ass_backup_2026-10-07_21-30-00", result.BackupFolder);
         Assert.Equal(original, File.ReadAllText(Path.Combine(result.BackupFolder, "Ep 01.ass")));
         var edited = File.ReadAllBytes(dir.Combine("Ep 01.ass"));
-        Assert.Equal([0xEF, 0xBB, 0xBF], edited.Take(3)); // utf-8-sig, как в оригинале
+        Assert.Equal([0xEF, 0xBB, 0xBF], edited.Take(3)); // UTF-8 с BOM
         Assert.Equal("[Events]\r\nDialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,Текст\r\n", Encoding.UTF8.GetString(edited[3..]));
         Assert.Equal([0xFF, 0xFE, 0x00], File.ReadAllBytes(dir.Combine("bad.ass")));
         Assert.Equal(AssEditOperation.ValuesToRemove(inspection, ["Signs"], keepSelected: false), remove);

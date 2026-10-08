@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Anitools.Core.Processes;
 
-/// <summary>Командная строка из аргументов — как subprocess.list2cmdline в оригинале (для логов ошибок).</summary>
+/// <summary>Командная строка из аргументов по правилам разбора MS C runtime (для логов ошибок).</summary>
 public static class CommandLine
 {
     public static string Format(IEnumerable<string> args)

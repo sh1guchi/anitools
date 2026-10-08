@@ -53,7 +53,7 @@ public sealed record HlsEpisodeResult(HlsEpisode Episode, HlsEpisodeOutcome Outc
     public IReadOnlyList<(string Rung, double Mbps)> Bitrates { get; init; } = [];
 }
 
-/// <summary>Итог п.7: серии по порядку плана, начало и конец.</summary>
+/// <summary>Итог HLS: серии по порядку плана, начало и конец.</summary>
 public sealed record HlsResult(IReadOnlyList<HlsEpisodeResult> Episodes, DateTime Started, DateTime Finished)
 {
     public int Count(HlsEpisodeOutcome outcome) => Episodes.Count(e => e.Outcome == outcome);
@@ -72,7 +72,7 @@ public sealed class HlsRunner(IProcessRunner runner, ToolPaths tools, IMediaProb
 {
     private readonly Func<DateTime> _clock = clock ?? (() => DateTime.Now);
 
-    /// <param name="workRoot">Папка для временных файлов (RAM-диск, HDD); null — рядом с выходом, как «как раньше» в оригинале.</param>
+    /// <param name="workRoot">Папка для временных файлов (RAM-диск, HDD); null — рядом с выходом.</param>
     /// <param name="episodeDone">Итог каждой серии сразу, как она закончилась (для журнала и строки хода).</param>
     public async Task<HlsResult> ExecuteAsync(
         HlsPlan plan,
@@ -118,7 +118,7 @@ public sealed class HlsRunner(IProcessRunner runner, ToolPaths tools, IMediaProb
 }
 
 /// <summary>
-/// Одна серия (_process_episode_multi_res, py:4268): качество (постоянный CQ или подбор) → видео на все качества
+/// Одна серия: качество (постоянный CQ или подбор) → видео на все качества
 /// одной командой → все озвучки одной командой → архивы → перенос .mka в папку тайтла.
 /// Временные файлы — в workRoot/&lt;тайтл&gt;/&lt;серия&gt; (или рядом с выходом); на SSD пишутся только zip и .mka.
 /// </summary>
@@ -178,7 +178,7 @@ public sealed class HlsEpisodeProcessor(IProcessRunner runner, ToolPaths tools, 
 
         private string Source => episode.Source.Path;
 
-        private string LogPrefix => PyText.Stem(episode.Source.Name);
+        private string LogPrefix => TextUtils.Stem(episode.Source.Name);
 
         public async Task<HlsEpisodeResult> ExecuteAsync()
         {

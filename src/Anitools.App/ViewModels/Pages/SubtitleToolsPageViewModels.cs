@@ -11,7 +11,7 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>«Сдвиг» субтитров (§4.11, subtitle_delay+1s.py): .srt/.ass/.ssa папки → subs_fixed\ со сдвигом времени.</summary>
+/// <summary>«Сдвиг» субтитров (§4.11): .srt/.ass/.ssa папки → subs_fixed\ со сдвигом времени.</summary>
 public sealed partial class SubShiftPageViewModel(IShell shell) : PageViewModel(shell, "Сдвиг субтитров", MaterialIconKind.TimerEditOutline)
 {
     public ObservableCollection<string> Files { get; } = [];
@@ -77,7 +77,7 @@ public sealed partial class AssValueRowViewModel(AssFieldValue value) : Observab
 }
 
 /// <summary>
-/// «Чистка стилей» (§4.11, edit_styles.py): строки Dialogue .ass папки — оставить или удалить по стилю или актёру;
+/// «Чистка стилей» (§4.11): строки Dialogue .ass папки — оставить или удалить по стилю или актёру;
 /// оригиналы — в ass_backup_&lt;дата&gt;.
 /// </summary>
 public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(shell, "Чистка стилей", MaterialIconKind.Broom)

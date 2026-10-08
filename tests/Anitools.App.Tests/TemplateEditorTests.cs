@@ -15,7 +15,7 @@ using Avalonia.VisualTree;
 
 namespace Anitools.App.Tests;
 
-/// <summary>Редактор шаблона имени на странице «Переименовать» (перенос из Anime Uploader), пресеты, экспорт настроек.</summary>
+/// <summary>Редактор шаблона имени на странице «Переименовать» (как в Anime Uploader), пресеты, экспорт настроек.</summary>
 public sealed class TemplateEditorTests
 {
     private const string Release = "{название:точки}.S{сезон:00}E{серия}.1080p.BluRay.Remux.AVC.MULTi.FLAC.2.0-Sylvar";

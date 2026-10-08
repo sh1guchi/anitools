@@ -6,7 +6,7 @@ namespace Anitools.Core.Operations.Hardsub;
 
 public sealed record HardsubOptions
 {
-    /// <summary>Кодирование (hardsub.py: hevc_nvenc, CQ 17, 10 бит); в тестах — libx264.</summary>
+    /// <summary>Кодирование (по умолчанию hevc_nvenc, CQ 17, 10 бит); в тестах — libx264.</summary>
     public IReadOnlyList<string> EncodeArgs { get; init; } = DefaultEncodeArgs;
 
     /// <summary>Папка со шрифтами для рендера .ass в рабочей папке; есть — подхватывается (fontsdir).</summary>
@@ -20,9 +20,9 @@ public sealed record HardsubOptions
 }
 
 /// <summary>
-/// Хардсаб (hardsub.py): пары «видео + .ass с тем же именем» → Hardsub\&lt;имя видео&gt;. Пишется в
+/// Хардсаб: пары «видео + .ass с тем же именем» → Hardsub\&lt;имя видео&gt;. Пишется в
 /// Hardsub\&lt;имя&gt;.part&lt;расширение&gt; и переименовывается только после успеха. ffmpeg запускается из рабочей папки
-/// с относительными путями — как в оригинале, без проблем с «C:» в фильтре subtitles.
+/// с относительными путями — так в фильтре subtitles нет проблем с «C:».
 /// </summary>
 public static class HardsubOperation
 {
@@ -32,8 +32,8 @@ public static class HardsubOperation
 
     /// <summary>
     /// Путь для параметра фильтра subtitles: обратные слеши → прямые, затем экранирование в два уровня —
-    /// для разбора параметров фильтра (\ ' :) и для графа фильтров (\ ' [ ] , ;). У оригинала (escape_filter)
-    /// уровень один, и файл с апострофом в имени («it's») ffmpeg не открывал.
+    /// для разбора параметров фильтра (\ ' :) и для графа фильтров (\ ' [ ] , ;). С одним уровнем файл
+    /// с апострофом в имени («it's») ffmpeg не откроет.
     /// </summary>
     public static string EscapeFilter(string path) => Escape(Escape(path.Replace('\\', '/'), "\\':"), "\\'[],;");
 
@@ -55,10 +55,10 @@ public static class HardsubOperation
 
     public static OperationPlan Plan(string folder, HardsubOptions options)
     {
-        // sorted(Path(".").iterdir()) оригинала: имена в нижнем регистре по кодам символов
+        // По именам в нижнем регистре, по кодам символов
         var pairs = MediaFiles.List(folder, VideoExtensions)
-            .OrderBy(p => PyText.Lower(Path.GetFileName(p)), PyText.CodePointComparer)
-            .Select(video => (Video: video, Ass: Path.Combine(folder, PyText.SplitExt(Path.GetFileName(video)).Root + ".ass")))
+            .OrderBy(p => TextUtils.Lower(Path.GetFileName(p)), TextUtils.CodePointComparer)
+            .Select(video => (Video: video, Ass: Path.Combine(folder, TextUtils.SplitExt(Path.GetFileName(video)).Root + ".ass")))
             .Where(p => File.Exists(p.Ass))
             .ToList();
         if (pairs.Count == 0)
@@ -70,7 +70,7 @@ public static class HardsubOperation
         var items = pairs.Select(p =>
         {
             var name = Path.GetFileName(p.Video);
-            var (stem, ext) = PyText.SplitExt(name);
+            var (stem, ext) = TextUtils.SplitExt(name);
             var part = Path.Combine(OutputFolderName, $"{stem}.part{ext}"); // .part перед расширением — иначе ffmpeg не поймёт контейнер
             var output = Path.Combine(folder, OutputFolderName, name);
             List<string> args =

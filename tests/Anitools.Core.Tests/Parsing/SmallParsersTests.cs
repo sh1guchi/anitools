@@ -6,7 +6,7 @@ namespace Anitools.Core.Tests.Parsing;
 public sealed class SmallParsersTests
 {
     [Fact]
-    public void TrackIdList_matches_original() =>
+    public void TrackIdList_matches_golden() =>
         GoldenAssert.All("parse_track_ids", input => TrackIdList.Parse(input.GetString()!));
 
     [Fact]
@@ -14,16 +14,16 @@ public sealed class SmallParsersTests
         Assert.Throws<FormatException>(() => TrackIdList.Parse("1-99999999"));
 
     [Fact]
-    public void LanguageGuess_matches_original() =>
+    public void LanguageGuess_matches_golden() =>
         GoldenAssert.All("detect_lang", input => LanguageGuess.Detect(input.GetString()));
 
     [Fact]
-    public void ExternalAudio_matches_original() =>
+    public void ExternalAudio_matches_golden() =>
         GoldenAssert.All("external_audio_matches", input =>
             ExternalAudio.Matches(input.GetProperty("filename").GetString()!, input.GetProperty("base_name").GetString()!));
 
     [Fact]
-    public void NaturalSort_matches_original() =>
+    public void NaturalSort_matches_golden() =>
         GoldenAssert.All("natural_sort", input =>
         {
             var names = input.EnumerateArray().Select(n => n.GetString()!).ToList();

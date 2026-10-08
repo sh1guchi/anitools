@@ -1,9 +1,6 @@
 {
   "function": "audio_tool_commands",
-  "description": "Команды перекодирования аудио (audio_decod.py: все форматы) и обрезки начала (delay-1s.py)",
-  "source": "reference/python/extra/audio_decod.py",
-  "source_sha256": "09bbd790815ad7114cfac00e3a57725ad48a8cac08e72ee50eb78d029810b6f6",
-  "python": "3.13.16",
+  "description": "Команды «Перекодировать» (все форматы) и «Сдвиг аудио» с перекодированием в AAC (обрезка начала)",
   "cases": [
     {"input": {"tool": "audio_decod", "format": "m4a", "source": "Track 01.flac"}, "output": [["ffmpeg", "-hide_banner", "-nostdin", "-i", "Track 01.flac", "-map", "0:a", "-c:a", "aac", "-profile:a", "aac_low", "-b:a", "256k", "-af", "aresample=async=1", "-ac", "2", "-map_metadata", "0", "-map", "0:v?", "-c:v", "copy", "-disposition:v", "attached_pic", "converted/Track 01.m4a"]]},
     {"input": {"tool": "audio_decod", "format": "aac", "source": "Track 01.flac"}, "output": [["ffmpeg", "-hide_banner", "-nostdin", "-i", "Track 01.flac", "-map", "0:a", "-c:a", "aac", "-profile:a", "aac_low", "-b:a", "256k", "-af", "aresample=async=1", "-ac", "2", "-map_metadata", "0", "-map", "0:v?", "-c:v", "copy", "-disposition:v", "attached_pic", "converted/Track 01.m4a"]]},

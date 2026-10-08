@@ -1,13 +1,13 @@
 namespace Anitools.Core.Parsing;
 
-/// <summary>Ввод номеров дорожек «1,3-5» (п.2, п.3).</summary>
+/// <summary>Ввод номеров дорожек «1,3-5».</summary>
 public static class TrackIdList
 {
-    /// <summary>Самый длинный диапазон: «1-99999999» по ошибке не должен подвесить программу (в оригинале зависал бы).</summary>
+    /// <summary>Самый длинный диапазон: «1-99999999» по ошибке не должен подвесить программу.</summary>
     public const int MaxRange = 10_000;
 
     /// <summary>
-    /// «1,3-5,8» → 0-based [0, 2, 3, 4, 7] (_parse_track_ids, py:1195): диапазоны раскрываются, обратный
+    /// «1,3-5,8» → 0-based [0, 2, 3, 4, 7]: диапазоны раскрываются, обратный
     /// переворачивается, повторы убираются, порядок ввода сохраняется. Ошибка ввода — <see cref="FormatException"/>.
     /// </summary>
     public static IReadOnlyList<int> Parse(string text)
@@ -15,7 +15,7 @@ public static class TrackIdList
         var ids = new List<int>();
         foreach (var raw in text.Split(','))
         {
-            var part = PyText.Strip(raw);
+            var part = TextUtils.Strip(raw);
             if (part.Length == 0)
             {
                 continue;
@@ -24,8 +24,8 @@ public static class TrackIdList
             if (part.Contains('-', StringComparison.Ordinal))
             {
                 var pieces = part.Split('-', 2);
-                var lo = ToInt(PyText.Strip(pieces[0]));
-                var hi = ToInt(PyText.Strip(pieces[1]));
+                var lo = ToInt(TextUtils.Strip(pieces[0]));
+                var hi = ToInt(TextUtils.Strip(pieces[1]));
                 if (lo > hi)
                 {
                     (lo, hi) = (hi, lo);
@@ -51,5 +51,5 @@ public static class TrackIdList
         return ids.Where(seen.Add).ToList();
     }
 
-    private static int ToInt(string s) => (int)PyText.ParseInt(s);
+    private static int ToInt(string s) => (int)TextUtils.ParseInt(s);
 }

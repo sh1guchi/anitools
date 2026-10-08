@@ -7,8 +7,8 @@ using Anitools.Core.Processes;
 namespace Anitools.Core.Logging;
 
 /// <summary>
-/// Логи ошибок внешних программ (write_process_error_log, py:846): время, команда, код возврата и хвост вывода.
-/// Пишутся в %LOCALAPPDATA%\anitools\logs (в оригинале — в текущую папку процесса, docs/PLAN.md §2.8 #8).
+/// Логи ошибок внешних программ: время, команда, код возврата и хвост вывода.
+/// Пишутся в %LOCALAPPDATA%\anitools\logs (docs/PLAN.md §2.8 #8).
 /// </summary>
 public sealed partial class ErrorLogWriter(string directory, Func<DateTime>? clock = null)
 {
@@ -43,7 +43,7 @@ public sealed partial class ErrorLogWriter(string directory, Func<DateTime>? clo
         }
 
         text.Append("\n--- output (stdout+stderr, tail) ---\n");
-        var trimmed = PyText.Strip(output ?? "");
+        var trimmed = TextUtils.Strip(output ?? "");
         text.Append(trimmed.Length > 0 ? trimmed + "\n" : "(процесс не вывел ничего — возможно, был прерван снаружи)\n");
 
         try
@@ -69,7 +69,7 @@ public sealed partial class ErrorLogWriter(string directory, Func<DateTime>? clo
         }
     }
 
-    // [^\w.-] с \w как в Python
+    // [^\w.-], где \w — буква или цифра любого письма или «_»
     [GeneratedRegex(@"[^\p{L}\p{N}_.-]", RegexOptions.CultureInvariant)]
     private static partial Regex UnsafeCharsRegex();
 }

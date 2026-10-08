@@ -8,7 +8,7 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>«Дорожки файла» (§4.11, mka_muxer.py, режим 2): таблица аудиодорожек и список тайтлов для копирования.</summary>
+/// <summary>«Дорожки файла» (§4.11): таблица аудиодорожек и список тайтлов для копирования.</summary>
 public sealed partial class TrackListPageViewModel(IShell shell) : PageViewModel(shell, "Дорожки файла", MaterialIconKind.FileMusicOutline)
 {
     private CancellationTokenSource? _reading;

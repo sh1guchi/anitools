@@ -64,8 +64,8 @@ public sealed record RenameSettings
 }
 
 /// <summary>
-/// Настройки приложения (settings.json, docs/PLAN.md §3.6). Значения по умолчанию — константы оригинала;
-/// чего нет в файле — берётся по умолчанию, неверное исправляет <see cref="Normalized"/>.
+/// Настройки приложения (settings.json, docs/PLAN.md §3.6). Чего нет в файле — берётся по умолчанию,
+/// неверное исправляет <see cref="Normalized"/>.
 /// </summary>
 public sealed record AppSettings
 {
@@ -73,7 +73,7 @@ public sealed record AppSettings
 
     public ToolPathSettings Tools { get; init; } = new();
 
-    /// <summary>Войс-лист: названия озвучек для выбора в п.2, п.3, п.7 и сборке .mka.</summary>
+    /// <summary>Войс-лист: названия озвучек для выбора в «Только аудио», «Сборке аудио», HLS и сборке .mka.</summary>
     public IReadOnlyList<string> Voices { get; init; } = VoiceList.Default;
 
     public HlsSettings Hls { get; init; } = HlsSettings.Default;

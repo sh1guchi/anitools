@@ -39,7 +39,7 @@ public sealed record MediaStream
 
     /// <summary>
     /// Кодек так, как его пишет ffmpeg -i в строке «Audio: …»: «aac (LC)», «pcm_s16le (sowt / 0x74776F73)».
-    /// Нужен там, где оригинал брал имя дорожки из этой строки (дорожка без тайтла).
+    /// Нужен там, где имя дорожки без тайтла берётся из этой строки.
     /// </summary>
     public string CodecDescription
     {

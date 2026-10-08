@@ -1,6 +1,6 @@
 namespace Anitools.Core.Platform;
 
-/// <summary>Снятие «только для чтения» с выходных файлов и папок (clear_readonly, py:1047).</summary>
+/// <summary>Снятие «только для чтения» с выходных файлов и папок.</summary>
 public static class ReadOnlyAttr
 {
     /// <summary>Windows — снять атрибут «только чтение»; Linux/macOS — дать владельцу право записи. Ошибки глушатся.</summary>
@@ -29,7 +29,7 @@ public static class ReadOnlyAttr
         }
     }
 
-    /// <summary>Сама папка и всё внутри (clear_readonly_tree).</summary>
+    /// <summary>Сама папка и всё внутри.</summary>
     public static void ClearTree(string path)
     {
         Clear(path);

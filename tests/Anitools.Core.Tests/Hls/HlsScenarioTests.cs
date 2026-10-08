@@ -11,16 +11,16 @@ using Anitools.Core.Tests.Fixtures;
 namespace Anitools.Core.Tests.Hls;
 
 /// <summary>
-/// Сценарии п.7 из оригинала (эталон hls_scenarios): для той же папки и тех же решений C# запускает те же команды
-/// ffmpeg, кладёт в архивы те же записи и оставляет те же файлы. ffmpeg фейковый: вместо кодирования создаёт
-/// сегменты и .mka — так же, как фейк в tools/gen_golden.py.
+/// Сценарии HLS (эталон hls_scenarios): для папки и решений из эталона запускаются те же команды ffmpeg,
+/// в архивы попадают те же записи и остаются те же файлы. ffmpeg фейковый: вместо кодирования создаёт
+/// сегменты и .mka.
 /// </summary>
 public sealed class HlsScenarioTests
 {
     private static readonly ToolPaths Tools = new("ffmpeg", "ffprobe", null, null);
 
     [Fact]
-    public void Same_commands_archives_and_files_as_original() =>
+    public void Same_commands_archives_and_files_as_golden() =>
         GoldenAssert.All("hls_scenarios", input => RunAsync(input).GetAwaiter().GetResult());
 
     private static async Task<object> RunAsync(JsonElement input)
@@ -63,7 +63,7 @@ public sealed class HlsScenarioTests
         var groupOptions = options.GetProperty("groups").EnumerateArray().Select(g => GroupOptions(inspection, g)).ToList();
         if (groupOptions.All(g => inspection.Groups.Contains(g.Group)))
         {
-            // Без перегруппировки C# находит те же группы в том же порядке, что и оригинал
+            // Без перегруппировки находятся те же группы в том же порядке, что в эталоне
             Assert.Equal(groupOptions.Select(g => g.Group.Title), inspection.Groups.Select(g => g.Title).Where(t => groupOptions.Any(o => o.Group.Title == t)));
         }
 
@@ -86,7 +86,7 @@ public sealed class HlsScenarioTests
 
         var commands = ffmpeg.FfmpegArguments.Select(args =>
         {
-            Assert.Equal(["-progress", "pipe:1", "-nostats"], args.Take(3)); // к команде оригинала добавлен только прогресс
+            Assert.Equal(["-progress", "pipe:1", "-nostats"], args.Take(3)); // к команде из эталона добавлен только прогресс
             return (IReadOnlyList<string>)["ffmpeg", .. args.Skip(3).Select(a => Normalize(a, dir.Path))];
         }).ToList();
         var statuses = result.Episodes
@@ -104,10 +104,10 @@ public sealed class HlsScenarioTests
         {
             using var zip = ZipFile.OpenRead(zipPath);
             Assert.All(zip.Entries, e => Assert.Equal(e.Length, e.CompressedLength));
-            zips[Relative(zipPath, dir.Path)] = [.. zip.Entries.Select(e => e.FullName).Order(PyText.CodePointComparer)];
+            zips[Relative(zipPath, dir.Path)] = [.. zip.Entries.Select(e => e.FullName).Order(TextUtils.CodePointComparer)];
         }
 
-        var files = Directory.EnumerateFiles(dir.Path, "*", SearchOption.AllDirectories).Select(p => Relative(p, dir.Path)).Order(PyText.CodePointComparer).ToList();
+        var files = Directory.EnumerateFiles(dir.Path, "*", SearchOption.AllDirectories).Select(p => Relative(p, dir.Path)).Order(TextUtils.CodePointComparer).ToList();
         return new Dictionary<string, object> { ["commands"] = commands, ["statuses"] = statuses, ["zips"] = zips, ["files"] = files };
     }
 
@@ -129,7 +129,7 @@ public sealed class HlsScenarioTests
         };
     }
 
-    /// <summary>Слеши — к прямым до замены корня: путь сегментов и на Windows уже с прямыми (as_posix, как в оригинале).</summary>
+    /// <summary>Слеши — к прямым до замены корня: путь сегментов и на Windows уже с прямыми.</summary>
     private static string Normalize(string arg, string root) => arg.Replace('\\', '/').Replace(root.Replace('\\', '/'), "{root}", StringComparison.Ordinal);
 
     private static string Relative(string path, string root) => Path.GetRelativePath(root, path).Replace('\\', '/');

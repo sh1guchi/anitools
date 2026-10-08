@@ -10,7 +10,7 @@ public sealed record MkaSource(string RelativePath, string FullPath, string? Tit
 {
     public string Name => Path.GetFileName(FullPath);
 
-    /// <summary>Метка озвучки (voice_label): папка «N. Имя» → тайтл дорожки → последний [тег] → остаток имени.</summary>
+    /// <summary>Метка озвучки: папка «N. Имя» → тайтл дорожки → последний [тег] → остаток имени.</summary>
     public string Label => MkaNames.VoiceFolder(RelativePath).Label ?? MkaNames.LabelFromFile(Name, Title, MkaNames.EpisodeBase(Name));
 
     /// <summary>Номер для порядка по умолчанию: «N. » у папки, иначе у файла.</summary>
@@ -46,7 +46,7 @@ public sealed record MkaLabelOptions
 }
 
 /// <summary>
-/// Сборка озвучек в .mka (mka_muxer.py, режим 1): аудиофайлы папки и подпапок (структура п.2 «N. Озвучка\…»)
+/// Сборка озвучек в .mka: аудиофайлы папки и подпапок (структура «Только аудио»: «N. Озвучка\…»)
 /// группируются по номеру серии, на каждую серию — один MKA\&lt;имя&gt;.mka со всеми озвучками дорожками
 /// (без перекодирования). Порядок, тайтлы и язык задаются один раз по меткам озвучек.
 /// </summary>
@@ -96,7 +96,7 @@ public static class MkaMuxOperation
             try
             {
                 var audio = (await probe.ProbeAsync(full, cancellationToken).ConfigureAwait(false)).AudioStreams;
-                var title = audio.Count > 0 && audio[0].Title is { } t && PyText.Strip(t).Length > 0 ? PyText.Strip(t) : null;
+                var title = audio.Count > 0 && audio[0].Title is { } t && TextUtils.Strip(t).Length > 0 ? TextUtils.Strip(t) : null;
                 sources.Add(new MkaSource(rel, full, title, Math.Max(1, audio.Count)));
             }
             catch (MediaProbeException)
@@ -187,7 +187,7 @@ public static class MkaMuxOperation
     }
 
     /// <summary>
-    /// ffmpeg (mux_group): все входы, каждая их аудиодорожка — отдельной дорожкой; первая — по умолчанию.
+    /// Команда ffmpeg: все входы, каждая их аудиодорожка — отдельной дорожкой; первая — по умолчанию.
     /// Язык метки уточняется тайтлом самого файла (англ./ориг. дорожка важнее метки).
     /// </summary>
     private static IReadOnlyList<string> Command(IReadOnlyList<MkaSource> files, MkaLabelOptions options, string output)
@@ -204,7 +204,7 @@ public static class MkaMuxOperation
         for (var input = 0; input < files.Count; input++)
         {
             var file = files[input];
-            var title = options.Titles is not null && options.Titles.TryGetValue(file.Label, out var t) && PyText.Strip(t).Length > 0 ? PyText.Strip(t) : file.Label;
+            var title = options.Titles is not null && options.Titles.TryGetValue(file.Label, out var t) && TextUtils.Strip(t).Length > 0 ? TextUtils.Strip(t) : file.Label;
             var language = options.Language is null
                 ? null
                 : LanguageGuess.Detect(file.Title ?? "") ?? LanguageGuess.Detect($"{file.Label} {title}") ?? DefaultLanguage(options.Language);
@@ -230,5 +230,5 @@ public static class MkaMuxOperation
         return args;
     }
 
-    private static string DefaultLanguage(string language) => PyText.Strip(language) is { Length: > 0 } l ? l : "rus";
+    private static string DefaultLanguage(string language) => TextUtils.Strip(language) is { Length: > 0 } l ? l : "rus";
 }

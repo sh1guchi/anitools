@@ -9,7 +9,10 @@ using Avalonia.Headless.XUnit;
 
 namespace Anitools.App.Tests;
 
-/// <summary>Страницы п.2–п.5 на фейковых ffprobe/mkvmerge: что показывают и какие команды строят.</summary>
+/// <summary>
+/// Страницы «Только аудио», «Сборка аудио», «Субтитры» и «Переименовать» на фейковых ffprobe/mkvmerge:
+/// что показывают и какие команды строят.
+/// </summary>
 public sealed class PagesTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

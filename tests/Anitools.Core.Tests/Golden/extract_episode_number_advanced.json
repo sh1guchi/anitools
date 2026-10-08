@@ -1,9 +1,6 @@
 {
   "function": "extract_episode_number_advanced",
-  "description": "Шаг 3 extract_episode_number_smart (py:3085)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Номер серии, расширенный разбор: Anitomy, затем наборы регулярок; номер больше 0",
   "cases": [
     {"input": "[SubsPlease] Sousou no Frieren - 01 (1080p) [F02B9CB4].mkv", "output": "01"},
     {"input": "[SubsPlease] Sousou no Frieren - 28 (1080p) [A1B2C3D4].mkv", "output": "28"},

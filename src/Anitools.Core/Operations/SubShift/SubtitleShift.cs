@@ -10,7 +10,7 @@ namespace Anitools.Core.Operations.SubShift;
 public sealed record SubShiftFileResult(string Source, string? Output, string? Error);
 
 /// <summary>
-/// Сдвиг субтитров (subtitle_delay+1s.py): .srt .ass .ssa из папки → subs_fixed\&lt;то же имя&gt; (UTF-8 без BOM).
+/// Сдвиг субтитров: .srt .ass .ssa из папки → subs_fixed\&lt;то же имя&gt; (UTF-8 без BOM).
 /// SRT — все метки «a --> b», ASS/SSA — время в строках Dialogue; раньше нуля не уходит.
 /// Переводы строк сохраняются как в файле.
 /// </summary>
@@ -22,7 +22,7 @@ public static partial class SubtitleShift
 
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
 
-    /// <summary>shift_time_srt: «HH:MM:SS,mmm» + сдвиг (миллисекунды — с отбрасыванием дробной части).</summary>
+    /// <summary>Время SRT «HH:MM:SS,mmm» + сдвиг (миллисекунды — с отбрасыванием дробной части).</summary>
     public static string ShiftSrtTime(string time, double seconds)
     {
         var (h, m, rest) = Split3(time, ':');
@@ -41,7 +41,7 @@ public static partial class SubtitleShift
         return string.Create(CultureInfo.InvariantCulture, $"{total / 3600000:00}:{total % 3600000 / 60000:00}:{total % 60000 / 1000:00},{total % 1000:000}");
     }
 
-    /// <summary>shift_time_ass: «H:MM:SS.cc» + сдвиг (сотые — с отбрасыванием дробной части).</summary>
+    /// <summary>Время ASS «H:MM:SS.cc» + сдвиг (сотые — с отбрасыванием дробной части).</summary>
     public static string ShiftAssTime(string time, double seconds)
     {
         var (h, m, rest) = Split3(time, ':');
@@ -91,7 +91,7 @@ public static partial class SubtitleShift
         var output = Path.Combine(outputFolder, Path.GetFileName(file));
         try
         {
-            // utf-8-sig с заменой битых байтов, как в оригинале
+            // UTF-8: BOM, если есть, снимается, битые байты → U+FFFD
             var text = File.ReadAllText(file, Utf8NoBom);
             var shifted = MediaFiles.Suffix(Path.GetFileName(file)).Equals(".srt", StringComparison.OrdinalIgnoreCase)
                 ? ShiftSrt(text, seconds)
@@ -105,7 +105,7 @@ public static partial class SubtitleShift
         }
     }
 
-    private static long Int(string s) => (long)PyText.ParseInt(s);
+    private static long Int(string s) => (long)TextUtils.ParseInt(s);
 
     private static (string, string, string) Split3(string time, char separator)
     {
@@ -113,7 +113,7 @@ public static partial class SubtitleShift
         return parts.Length == 3 ? (parts[0], parts[1], parts[2]) : throw new FormatException($"Не время: {time}");
     }
 
-    [GeneratedRegex(@"(\d{2}:\d{2}:\d{2},\d{3})" + PyText.Space + "*-->" + PyText.Space + @"*(\d{2}:\d{2}:\d{2},\d{3})")]
+    [GeneratedRegex(@"(\d{2}:\d{2}:\d{2},\d{3})" + TextUtils.Space + "*-->" + TextUtils.Space + @"*(\d{2}:\d{2}:\d{2},\d{3})")]
     private static partial Regex SrtTimesRegex();
 
     [GeneratedRegex(@"Dialogue: (\d+,)(\d:\d{2}:\d{2}\.\d{2}),(\d:\d{2}:\d{2}\.\d{2}),(.*)")]

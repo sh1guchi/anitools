@@ -9,8 +9,8 @@ using Material.Icons;
 namespace Anitools.App.ViewModels.Pages;
 
 /// <summary>
-/// «Сдвиг аудио» (§4.11, delay±1s.py): плюс — звук позже, минус — обрезать начало; → audio_fixed. По умолчанию без
-/// перекодирования (mkvmerge), по желанию — в AAC, как в оригинале.
+/// «Сдвиг аудио» (§4.11): плюс — звук позже, минус — обрезать начало; → audio_fixed. По умолчанию без
+/// перекодирования (mkvmerge), по желанию — в AAC.
 /// </summary>
 public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewModel(shell, "Сдвиг аудио", MaterialIconKind.ClockOutline)
 {
@@ -25,7 +25,7 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
     [ObservableProperty]
     public partial string Workers { get; set; } = Text(shell.Services.Settings.AudioShift.Workers);
 
-    /// <summary>Перекодировать в AAC (как в оригинале); нет — сдвиг без потерь.</summary>
+    /// <summary>Перекодировать в AAC; нет — сдвиг без потерь.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsLossless))]
     public partial bool Reencode { get; set; } = shell.Services.Settings.AudioShift.Reencode;
@@ -37,7 +37,7 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
     }
 
     public string Description => Reencode
-        ? "Перекодирование в AAC, как в оригинале: плюс — тишина в начало, минус — начало обрезается. Выход — папка «audio_fixed», .mka."
+        ? "Перекодирование в AAC: плюс — тишина в начало, минус — начало обрезается. Выход — папка «audio_fixed», .mka."
         : "Без перекодирования (mkvmerge): плюс — звук начинается позже, минус — начало отбрасывается. Кодек и качество — как в исходнике. Выход — папка «audio_fixed», .mka.";
 
     protected override Task LoadAsync(string folder, CancellationToken cancellationToken)
@@ -108,7 +108,7 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
     internal static string Text(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 }
 
-/// <summary>«Перекодировать» (§4.11, audio_decod.py): аудио папки → converted\ в выбранный формат.</summary>
+/// <summary>«Перекодировать» (§4.11): аудио папки → converted\ в выбранный формат.</summary>
 public sealed partial class AudioConvertPageViewModel(IShell shell) : PageViewModel(shell, "Перекодировать", MaterialIconKind.Waveform)
 {
     public PlanPreviewViewModel Preview { get; } = new();

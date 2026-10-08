@@ -1,9 +1,6 @@
 {
   "function": "hls_video_encode_args",
-  "description": "Параметры h264_nvenc для одного качества (py:3972)",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Параметры h264_nvenc для одного качества",
   "cases": [
     {"input": {"vbr": 800000, "rate_control": null}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-b:v", "800000", "-maxrate", "1600000", "-bufsize", "3200000"]},
     {"input": {"vbr": 16000000, "rate_control": null}, "output": ["-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr", "-spatial-aq", "1", "-rc-lookahead", "32", "-forced-idr", "1", "-force_key_frames", "expr:gte(t,n_forced*6)", "-b:v", "16000000", "-maxrate", "32000000", "-bufsize", "64000000"]},

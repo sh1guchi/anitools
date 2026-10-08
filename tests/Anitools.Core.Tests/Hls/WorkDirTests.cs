@@ -34,7 +34,7 @@ public sealed class WorkDirTests
         state.Remove('Z');
         Assert.False(File.Exists(state.Path));
 
-        // файл оригинала (json.dumps с пробелом) читается, испорченный — как пустой
+        // список с пробелами после запятых тоже читается, испорченный — как пустой
         File.WriteAllText(state.Path, """["L", "M"]""");
         Assert.Equal(["L", "M"], state.Read());
         File.WriteAllText(state.Path, "{битый");

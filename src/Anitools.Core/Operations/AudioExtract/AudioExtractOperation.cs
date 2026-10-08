@@ -15,10 +15,10 @@ public enum AudioExtractMode
     SingleMka,
 }
 
-/// <summary>Настройки п.2 — те же вопросы и значения по умолчанию, что в оригинале.</summary>
+/// <summary>Настройки «Только аудио».</summary>
 public sealed record AudioExtractOptions
 {
-    /// <summary>Дорожки 0-based в порядке ввода (в оригинале по умолчанию — «1», то есть [0]).</summary>
+    /// <summary>Дорожки 0-based в порядке ввода.</summary>
     public required IReadOnlyList<int> TrackIds { get; init; }
 
     /// <summary>Важно, только если дорожек больше одной.</summary>
@@ -35,15 +35,15 @@ public sealed record AudioExtractOptions
 
     /// <summary>
     /// SingleMka: язык дорожки, выбранный вручную (номер дорожки → код; пусто — не ставить), важнее
-    /// <see cref="Language"/> и угадывания. Нет ключа — как в оригинале.
+    /// <see cref="Language"/> и угадывания. Нет ключа — как задаёт <see cref="Language"/>.
     /// </summary>
     public IReadOnlyDictionary<int, string>? Languages { get; init; }
 }
 
-/// <summary>Что есть в папке для п.2: файлы и дорожки первого из них.</summary>
+/// <summary>Что есть в папке для «Только аудио»: файлы и дорожки первого из них.</summary>
 public sealed record AudioExtractSource(string Folder, IReadOnlyList<string> Files, IReadOnlyList<AudioTrackInfo> Tracks);
 
-/// <summary>П.2 «Оставить только аудио» (keep_audio_only, py:1326; _extract_audio_single_mka, py:1215).</summary>
+/// <summary>«Только аудио»: выбранные дорожки — по файлу на дорожку или все в один .mka на серию.</summary>
 public static class AudioExtractOperation
 {
     public const string OutputFolderName = "Audio only";
@@ -82,8 +82,8 @@ public static class AudioExtractOperation
     }
 
     /// <summary>
-    /// Имя папки дорожки: тайтл → кодек из «Audio: …» → номер; санитизация как в п.2; повтор имени → «имя_N»
-    /// (N — номер дорожки в исходнике).
+    /// Имя папки дорожки: тайтл → кодек из «Audio: …» → номер; санитизация — <see cref="TitleText.SanitizeTrackFolder"/>;
+    /// повтор имени → «имя_N» (N — номер дорожки в исходнике).
     /// </summary>
     public static IReadOnlyDictionary<int, string> TrackFolderNames(IReadOnlyList<AudioTrackInfo> tracks, IReadOnlyList<int> ids)
     {

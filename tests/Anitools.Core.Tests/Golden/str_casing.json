@@ -1,9 +1,6 @@
 {
   "function": "str_casing",
-  "description": "str.lower() и str.casefold() для всех символов, которые они меняют: код → [lower, casefold]",
-  "source": "reference/python/anitools.py",
-  "source_sha256": "224c08b02bef17d32b6981cb15dc4711e4ec00036e20f0f31593e2b7d2c3da9a",
-  "python": "3.13.16",
+  "description": "Нижний регистр (полное отображение Unicode) и casefold для всех символов, которые они меняют: код → [lower, casefold]",
   "cases": [
     {"input": 65, "output": ["a", "a"]},
     {"input": 66, "output": ["b", "b"]},

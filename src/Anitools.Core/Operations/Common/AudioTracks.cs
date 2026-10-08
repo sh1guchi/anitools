@@ -2,7 +2,7 @@ using Anitools.Core.Media;
 
 namespace Anitools.Core.Operations.Common;
 
-/// <summary>Аудиодорожка файла для выбора в п.2 и п.3.</summary>
+/// <summary>Аудиодорожка файла для выбора в «Только аудио» и «Сборке аудио».</summary>
 /// <param name="Index">N в «0:a:N».</param>
 /// <param name="Title">Настоящий тайтл (ffprobe, а для MOV/MP4 — ещё и из боксов файла); null — нет.</param>
 /// <param name="Description">Кодек как в «Audio: …» у ffmpeg -i: «aac (LC)».</param>
@@ -14,7 +14,7 @@ public static class AudioTracks
 
     /// <summary>
     /// Аудиодорожки файла по порядку. Если ffprobe не дал тайтл хоть одной дорожке, а файл QuickTime/MP4 —
-    /// недостающие берутся по порядку из боксов файла (экспорты DaVinci, py:1366).
+    /// недостающие берутся по порядку из боксов файла (экспорты DaVinci).
     /// </summary>
     public static async Task<IReadOnlyList<AudioTrackInfo>> ReadAsync(IMediaProbe probe, string path, CancellationToken ct = default)
     {

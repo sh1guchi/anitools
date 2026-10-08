@@ -5,12 +5,12 @@ namespace Anitools.Core.Operations.Common;
 /// <summary>Файлы рабочей папки и имена выходных файлов.</summary>
 public static class MediaFiles
 {
-    /// <summary>Видео для п.1, п.3, п.4.</summary>
+    /// <summary>Видео для «Только видео», «Сборки аудио» и «Субтитров».</summary>
     public static IReadOnlyList<string> VideoExtensions { get; } = [".mkv", ".mp4", ".hevc", ".avi", ".h264", ".m2ts", ".ogm", ".mpg", ".mov"];
 
     /// <summary>
     /// Файлы верхнего уровня с расширением из списка (без учёта регистра) — полные пути, по имени без учёта
-    /// регистра (как отдаёт их NTFS: оригинал брал порядок os.listdir). Папки не берутся.
+    /// регистра (как их отдаёт NTFS). Папки не берутся.
     /// </summary>
     public static IReadOnlyList<string> List(string folder, IEnumerable<string> extensions)
     {
@@ -21,10 +21,10 @@ public static class MediaFiles
             .ToList();
     }
 
-    /// <summary>Path(name).suffix из Python: «.mkv», у «.mkv» и «x.» — пусто.</summary>
-    public static string Suffix(string name) => name[PyText.Stem(name).Length..];
+    /// <summary>Последний суффикс имени: «a.b.mkv» → «.mkv», у «.mkv» и «x.» — пусто.</summary>
+    public static string Suffix(string name) => name[TextUtils.Stem(name).Length..];
 
-    /// <summary>name.rsplit('.', 1)[0] — имя без последнего расширения, как в п.2–4.</summary>
+    /// <summary>Имя без последнего расширения (всё до последней точки) — для выходов «Только аудио», «Сборки аудио» и «Субтитров».</summary>
     public static string WithoutLastExtension(string name)
     {
         var dot = name.LastIndexOf('.');
