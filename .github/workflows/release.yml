@@ -39,7 +39,9 @@ jobs:
           "VERSION=$version" >> $env:GITHUB_ENV
           "TAG=v$version" >> $env:GITHUB_ENV
       - run: dotnet build -c Release
-      - run: dotnet test -c Release --no-build
+      # Проекты тестов по очереди: при одновременном старте xUnit на Windows изредка не дожидается ответа процесса
+      # тестов («Test process did not return valid JSON») — выпуск не должен срываться из-за этого
+      - run: dotnet test -c Release --no-build -m:1
       - name: Сборка Anitools.exe
         run: >-
           dotnet publish src/Anitools.App -c Release -r win-x64 --self-contained
