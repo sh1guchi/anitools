@@ -280,6 +280,23 @@
                   <CheckBox Content="чинить метки времени" IsChecked="{Binding AudioConvertFixTimestamps}" />
                 </StackPanel>
               </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Команда ani">
+                <CheckBox Content="закрывать консоль, из которой набрали ani (окно anitools остаётся)" IsChecked="{Binding CloseConsoleAfterAni}" />
+              </HeaderedContentControl>
+              <HeaderedContentControl Classes="field" Header="Обновления">
+                <StackPanel Spacing="8">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding VersionText}" Classes="text2" VerticalAlignment="Center" />
+                    <Button Classes="sm" Command="{Binding CheckUpdatesNowCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="Update" />
+                        <TextBlock Text="Проверить сейчас" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+                  <CheckBox Content="проверять раз в день при запуске (GitHub)" IsChecked="{Binding CheckUpdates}" />
+                </StackPanel>
+              </HeaderedContentControl>
             </StackPanel>
           </Border>
         </Grid>

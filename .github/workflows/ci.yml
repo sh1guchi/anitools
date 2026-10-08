@@ -108,3 +108,28 @@ jobs:
           name: anitools-win-x64
           path: artifacts/publish/Anitools.exe
           retention-days: 30
+      # Установщик (installer/anitools.iss) и его проверка на чистой Windows: тихая установка, команда ani из cmd
+      # и PowerShell (окно открывается в текущей папке, консоль закрывается сама), удаление.
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          for ($i = 1; $i -le 3; $i++) {
+            choco upgrade innosetup -y --no-progress
+            if (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") { exit 0 }
+            Start-Sleep -Seconds (20 * $i)
+          }
+          exit 1
+      - name: Сборка установщика
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DAppVersion=$version" installer\anitools.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Проверка установщика и команды ani
+        shell: pwsh
+        run: ./tools/windows/test-installer.ps1 -Setup artifacts/installer/anitools-setup.exe
+      - uses: actions/upload-artifact@v7
+        with:
+          name: anitools-setup
+          path: artifacts/installer/anitools-setup.exe
+          retention-days: 30

@@ -190,7 +190,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
     public string Version { get; } = $"{AppInfo.Name} {AppInfo.Version}";
 
-    /// <summary>Под названием слева сверху: «0.1.0 · by shiguchi».</summary>
+    /// <summary>Под названием слева сверху: «1.0.0 · by shiguchi».</summary>
     public string BrandSubtitle { get; } = $"{AppInfo.Version} · by shiguchi";
 
     /// <summary>Всплывающие уведомления, новые снизу (не больше пяти).</summary>
@@ -318,6 +318,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
 
         ToolChips.Add(new ToolChip("NVENC", null, status.Nvenc == true,
             status.Nvenc == true ? "h264_nvenc и scale_cuda есть" : "в ffmpeg нет h264_nvenc/scale_cuda — HLS только на процессоре"));
+        UpdateMissingTools(paths);
         var missing = ToolChips.Where(c => !c.Ok).Select(c => c.Name).ToList();
         ToolsOk = missing.Count == 0;
         ToolsSummary = ToolsOk ? "программы" : string.Join(", ", missing);

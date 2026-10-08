@@ -1,0 +1,74 @@
+name: Release
+
+# Выпуск по тегу vX.Y.Z (docs/PLAN.md, этап 9): тег должен совпадать с <Version> в Directory.Build.props.
+# Собирает Anitools.exe и установщик, проверяет установщик на чистой Windows, публикует выпуск на GitHub
+# с anitools-setup.exe, Anitools.exe и SHA256SUMS.txt (по ним сверяется обновление из самой программы).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  AVALONIA_TELEMETRY_OPTOUT: 1
+
+jobs:
+  release:
+    name: Выпуск (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Тег совпадает с версией
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            Write-Host "::error::Тег ${{ github.ref_name }}, а в Directory.Build.props — $version"
+            exit 1
+          }
+          "VERSION=$version" >> $env:GITHUB_ENV
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+      - name: Сборка Anitools.exe
+        run: >-
+          dotnet publish src/Anitools.App -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:PublishReadyToRun=true -p:DebugType=none -o artifacts/publish
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          for ($i = 1; $i -le 3; $i++) {
+            choco upgrade innosetup -y --no-progress
+            if (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") { exit 0 }
+            Start-Sleep -Seconds (20 * $i)
+          }
+          exit 1
+      - name: Сборка установщика
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DAppVersion=$env:VERSION" installer\anitools.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Проверка установщика и команды ani
+        shell: pwsh
+        run: ./tools/windows/test-installer.ps1 -Setup artifacts/installer/anitools-setup.exe
+      - name: Файлы выпуска и контрольные суммы
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item artifacts/installer/anitools-setup.exe, artifacts/publish/Anitools.exe release/
+          $sums = Get-ChildItem release -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
+          [IO.File]::WriteAllText("$PWD/release/SHA256SUMS.txt", ($sums -join "`n") + "`n")
+          Get-Content release/SHA256SUMS.txt
+      - name: Выпуск на GitHub
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}" release/anitools-setup.exe release/Anitools.exe release/SHA256SUMS.txt
+          --verify-tag --title "anitools $env:VERSION" --notes-file installer/release-notes.md --generate-notes

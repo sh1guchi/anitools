@@ -82,6 +82,15 @@ public sealed record AppSettings
     /// <summary>Недавние рабочие папки, последняя — первой.</summary>
     public IReadOnlyList<string> RecentFolders { get; init; } = [];
 
+    /// <summary>Команда ani закрывает консоль, из которой её набрали (окно anitools открывается само по себе).</summary>
+    public bool CloseConsoleAfterAni { get; init; } = true;
+
+    /// <summary>Раз в день проверять, не вышла ли новая версия (GitHub Releases).</summary>
+    public bool CheckUpdates { get; init; } = true;
+
+    /// <summary>Когда последний раз проверяли обновления; null — ни разу.</summary>
+    public DateTimeOffset? LastUpdateCheck { get; init; }
+
     /// <summary>Папка — первой в недавних (без повторов, не больше <see cref="MaxRecentFolders"/>).</summary>
     public AppSettings WithRecentFolder(string folder)
     {
