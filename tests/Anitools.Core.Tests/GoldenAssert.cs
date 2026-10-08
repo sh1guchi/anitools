@@ -40,10 +40,10 @@ internal static class GoldenAssert
                 actual = element.GetRawText();
                 ok = c.Output is { } output && JsonEquals(output, element, relativeTolerance);
             }
-            catch (Exception ex) when (PythonError(ex) is { } pythonError)
+            catch (Exception ex) when (ErrorName(ex) is { } error)
             {
-                actual = $"исключение {pythonError} ({ex.GetType().Name}: {ex.Message})";
-                ok = c.Error == pythonError;
+                actual = $"исключение {error} ({ex.GetType().Name}: {ex.Message})";
+                ok = c.Error == error;
             }
 
             if (known.ContainsKey(key))
@@ -67,8 +67,8 @@ internal static class GoldenAssert
             $"{name}: {failures.Count} расхождений из {golden.Cases.Count}:\n  " + string.Join("\n  ", failures.Take(50)));
     }
 
-    /// <summary>Имя исключения Python, которому соответствует исключение .NET, или null (тогда тест падает как есть).</summary>
-    public static string? PythonError(Exception ex) => ex switch
+    /// <summary>Имя ошибки в эталоне (ValueError…), которому соответствует исключение .NET, или null (тогда тест падает как есть).</summary>
+    public static string? ErrorName(Exception ex) => ex switch
     {
         FormatException or OverflowException or ArgumentOutOfRangeException => "ValueError",
         KeyNotFoundException => "KeyError",
@@ -76,7 +76,7 @@ internal static class GoldenAssert
         _ => null,
     };
 
-    /// <summary>Кортежи → массивы, как их видит JSON эталона (tuple Python = list).</summary>
+    /// <summary>Кортежи → массивы: в JSON эталона кортеж — это список.</summary>
     private static object? Normalize(object? value) => value switch
     {
         null or string => value,

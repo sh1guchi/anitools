@@ -59,7 +59,7 @@ public sealed partial class RegroupViewModel : ObservableObject
     [RelayCommand]
     private void Cancel() => Closed?.Invoke(false);
 
-    /// <summary>Файлы без группы — в отдельную группу «Прочее» (как «остаток в отдельную группу» в оригинале).</summary>
+    /// <summary>Файлы без группы — в отдельную группу «Прочее».</summary>
     [RelayCommand]
     private void RestToOther()
     {

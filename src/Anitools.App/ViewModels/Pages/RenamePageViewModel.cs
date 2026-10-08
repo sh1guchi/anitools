@@ -89,9 +89,9 @@ public sealed partial class RenameRowViewModel : ObservableObject
 }
 
 /// <summary>
-/// П.5 «Переименовать» (§4.7): новое имя — по шаблону (стандартный — «Название - 01.ext», как в оригинале).
+/// «Переименовать» (§4.7): новое имя — по шаблону (стандартный — «Название - 01.ext»).
 /// Название — вручную или оригинальное с Shikimori; номер в каждой строке можно поправить. Шаблон правится в редакторе
-/// (перенос из Anime Uploader) и запоминается сам, есть свои пресеты. Переименование сразу (не задачей), с журналом для отката.
+/// (как в Anime Uploader) и запоминается сам, есть свои пресеты. Переименование сразу (не задачей), с журналом для отката.
 /// </summary>
 public sealed partial class RenamePageViewModel : PageViewModel
 {
@@ -432,9 +432,9 @@ public sealed partial class RenamePageViewModel : PageViewModel
     }
 
     /// <summary>
-    /// Название, которое встречается в именах видео чаще всего: в папке бывают NCOP.mkv и т.п., а оригинал брал
-    /// первое видео по алфавиту. У каждой серии своё «название» (имена вида «01. Kill the King.mkv») — берётся
-    /// название из имени папки. Видео нет — как у оригинала (<see cref="RenameOperation.TitleHint"/>).
+    /// Название, которое встречается в именах видео чаще всего, а не из первого видео по алфавиту: в папке бывают
+    /// NCOP.mkv и т.п. У каждой серии своё «название» (имена вида «01. Kill the King.mkv») — берётся
+    /// название из имени папки. Видео нет — из первого файла (<see cref="RenameOperation.TitleHint"/>).
     /// </summary>
     public static string GuessTitle(IReadOnlyList<string> files, string? folder = null)
     {

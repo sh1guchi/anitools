@@ -8,17 +8,17 @@ namespace Anitools.App.ViewModels.Pages;
 
 public enum RemuxProfile
 {
-    /// <summary>П.6: в MP4 (папка converted_mp4).</summary>
+    /// <summary>В MP4 (папка converted_mp4).</summary>
     Mp4,
 
-    /// <summary>П.6: в MKV (папка та же — converted_mp4, как в оригинале).</summary>
+    /// <summary>В MKV (папка та же — converted_mp4).</summary>
     Mkv,
 
-    /// <summary>m2ts.bat: Blu-ray M2TS → MKV рядом с исходником, PCM → FLAC.</summary>
+    /// <summary>Blu-ray M2TS → MKV рядом с исходником, PCM → FLAC.</summary>
     M2tsToMkv,
 }
 
-/// <summary>П.6 «Ремукс» (§4.3) и профиль из m2ts.bat (§2.9.10): смена контейнера без перекодирования видео.</summary>
+/// <summary>«Ремукс» (§4.3) и профиль Blu-ray M2TS (§2.9.10): смена контейнера без перекодирования видео.</summary>
 public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(shell, "Ремукс", MaterialIconKind.FileSwapOutline)
 {
     public PlanPreviewViewModel Preview { get; } = new();
@@ -26,7 +26,7 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
     [ObservableProperty]
     public partial RemuxProfile Profile { get; set; } = RemuxProfile.Mp4;
 
-    /// <summary>Только для MKV (в оригинале по умолчанию — да).</summary>
+    /// <summary>Только для MKV (по умолчанию — да).</summary>
     [ObservableProperty]
     public partial bool CopySubtitles { get; set; } = true;
 
@@ -56,7 +56,7 @@ public sealed partial class RemuxPageViewModel(IShell shell) : PageViewModel(she
     public string Description => Profile switch
     {
         RemuxProfile.Mp4 => "Видео и все аудиодорожки — в MP4, без перекодирования. Выход: папка «converted_mp4».",
-        RemuxProfile.Mkv => "Видео, аудио и (по желанию) субтитры — в MKV, без перекодирования. Выход: папка «converted_mp4», как в оригинале.",
+        RemuxProfile.Mkv => "Видео, аудио и (по желанию) субтитры — в MKV, без перекодирования. Выход: папка «converted_mp4».",
         _ => "Blu-ray M2TS → MKV: видео и звук копируются, PCM сжимается в FLAC без потерь. Выход — рядом с исходником.",
     };
 

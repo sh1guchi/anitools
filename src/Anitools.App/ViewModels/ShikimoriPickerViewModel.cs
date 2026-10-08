@@ -136,7 +136,7 @@ public sealed partial class ShikimoriPickerViewModel : ObservableObject
         Message = null;
         try
         {
-            // Сезон и тип — из названия файлов, запрос — какой ввели (как при повторном поиске в оригинале)
+            // Сезон и тип — из названия файлов, запрос — какой ввели
             var found = ShikimoriQuery.Rank(await _client.SmartSearchDetailedAsync(query), query, _query.Season, _query.Kinds);
             StopPosters();
             Selected = null;

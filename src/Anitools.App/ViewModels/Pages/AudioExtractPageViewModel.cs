@@ -96,7 +96,7 @@ public sealed partial class OutputTrackRowViewModel : ObservableObject
 }
 
 /// <summary>
-/// П.2 «Только аудио» (§4.4): дорожки по первому файлу; отдельный файл на дорожку (папки «N. Тайтл») или все
+/// «Только аудио» (§4.4): дорожки по первому файлу; отдельный файл на дорожку (папки «N. Тайтл») или все
 /// выбранные в один .mka с тайтлами из войс-листа, языком и порядком.
 /// </summary>
 public sealed partial class AudioExtractPageViewModel(IShell shell) : PageViewModel(shell, "Только аудио", MaterialIconKind.Headphones)
@@ -172,7 +172,7 @@ public sealed partial class AudioExtractPageViewModel(IShell shell) : PageViewMo
         OutputTracks.Clear();
         foreach (var track in source.Tracks)
         {
-            // По умолчанию — первая дорожка, как в оригинале («1»)
+            // По умолчанию — первая дорожка
             var row = new AudioTrackRowViewModel(track) { IsSelected = track.Index == 0 };
             row.PropertyChanged += OnTrackChanged;
             Tracks.Add(row);

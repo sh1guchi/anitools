@@ -5,7 +5,7 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>П.1 «Только видео» (§4.3): первая видеодорожка без звука и субтитров → «Video only».</summary>
+/// <summary>«Только видео» (§4.3): первая видеодорожка без звука и субтитров → «Video only».</summary>
 public sealed partial class VideoOnlyPageViewModel(IShell shell) : PageViewModel(shell, "Только видео", MaterialIconKind.Filmstrip)
 {
     public PlanPreviewViewModel Preview { get; } = new();
