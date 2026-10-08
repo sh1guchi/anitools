@@ -115,14 +115,21 @@ public sealed class ScreenshotTests
     public async Task Settings_page()
     {
         using var app = new AppFixture();
+        app.Services.Installer = FakeToolSite.WithFfmpeg("9.0.2", mkvToolNixHangs: true).Installer(app.Root);
         var vm = app.CreateViewModel();
         var window = new MainWindow { DataContext = vm };
         window.Show();
         await vm.CheckToolsAsync();
         vm.SelectedNav = vm.SettingsPage;
+        var packages = vm.SettingsPage.Packages;
+        await AppFixture.WaitUntilAsync(() => packages[0].Latest is not null, "последняя версия");
+        var installing = packages[1].InstallCommand.ExecuteAsync(null); // MKVToolNix «качается» — виден ход и «Отмена»
+        await AppFixture.WaitUntilAsync(() => packages[1].IsInstalling, "установка");
         AppFixture.Flush();
 
         Capture(window, "settings");
+        packages[1].CancelInstallCommand.Execute(null);
+        await installing;
     }
 
     [AvaloniaFact]

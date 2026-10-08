@@ -45,29 +45,63 @@
               <c:CardHead Icon="ApplicationCogOutline" Title="Программы" Margin="0" />
               <TextBlock Classes="dim" FontSize="12.5" TextWrapping="Wrap"
                          Text="Пусто — искать самим: FFMPEG_PATH/FFPROBE_PATH → PATH → Program Files. Можно указать файл или папку с программой." />
-              <ItemsControl ItemsSource="{Binding ToolPaths}">
+              <!-- по программам: FFmpeg, MKVToolNix, ImDisk — пути и «Установить» (последняя версия с сайта) -->
+              <ItemsControl ItemsSource="{Binding Packages}">
                 <ItemsControl.ItemsPanel>
                   <ItemsPanelTemplate>
                     <StackPanel Spacing="10" />
                   </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                  <DataTemplate DataType="vm:ToolPathRow">
-                    <HeaderedContentControl Classes="field" Header="{Binding Name}">
-                      <StackPanel Spacing="4">
+                  <DataTemplate DataType="vm:ToolPackageViewModel">
+                    <Border Classes="box">
+                      <StackPanel Spacing="10">
                         <Grid ColumnDefinitions="*,Auto">
-                          <TextBox Text="{Binding Configured}" PlaceholderText="искать автоматически" />
-                          <Button Grid.Column="1" Classes="icon" Command="{Binding BrowseCommand}" ToolTip.Tip="Выбрать файл" Margin="4,0,0,0">
-                            <mi:MaterialIcon Kind="FolderSearchOutline" />
+                          <StackPanel Spacing="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                            <TextBlock Classes="dim sm" TextWrapping="Wrap" Text="{Binding Caption}" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Classes="sm" Command="{Binding InstallCommand}" IsVisible="{Binding CanInstall}" Margin="10,0,0,0"
+                                  ToolTip.Tip="Скачать последнюю версию с сайта и прописать пути">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <mi:MaterialIcon Kind="DownloadOutline" />
+                              <TextBlock Text="{Binding InstallText}" />
+                            </StackPanel>
                           </Button>
                         </Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                          <mi:MaterialIcon Kind="CheckCircle" Classes="ok" Width="14" Height="14" IsVisible="{Binding IsFound}" />
-                          <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="14" Height="14" IsVisible="{Binding !IsFound}" />
-                          <TextBlock Text="{Binding Found}" Classes="dim sm" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" IsVisible="{Binding IsInstalling}">
+                          <ProgressBar Classes="pbar" Maximum="100" Value="{Binding Percent}" IsIndeterminate="{Binding IsIndeterminate}" VerticalAlignment="Center" />
+                          <Button Grid.Column="1" Grid.RowSpan="2" Classes="ghost sm" Content="Отмена" Command="{Binding CancelInstallCommand}" Margin="10,0,0,0" />
+                          <TextBlock Grid.Row="1" Classes="dim sm" Text="{Binding Stage}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Rows}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:ToolPathRow">
+                              <HeaderedContentControl Classes="field" Header="{Binding Name}">
+                                <StackPanel Spacing="4">
+                                  <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Text="{Binding Configured}" PlaceholderText="искать автоматически" />
+                                    <Button Grid.Column="1" Classes="icon" Command="{Binding BrowseCommand}" ToolTip.Tip="Выбрать файл" Margin="4,0,0,0">
+                                      <mi:MaterialIcon Kind="FolderSearchOutline" />
+                                    </Button>
+                                  </Grid>
+                                  <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <mi:MaterialIcon Kind="CheckCircle" Classes="ok" Width="14" Height="14" IsVisible="{Binding IsFound}" />
+                                    <mi:MaterialIcon Kind="CloseCircle" Classes="bad" Width="14" Height="14" IsVisible="{Binding !IsFound}" />
+                                    <TextBlock Text="{Binding Found}" Classes="dim sm" TextTrimming="CharacterEllipsis" />
+                                  </StackPanel>
+                                </StackPanel>
+                              </HeaderedContentControl>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                       </StackPanel>
-                    </HeaderedContentControl>
+                    </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

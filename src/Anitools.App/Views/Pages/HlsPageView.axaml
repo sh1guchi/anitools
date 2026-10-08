@@ -135,7 +135,7 @@
                             <mi:MaterialIcon Kind="FolderOutline" Classes="dim" Width="14" Height="14" VerticalAlignment="Center" />
                             <TextBlock Classes="dim sm" VerticalAlignment="Center">
                               <Run Text="hls_multi /" />
-                              <Run Text="{Binding TitleFolder}" Foreground="{StaticResource Text2Brush}" />
+                              <Run Text="{Binding TitleFolder, Mode=OneWay}" Foreground="{StaticResource Text2Brush}" />
                             </TextBlock>
                           </StackPanel>
                           <ItemsControl ItemsSource="{Binding Layouts}">

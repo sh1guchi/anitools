@@ -409,12 +409,12 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         var warnings = new List<string>();
         if (WorkDirMode == WorkDirMode.RamDisk && Shell.Services.Imdisk is null)
         {
-            warnings.Add("ImDisk не найден — RAM-диск не создать; выберите папку или «рядом с выходом».");
+            warnings.Add("ImDisk не найден — RAM-диск не создать: поставьте его в «Настройках» («Установить») или выберите папку / «рядом с выходом».");
         }
 
         if (UseNvenc && Shell.Services.Tools.Ffmpeg is null)
         {
-            warnings.Add("ffmpeg не найден — укажите путь в настройках.");
+            warnings.Add("ffmpeg не найден — поставьте его в «Настройках» («Установить») или укажите путь.");
         }
 
         Warning = warnings.Count > 0 ? string.Join("\n", warnings) : null;

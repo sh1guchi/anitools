@@ -307,13 +307,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IShell
         ToolChips.Clear();
         var paths = status.Paths;
         ToolChips.Add(new ToolChip("ffmpeg", status.FfmpegVersion, paths.Ffmpeg is not null && paths.Ffprobe is not null,
-            paths.Ffmpeg is null ? "ffmpeg не найден — укажите путь в настройках" : paths.Ffprobe is null ? "ffprobe не найден" : paths.Ffmpeg));
+            paths.Ffmpeg is null ? "ffmpeg не найден — «Настройки» → «Установить» или путь" : paths.Ffprobe is null ? "ffprobe не найден" : paths.Ffmpeg));
         ToolChips.Add(new ToolChip("mkvmerge", status.MkvmergeVersion, paths.Mkvmerge is not null && paths.Mkvextract is not null,
-            paths.Mkvmerge is null ? "MKVToolNix не найден — нужен для субтитров и шрифтов" : paths.Mkvmerge));
+            paths.Mkvmerge is null ? "MKVToolNix не найден — нужен для субтитров и шрифтов; «Настройки» → «Установить»" : paths.Mkvmerge));
         if (OperatingSystem.IsWindows())
         {
             ToolChips.Add(new ToolChip("ImDisk", null, status.Imdisk is not null,
-                status.Imdisk ?? "ImDisk не найден — RAM-диск для HLS недоступен, временные файлы пойдут в папку"));
+                status.Imdisk ?? "ImDisk не найден — RAM-диск для HLS недоступен; «Настройки» → «Установить»"));
         }
 
         ToolChips.Add(new ToolChip("NVENC", null, status.Nvenc == true,

@@ -1,3 +1,4 @@
+using Anitools.Core.Install;
 using Anitools.Core.Jobs;
 using Anitools.Core.Logging;
 using Anitools.Core.Media;
@@ -32,6 +33,7 @@ public sealed class AppServices : IDisposable
         var loaded = store.Load();
         _settings = loaded.Settings;
         SettingsError = loaded.Error;
+        Installer = OperatingSystem.IsWindows() ? new ToolInstaller(http) : null;
         RefreshTools();
     }
 
@@ -48,6 +50,9 @@ public sealed class AppServices : IDisposable
     public ToolLocator Locator { get; }
 
     public HttpClient Http { get; }
+
+    /// <summary>Установка ffmpeg, MKVToolNix, ImDisk из настроек; null — не Windows (сборки только под Windows).</summary>
+    public ToolInstaller? Installer { get; set; }
 
     public ErrorLogWriter Logs { get; }
 

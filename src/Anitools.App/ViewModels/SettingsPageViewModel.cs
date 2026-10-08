@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Anitools.Core.Install;
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Operations.Hardsub;
 using Anitools.Core.Operations.Hls;
@@ -39,8 +40,12 @@ public sealed partial class ToolPathRow : ObservableObject
     [ObservableProperty]
     public partial bool IsFound { get; set; }
 
-    partial void OnConfiguredChanged(string value)
+    partial void OnConfiguredChanged(string value) => Refresh();
+
+    /// <summary>Заново проверить, есть ли программа (после установки ImDisk путь тот же, а программа появилась).</summary>
+    public void Refresh()
     {
+        var value = Configured;
         var locator = _shell.Services.Locator;
         var path = locator.Find(Tool, value);
         if (value.Trim().Length > 0 && locator.ConfiguredPath(Tool, value.Trim()) is null)
@@ -63,6 +68,149 @@ public sealed partial class ToolPathRow : ObservableObject
             Configured = path;
         }
     }
+}
+
+/// <summary>
+/// Программа в настройках целиком (FFmpeg — ffmpeg и ffprobe, MKVToolNix, ImDisk): пути её exe и кнопка
+/// «Установить» / «Обновить» — скачать последнюю версию с сайта и сразу прописать пути.
+/// </summary>
+public sealed partial class ToolPackageViewModel : ObservableObject
+{
+    private readonly SettingsPageViewModel _page;
+    private CancellationTokenSource? _installing;
+
+    public ToolPackageViewModel(SettingsPageViewModel page, ToolPackage package, string title, string source, IReadOnlyList<ToolPathRow> rows)
+    {
+        _page = page;
+        Package = package;
+        Title = title;
+        Source = source;
+        Rows = rows;
+        foreach (var row in rows)
+        {
+            row.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ToolPathRow.IsFound))
+                {
+                    OnPropertyChanged(nameof(InstallText));
+                }
+            };
+        }
+    }
+
+    public ToolPackage Package { get; }
+
+    public string Title { get; }
+
+    /// <summary>Откуда ставится: «сборка essentials с gyan.dev».</summary>
+    public string Source { get; }
+
+    public IReadOnlyList<ToolPathRow> Rows { get; }
+
+    /// <summary>Установка есть только на Windows (сборки программ — под Windows).</summary>
+    public bool CanInstall => _page.Shell.Services.Installer is not null;
+
+    /// <summary>Всё нашлось — «Обновить» (поставить последнюю), иначе «Установить».</summary>
+    public string InstallText => Rows.All(r => r.IsFound) ? "Обновить" : "Установить";
+
+    /// <summary>«последняя: 9.0.2» с сайта; не узнали — null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Caption))]
+    public partial string? Latest { get; set; }
+
+    /// <summary>«сборка «essentials» с gyan.dev · последняя: 9.0.2».</summary>
+    public string Caption => Latest is null ? Source : $"{Source} · {Latest}";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(InstallCommand))]
+    public partial bool IsInstalling { get; set; }
+
+    /// <summary>«скачиваю ffmpeg 9.0.2 — 34 из 115 МБ».</summary>
+    [ObservableProperty]
+    public partial string? Stage { get; set; }
+
+    [ObservableProperty]
+    public partial double Percent { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsIndeterminate { get; set; } = true;
+
+    /// <summary>Узнать последнюю версию (при первом открытии настроек); нет связи — молча.</summary>
+    public async Task CheckLatestAsync()
+    {
+        if (_page.Shell.Services.Installer is not { } installer)
+        {
+            return;
+        }
+
+        try
+        {
+            var version = await installer.LatestVersionAsync(Package);
+            Latest = version is null ? "последняя — с сайта автора" : $"последняя: {version}";
+        }
+        catch (InstallException)
+        {
+            Latest = null;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStartInstall))]
+    private async Task InstallAsync()
+    {
+        if (_page.Shell.Services.Installer is not { } installer)
+        {
+            return;
+        }
+
+        using var cts = new CancellationTokenSource();
+        _installing = cts;
+        IsInstalling = true;
+        Percent = 0;
+        IsIndeterminate = true;
+        Stage = "подготовка";
+        try
+        {
+            var result = await installer.InstallAsync(Package, new Progress<InstallProgress>(Show), cts.Token);
+            _page.ApplyInstalled(result);
+            var version = result.Version is { } v ? $" {v}" : "";
+            Latest = result.Version is { } latest ? $"последняя: {latest}" : Latest;
+            _page.Shell.Toast($"{Title}{version} установлен — пути прописаны в настройках.", ToastKind.Ok);
+        }
+        catch (InstallException ex)
+        {
+            _page.Shell.Toast(ex.Message, ToastKind.Error);
+        }
+        catch (OperationCanceledException)
+        {
+            _page.Shell.Toast($"Установка {Title} отменена.", ToastKind.Warn);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _page.Shell.Toast($"{Title} установлен, но настройки не сохранились: {ex.Message}", ToastKind.Error);
+        }
+        finally
+        {
+            _installing = null;
+            IsInstalling = false;
+            Stage = null;
+        }
+    }
+
+    private bool CanStartInstall() => !IsInstalling;
+
+    [RelayCommand]
+    private void CancelInstall() => _installing?.Cancel();
+
+    private void Show(InstallProgress progress)
+    {
+        IsIndeterminate = progress.Total is not > 0;
+        Percent = progress.Total is > 0 and var total ? progress.Downloaded * 100.0 / total : 0;
+        Stage = progress.Total is > 0 and var size
+            ? $"{progress.Stage} — {Megabytes(progress.Downloaded)} из {Megabytes(size)} МБ"
+            : progress.Stage;
+    }
+
+    private static string Megabytes(long bytes) => (bytes / (1024.0 * 1024)).ToString("0", CultureInfo.InvariantCulture);
 }
 
 /// <summary>Качество лестницы HLS в настройках: битрейт в кбит/с.</summary>
@@ -97,6 +245,9 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     public override string Subtitle => "общие для всех инструментов";
 
     public ObservableCollection<ToolPathRow> ToolPaths { get; } = [];
+
+    /// <summary>Те же пути, по программам: FFmpeg, MKVToolNix, ImDisk — с кнопкой «Установить».</summary>
+    public ObservableCollection<ToolPackageViewModel> Packages { get; } = [];
 
     public ObservableCollection<LadderRowViewModel> Ladder { get; } = [];
 
@@ -221,7 +372,37 @@ public sealed partial class SettingsPageViewModel : PageViewModel
 
     public string SettingsPath => Shell.Services.Store.Path;
 
-    protected override Task LoadAsync(string folder, CancellationToken cancellationToken) => Task.CompletedTask;
+    /// <summary>Первое открытие настроек — узнать последние версии программ (для «Установить»).</summary>
+    protected override Task LoadAsync(string folder, CancellationToken cancellationToken)
+    {
+        foreach (var package in Packages)
+        {
+            _ = package.CheckLatestAsync();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Программа поставилась: пути — в строки и сразу в настройки (остальные несохранённые поля не трогаются).</summary>
+    /// <exception cref="IOException">Настройки не записались.</exception>
+    /// <exception cref="UnauthorizedAccessException">Нет прав на запись настроек.</exception>
+    public void ApplyInstalled(InstallResult result)
+    {
+        foreach (var row in ToolPaths)
+        {
+            if (result.Paths.TryGetValue(row.Tool, out var path))
+            {
+                row.Configured = path;
+            }
+        }
+
+        var current = Shell.Services.Settings;
+        Shell.Services.SaveSettings(current with { Tools = result.Paths.Aggregate(current.Tools, (tools, p) => tools.With(p.Key, p.Value)) });
+        foreach (var row in ToolPaths)
+        {
+            row.Refresh(); // ImDisk: путь тот же (ищется сам), а программа появилась
+        }
+    }
 
     /// <summary>Поля → настройки; ошибки — список понятных сообщений (тогда настройки null).</summary>
     public (AppSettings? Settings, IReadOnlyList<string> Errors) Build()
@@ -378,13 +559,22 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     private void Load(AppSettings s)
     {
         ToolPaths.Clear();
-        ToolPaths.Add(new ToolPathRow(Shell, Tool.Ffmpeg, "ffmpeg", s.Tools.Ffmpeg));
-        ToolPaths.Add(new ToolPathRow(Shell, Tool.Ffprobe, "ffprobe", s.Tools.Ffprobe));
-        ToolPaths.Add(new ToolPathRow(Shell, Tool.Mkvmerge, "mkvmerge", s.Tools.Mkvmerge));
-        ToolPaths.Add(new ToolPathRow(Shell, Tool.Mkvextract, "mkvextract", s.Tools.Mkvextract));
+        Packages.Clear();
+        ToolPathRow Row(Tool tool, string name)
+        {
+            var row = new ToolPathRow(Shell, tool, name, s.Tools.Get(tool));
+            ToolPaths.Add(row);
+            return row;
+        }
+
+        Packages.Add(new ToolPackageViewModel(this, ToolPackage.Ffmpeg, "FFmpeg", "сборка «essentials» с gyan.dev",
+            [Row(Tool.Ffmpeg, "ffmpeg"), Row(Tool.Ffprobe, "ffprobe")]));
+        Packages.Add(new ToolPackageViewModel(this, ToolPackage.MkvToolNix, "MKVToolNix", "portable-сборка с mkvtoolnix.download",
+            [Row(Tool.Mkvmerge, "mkvmerge"), Row(Tool.Mkvextract, "mkvextract")]));
         if (ShowsImdisk)
         {
-            ToolPaths.Add(new ToolPathRow(Shell, Tool.Imdisk, "imdisk", s.Tools.Imdisk));
+            Packages.Add(new ToolPackageViewModel(this, ToolPackage.ImDisk, "ImDisk", "драйвер RAM-диска с ltr-data.se, нужны права администратора",
+                [Row(Tool.Imdisk, "imdisk")]));
         }
 
         VoicesText = string.Join('\n', s.Voices);
