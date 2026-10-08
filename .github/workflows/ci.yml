@@ -96,12 +96,13 @@ jobs:
           name: screenshots-windows
           path: artifacts/screenshots
           if-no-files-found: ignore
-      # Готовый Anitools.exe (один файл, .NET внутри) — скачать из «Artifacts» и проверить у себя (docs/WINDOWS.md)
+      # Готовый Anitools.exe (один файл, .NET внутри) — скачать из «Artifacts» и проверить у себя (docs/WINDOWS.md).
+      # Флаги как в tools/windows/publish.ps1: ReadyToRun и без сжатия — быстрый запуск.
       - name: Сборка Anitools.exe
         run: >-
           dotnet publish src/Anitools.App -c Release -r win-x64 --self-contained
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true -p:DebugType=none -o artifacts/publish
+          -p:PublishReadyToRun=true -p:DebugType=none -o artifacts/publish
       - uses: actions/upload-artifact@v7
         with:
           name: anitools-win-x64

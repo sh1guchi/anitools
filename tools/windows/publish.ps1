@@ -8,10 +8,12 @@ param([string]$Output = "C:\personal\Apps\anitools")
 $ErrorActionPreference = "Stop"
 $project = Join-Path $PSScriptRoot "..\..\src\Anitools.App"
 
+# ReadyToRun: код уже скомпилирован, на старте нет JIT; без сжатия файлы читаются из exe напрямую, а не
+# распаковываются в память. Запуск ≈ втрое быстрее (замер: 1,9 → 0,6 с), exe крупнее (≈150 МБ).
 dotnet publish $project -c Release -r win-x64 --self-contained `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:EnableCompressionInSingleFile=true `
+    -p:PublishReadyToRun=true `
     -p:DebugType=none `
     -o $Output
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
