@@ -66,6 +66,8 @@ public sealed class TemplateEditorTests
         box.Focus();
         box.Select(13, 20);
         Click(editor.FindControl<Button>("ConditionButton")!);
+        // на экране — пункты, а не пустая полоска (заголовок + условия)
+        Assert.Equal(1 + RenameTemplate.Conditions.Count, window.GetVisualDescendants().OfType<MenuFlyoutPresenter>().Single().ItemCount);
         MenuClick(editor.OpenMenu!, "если сезон не 1");
         Assert.Equal("{название} - {?сезон≠1}{серия}{/}{?суффикс}.{суффикс}{/}", page.Template);
         Assert.Equal((23, 30), (box.SelectionStart, box.SelectionEnd)); // выделено то, что внутри условия

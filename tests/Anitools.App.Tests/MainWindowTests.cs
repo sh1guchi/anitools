@@ -4,7 +4,10 @@ using Anitools.App.Views;
 using Anitools.Core.Jobs;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 
 namespace Anitools.App.Tests;
@@ -84,6 +87,44 @@ public sealed class MainWindowTests
         Assert.False(vm.OpenFolder(Path.Combine(app.Root, "нет такой")));
         Assert.StartsWith("Папка не найдена: ", vm.FolderMessage);
         Assert.Equal(other, vm.Folder);
+    }
+
+    /// <summary>
+    /// Кнопка «Недавние папки»: меню показывает папки (раньше было пустой полоской — пункты добавлялись в Opening,
+    /// а Avalonia 12 их не показывает), щелчок по пункту открывает папку.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Recent_folders_menu_shows_folders_and_opens_one()
+    {
+        using var app = new AppFixture().WithFiles("other/Another Show - 01.mkv");
+        var other = Path.Combine(app.Folder, "other");
+        var vm = app.CreateViewModel();
+        var window = new MainWindow { DataContext = vm };
+        window.Show();
+        app.Dialogs.NextFolder = other;
+        await vm.BrowseCommand.ExecuteAsync(null);
+        AppFixture.Flush();
+
+        var button = window.FindControl<Button>("RecentButton")!;
+        var center = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        AppFixture.Flush();
+
+        // видно то, что в меню на экране, а не только список пунктов
+        var presenter = window.GetVisualDescendants().OfType<MenuFlyoutPresenter>().Single();
+        var items = presenter.GetRealizedContainers().OfType<MenuItem>().ToList();
+        Assert.Equal(2, items.Count);
+        Assert.True(presenter.Bounds.Width > 100, $"меню — полоска {presenter.Bounds}");
+        Assert.Equal(["other", "Sousou no Frieren"], items.Select(i => ((TextBlock)((StackPanel)i.Header!).Children[0]).Text));
+        Assert.Equal(other, ((TextBlock)((StackPanel)items[0].Header!).Children[1]).Text);
+        Assert.NotNull(items[0].Icon); // текущая папка — с галочкой
+        Assert.Null(items[1].Icon);
+        Screenshots.Capture(window, "recent-folders");
+
+        items[1].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        await AppFixture.WaitUntilAsync(() => vm.Folder == app.Folder, "открылась папка из недавних");
+        window.Close();
     }
 
     [AvaloniaFact]
