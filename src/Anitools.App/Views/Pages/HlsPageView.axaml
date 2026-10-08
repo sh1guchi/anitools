@@ -63,7 +63,8 @@
             <StackPanel Orientation="Horizontal" Spacing="8">
               <Border Classes="seg">
                 <StackPanel Orientation="Horizontal">
-                  <RadioButton Classes="seg" GroupName="hlsWork" Content="RAM-диск" IsChecked="{Binding IsRamDisk}" />
+                  <RadioButton Classes="seg" GroupName="hlsWork" Content="RAM-диск" IsChecked="{Binding IsRamDisk}"
+                               ToolTip.Tip="Диск в памяти через ImDisk. Если anitools запущен не от администратора, Windows один раз спросит разрешение." />
                   <RadioButton Classes="seg" GroupName="hlsWork" Content="папка" IsChecked="{Binding IsFolder}" />
                   <RadioButton Classes="seg" GroupName="hlsWork" Content="рядом с выходом" IsChecked="{Binding IsNearOutput}" />
                 </StackPanel>

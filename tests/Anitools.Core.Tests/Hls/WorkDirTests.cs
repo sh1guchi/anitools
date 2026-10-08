@@ -78,7 +78,7 @@ public sealed class WorkDirTests
 
         var denied = new ImDiskRamDisk(new ImDisk(new ImDiskRunner { CreateExitCode = 1, CreateOutput = "Error creating virtual disk: Access is denied." }, "imdisk"), 14, state, drives, requireWindows: false);
         var ex = await Assert.ThrowsAsync<WorkDirException>(() => denied.AcquireAsync(Ct));
-        Assert.Contains("администратора", ex.Message);
+        Assert.Contains("не хватает свободной памяти", ex.Message);
         Assert.Contains("Access is denied", ex.Message);
         Assert.Empty(state.Read());
 
@@ -102,14 +102,39 @@ public sealed class WorkDirTests
         var state = new RamDiskStateFile(dir.Combine("state.json"));
         state.Add('R');
         state.Add('Y');
+        state.Add('Q');
         var runner = new ImDiskRunner();
+        var drives = new FakeDrives { Used = ['C', 'R', 'Y'] }; // Q уже нет (перезагрузка) — права администратора зря не просим
 
-        var removed = await ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(runner, "imdisk"), state, Ct);
+        var removed = await ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(runner, "imdisk"), state, drives: drives, cancellationToken: Ct);
 
         Assert.Equal(['R', 'Y'], removed);
         Assert.Equal([["-l"], ["-D", "-m", "R:"], ["-D", "-m", "Y:"]], runner.Calls);
         Assert.False(File.Exists(state.Path));
-        Assert.Empty(await ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(runner, "imdisk"), state, Ct));
+        Assert.Empty(await ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(runner, "imdisk"), state, drives: drives, cancellationToken: Ct));
+    }
+
+    [Fact]
+    public async Task Ram_disk_without_admin_rights_goes_through_the_helper()
+    {
+        using var dir = new TempDir();
+        var state = new RamDiskStateFile(dir.Combine("state.json"));
+        var runner = new ImDiskRunner();
+        var admin = new FakeAdmin();
+        var provider = new ImDiskRamDisk(new ImDisk(runner, "imdisk"), 14, state, new FakeDrives(), requireWindows: false, admin: admin);
+
+        await using (var lease = await provider.AcquireAsync(Ct))
+        {
+            Assert.Equal(@"R:\anitools_tmp", lease.Path);
+        }
+
+        // список дисков — сам ImDisk (прав не нужно), создать и снять — помощник
+        Assert.Equal([["-l"]], runner.Calls);
+        Assert.Equal(["create R 14", "remove R"], admin.Calls);
+
+        state.Add('R');
+        await ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(runner, "imdisk"), state, admin, new FakeDrives { Used = ['R'] }, Ct);
+        Assert.Equal("remove R", admin.Calls[^1]);
     }
 
     [Fact]
@@ -159,6 +184,35 @@ public sealed class WorkDirTests
                 _ => 0,
             };
             return Task.FromResult(new ProcessResult(code, spec.Arguments[0] == "-a" ? CreateOutput : "", "", TimeSpan.Zero));
+        }
+    }
+
+    /// <summary>Помощник с правами администратора: только записывает команды.</summary>
+    internal sealed class FakeAdmin : IImDiskAdmin
+    {
+        public List<string> Calls { get; } = [];
+
+        /// <summary>Ошибка ImDisk на «создать»; null — создаётся.</summary>
+        public string? CreateError { get; set; }
+
+        public Task CreateAsync(int sizeGb, char letter, CancellationToken cancellationToken = default)
+        {
+            lock (Calls)
+            {
+                Calls.Add($"create {letter} {sizeGb}");
+            }
+
+            return CreateError is null ? Task.CompletedTask : throw new WorkDirException(CreateError);
+        }
+
+        public Task RemoveAsync(char letter)
+        {
+            lock (Calls)
+            {
+                Calls.Add($"remove {letter}");
+            }
+
+            return Task.CompletedTask;
         }
     }
 

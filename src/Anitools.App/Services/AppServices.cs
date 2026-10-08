@@ -5,6 +5,7 @@ using Anitools.Core.Operations.Common;
 using Anitools.Core.Processes;
 using Anitools.Core.Settings;
 using Anitools.Core.Shikimori;
+using Anitools.Core.WorkDir;
 
 namespace Anitools.App.Services;
 
@@ -18,6 +19,7 @@ public sealed class AppServices : IDisposable
     private AppSettings _settings;
     private ToolPaths _tools = new(null, null, null, null);
     private string? _imdisk;
+    private ElevatedImDisk? _elevated;
 
     public AppServices(SettingsStore store, IProcessRunner runner, ToolLocator locator, HttpClient http, string logsDirectory, JobQueue? jobs = null)
     {
@@ -85,6 +87,26 @@ public sealed class AppServices : IDisposable
         }
     }
 
+    /// <summary>
+    /// Кто создаёт RAM-диски: приложение запущено от администратора (или не Windows) — сам ImDisk, иначе — помощник
+    /// с правами администратора (Windows один раз спросит разрешение; помощник живёт до закрытия приложения).
+    /// </summary>
+    public IImDiskAdmin ImDiskAdmin
+    {
+        get
+        {
+            if (!OperatingSystem.IsWindows() || Environment.IsPrivilegedProcess)
+            {
+                return new ImDisk(Runner, Imdisk);
+            }
+
+            lock (_lock)
+            {
+                return _elevated ??= new ElevatedImDisk();
+            }
+        }
+    }
+
     public IMediaProbe Probe => new MediaProbe(Runner, Tools);
 
     public ShikimoriClient Shikimori => new(Http, new Uri(Settings.ShikimoriBaseUrl));
@@ -145,5 +167,9 @@ public sealed class AppServices : IDisposable
     public Task<ToolsStatus> CheckToolsAsync(CancellationToken cancellationToken = default) =>
         ToolStatusChecker.CheckAsync(Runner, Tools, Imdisk, cancellationToken);
 
-    public void Dispose() => Http.Dispose();
+    public void Dispose()
+    {
+        Http.Dispose();
+        _elevated?.Dispose(); // помощник снимет свои RAM-диски и выйдет
+    }
 }

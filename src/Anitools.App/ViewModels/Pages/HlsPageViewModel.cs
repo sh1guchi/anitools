@@ -359,11 +359,26 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         }
 
         var services = Shell.Services;
+        if (WorkDirMode == WorkDirMode.RamDisk && services.ImDiskAdmin is ElevatedImDisk elevated)
+        {
+            // без прав администратора: разрешение Windows — сейчас, пока пользователь у экрана, а не когда дойдёт очередь
+            try
+            {
+                await elevated.EnsureStartedAsync();
+            }
+            catch (WorkDirException ex)
+            {
+                Message = ex.Message;
+                return;
+            }
+        }
+
         var runner = new HlsRunner(services.Runner, services.Tools, services.Probe, services.Logs, settings);
-        var provider = WorkDirProviders.Create(workDir, services.Runner, services.Imdisk);
+        var provider = WorkDirProviders.Create(workDir, services.Runner, services.Imdisk, services.ImDiskAdmin);
         Func<CancellationToken, Task<bool>>? shutdown = Shutdown ? ct => new ShutdownService(services.Runner).ScheduleAsync(ct) : null;
         Func<CancellationToken, Task<IReadOnlyList<char>>>? cleanup = OperatingSystem.IsWindows()
-            ? ct => ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(services.Runner, services.Imdisk), new RamDiskStateFile(RamDiskStateFile.DefaultPath), ct)
+            ? ct => ImDiskRamDisk.CleanupOrphansAsync(
+                new ImDisk(services.Runner, services.Imdisk), new RamDiskStateFile(RamDiskStateFile.DefaultPath), services.ImDiskAdmin, cancellationToken: ct)
             : null;
         Enqueue("HLS", HlsJobs.Run(toRun, runner, provider, calibrates: settings.FixedCq is null, shutdown, cleanup));
     }

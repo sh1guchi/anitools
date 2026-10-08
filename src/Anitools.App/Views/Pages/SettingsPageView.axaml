@@ -183,7 +183,11 @@
                 </Grid>
               </HeaderedContentControl>
               <HeaderedContentControl Classes="field" Header="Размер RAM-диска, ГБ">
-                <TextBox Text="{Binding RamDiskGb}" Width="96" HorizontalAlignment="Left" />
+                <StackPanel Spacing="6">
+                  <TextBox Text="{Binding RamDiskGb}" Width="96" HorizontalAlignment="Left" />
+                  <TextBlock Classes="dim sm" TextWrapping="Wrap"
+                             Text="Создать диск может только администратор: если anitools запущен без этих прав, Windows спросит разрешение при первом RAM-диске (один раз за запуск)." />
+                </StackPanel>
               </HeaderedContentControl>
             </StackPanel>
           </Border>
