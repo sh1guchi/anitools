@@ -9,6 +9,29 @@ namespace Anitools.Core.Operations.Subtitles;
 /// </summary>
 public static class SubtitleTrackMatcher
 {
+    private static readonly string[] SignsWords = ["надпис", "sign"];
+    private static readonly string[] SubsWords = ["полн", "full", "диалог", "dialog", "субтитр", "сабы", "subs"];
+
+    /// <summary>Чем похожа дорожка по тайтлу: «Надписи / Signs» → надписи, «Полные / Full / Субтитры» → сабы, иначе null.</summary>
+    public static SubtitleKind? GuessKind(string trackName)
+    {
+        var name = PyText.Lower(trackName);
+        return SignsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Signs
+            : SubsWords.Any(w => name.Contains(w, StringComparison.Ordinal)) ? SubtitleKind.Subs
+            : null;
+    }
+
+    /// <summary>
+    /// Дорожки по умолчанию для надписей и сабов — по тайтлам; ничего не похоже — первая дорожка в надписи
+    /// (как было, когда выбиралась одна дорожка).
+    /// </summary>
+    public static (SubtitleTrack? Signs, SubtitleTrack? Subs) GuessRoles(IReadOnlyList<SubtitleTrack> tracks)
+    {
+        var signs = tracks.FirstOrDefault(t => GuessKind(t.Name) == SubtitleKind.Signs);
+        var subs = tracks.FirstOrDefault(t => GuessKind(t.Name) == SubtitleKind.Subs);
+        return signs is null && subs is null ? (tracks.FirstOrDefault(), null) : (signs, subs);
+    }
+
     /// <summary>Расширение по codec_id mkvmerge (codec_id_to_ext, py:2783): ASS/SSA → .ass, UTF8/ASCII → .srt, PGS → .sup, VobSub → .sub.</summary>
     public static string CodecIdToExtension(string codecId)
     {

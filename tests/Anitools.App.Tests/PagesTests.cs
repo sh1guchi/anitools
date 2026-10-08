@@ -109,17 +109,29 @@ public sealed class PagesTests
         var vm = app.CreateViewModel();
         var page = vm.SubtitlesPage;
         vm.SelectedNav = page;
-        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 2 && page.Preview.Rows.Count == 2, "дорожки");
+        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 2 && page.Preview.Rows.Count == 4, "дорожки");
 
         Assert.Equal("S_TEXT/ASS → .ass", page.Tracks[0].Codec);
-        Assert.Equal("2:", TrackOf(page, 1)[..2]);
+        // по тайтлам: «Надписи» — в надписи, «Полные» — в сабы; шаги — по сериям, обе папки за один запуск
+        Assert.Equal([SubtitleRole.Signs, SubtitleRole.Subs], page.Tracks.Select(t => t.Role));
+        Assert.Equal(
+            ["Frieren - 01.mkv · надписи", "Frieren - 01.mkv · сабы", "Frieren - 02.mkv · надписи", "Frieren - 02.mkv · сабы"],
+            page.Preview.Rows.Select(r => r.Label));
+        Assert.Equal("2:", TrackOf(page, 2)[..2]); // по ID: во второй серии ID 2 — уже «Полные»
 
         page.IsByTitle = true;
-        await AppFixture.WaitUntilAsync(() => TrackOf(page, 1).StartsWith("3:", StringComparison.Ordinal), "по тайтлу");
-        Assert.Equal("→ " + Path.Combine("надписи", "Frieren - 02.надписи.ass"), page.Preview.Rows[1].Target);
+        await AppFixture.WaitUntilAsync(() => TrackOf(page, 2).StartsWith("3:", StringComparison.Ordinal), "по тайтлу");
+        Assert.Equal("→ " + Path.Combine("надписи", "Frieren - 02.надписи.ass"), page.Preview.Rows[2].Target);
+        Assert.Equal("2:", TrackOf(page, 3)[..2]);
+        Assert.Contains(".сабы.ass", page.Preview.Rows[3].Target, StringComparison.Ordinal);
 
-        page.IsSubs = true;
-        await AppFixture.WaitUntilAsync(() => page.Preview.Rows[1].Target.Contains(".сабы.ass", StringComparison.Ordinal), "сабы");
+        // у папки одна дорожка: «Полные» в надписи — прежняя дорожка надписей освобождается, сабов нет
+        page.Tracks[1].IsSigns = true;
+        Assert.Equal([SubtitleRole.None, SubtitleRole.Signs], page.Tracks.Select(t => t.Role));
+        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 2, "только надписи");
+        Assert.All(page.Preview.Rows, r => Assert.Contains(".надписи.ass", r.Target, StringComparison.Ordinal));
+        page.Tracks[1].IsNone = true;
+        Assert.Equal("Выберите дорожку для надписей или для сабов.", page.Message);
         // mkvmerge -J по каждой серии — один раз, дальше из кэша
         Assert.Equal(2, app.Runner.Calls.Count(c => c.Arguments.Contains("-J")));
     }

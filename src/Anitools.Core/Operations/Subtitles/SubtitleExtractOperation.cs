@@ -138,6 +138,39 @@ public static class SubtitleExtractOperation
         return new OperationPlan($"Субтитры → {folderName}", source.Folder, items);
     }
 
+    /// <summary>
+    /// Надписи и сабы за один запуск: у каждой папки — своя дорожка (режим поиска в сериях общий). Шаги идут по
+    /// сериям: «01 · надписи», «01 · сабы», «02 · надписи»…
+    /// </summary>
+    public static async Task<OperationPlan> PlanAsync(
+        SubtitleSource source, IReadOnlyList<SubtitleExtractOptions> selections, IMediaProbe probe, CancellationToken ct = default)
+    {
+        if (selections.Count == 0)
+        {
+            throw new PlanException("Выберите дорожку для надписей или для сабов.");
+        }
+
+        if (selections.Count == 1)
+        {
+            return await PlanAsync(source, selections[0], probe, ct).ConfigureAwait(false);
+        }
+
+        var plans = new List<OperationPlan>();
+        foreach (var selection in selections)
+        {
+            plans.Add(await PlanAsync(source, selection, probe, ct).ConfigureAwait(false));
+        }
+
+        var items = plans
+            .SelectMany((plan, kind) => plan.Items.Select((item, index) => (item, index, kind, folder: Output(selections[kind].Kind).Folder)))
+            .OrderBy(x => x.index)
+            .ThenBy(x => x.kind)
+            .Select(x => x.item with { Label = $"{x.item.Label} · {x.folder}" })
+            .ToList();
+        var folders = string.Join(" и ", selections.Select(s => Output(s.Kind).Folder));
+        return new OperationPlan($"Субтитры → {folders}", source.Folder, items);
+    }
+
     private static PlanItem Item(string file, string name, string output, PlannedCommand command) =>
         MediaFiles.IsDone(output)
             ? new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже готово", Outputs = [output] }

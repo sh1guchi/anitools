@@ -12,6 +12,21 @@ public sealed class SubtitleTrackMatcherTests
         GoldenAssert.All("codec_id_to_ext", input => SubtitleTrackMatcher.CodecIdToExtension(input.GetString()!));
 
     [Fact]
+    public void Roles_are_guessed_from_track_titles()
+    {
+        Assert.Equal(SubtitleKind.Signs, SubtitleTrackMatcher.GuessKind("Надписи [Anilibria]"));
+        Assert.Equal(SubtitleKind.Signs, SubtitleTrackMatcher.GuessKind("Signs & Songs"));
+        Assert.Equal(SubtitleKind.Subs, SubtitleTrackMatcher.GuessKind("Полные"));
+        Assert.Equal(SubtitleKind.Subs, SubtitleTrackMatcher.GuessKind("Full Subs"));
+        Assert.Null(SubtitleTrackMatcher.GuessKind("English"));
+
+        SubtitleTrack[] tracks = [new(2, "English"), new(3, "Полные"), new(4, "Надписи")];
+        Assert.Equal((tracks[2], tracks[1]), SubtitleTrackMatcher.GuessRoles(tracks));
+        // ничего не похоже — первая дорожка в надписи, как раньше
+        Assert.Equal((tracks[0], (SubtitleTrack?)null), SubtitleTrackMatcher.GuessRoles([tracks[0]]));
+    }
+
+    [Fact]
     public void FindByTitle_matches_original()
     {
         var fixtures = Fixtures("subtitle_track_by_title");

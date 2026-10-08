@@ -180,7 +180,7 @@ public sealed class ScreenshotTests
         var (vm, window) = await OpenAsync(app);
         var page = vm.SubtitlesPage;
         vm.SelectedNav = page;
-        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 3 && page.Preview.Rows.Count == 12, "план");
+        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 3 && page.Preview.Rows.Count == 24, "план");
         page.IsByTitle = true;
         await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Any(r => r.IsSkip) && !page.IsPlanning, "по тайтлу");
 
