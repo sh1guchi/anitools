@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="/Assets/anitools.ico"
+        x:Class="Anitools.App.Views.Dialogs.PromptDialog"
+        Width="480" SizeToContent="Height"
+        CanResize="False" ShowInTaskbar="False"
+        Background="{StaticResource PanelBrush}"
+        WindowStartupLocation="CenterOwner">
+  <!-- как .form-dlg: заголовок, пояснение, поле, кнопки справа -->
+  <StackPanel>
+    <TextBlock x:Name="TitleText" Classes="h2" FontSize="17" Margin="20,18,20,4" TextWrapping="Wrap" />
+    <TextBlock x:Name="MessageText" TextWrapping="Wrap" Classes="sm" Foreground="{StaticResource Text2Brush}" Margin="20,6,20,10" />
+    <TextBox x:Name="ValueBox" Margin="20,0" />
+    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="20,16,20,18">
+      <Button x:Name="CancelButton" Content="Отмена" MinWidth="90" HorizontalContentAlignment="Center" IsCancel="True" />
+      <Button x:Name="ConfirmButton" Classes="primary" MinWidth="90" HorizontalContentAlignment="Center" IsDefault="True" />
+    </StackPanel>
+  </StackPanel>
+</Window>

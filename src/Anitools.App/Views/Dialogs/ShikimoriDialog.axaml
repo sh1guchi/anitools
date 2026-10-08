@@ -37,7 +37,7 @@
     <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,12">
       <StackPanel Spacing="2">
         <TextBlock Classes="h2" FontSize="17" Text="Тайтл на Shikimori" />
-        <TextBlock Classes="dim" FontSize="13" Text="{Binding Title, StringFormat='Название из файлов: {0}'}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Classes="dim" FontSize="13" Text="{Binding Caption}" TextTrimming="CharacterEllipsis" />
       </StackPanel>
       <Grid ColumnDefinitions="*,Auto">
         <TextBox x:Name="QueryBox" Text="{Binding Query}" PlaceholderText="Название для поиска">

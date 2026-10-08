@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
+using Anitools.Core.Media;
 using Anitools.Core.Operations.Common;
 using Anitools.Core.Parsing;
+using Anitools.Core.Templates;
 
 namespace Anitools.Core.Operations.Rename;
 
@@ -16,6 +18,18 @@ public sealed record RenameOptions
 
     /// <summary>Приписка через точку: «надписи» → «Тайтл - 01.надписи.ass»; ведущая точка убирается.</summary>
     public string? Suffix { get; init; }
+
+    /// <summary>Шаблон имени без расширения (<see cref="RenameTemplate"/>); null — стандартный, как в оригинале.</summary>
+    public string? Template { get; init; }
+
+    /// <summary>Сезон для {сезон}.</summary>
+    public string? Season { get; init; }
+
+    /// <summary>
+    /// Что в видео (ffprobe): файл → его потоки — для {разрешение}, {видео}, {аудио}, {каналы}, {мульти}.
+    /// У субтитров и звука — от видео той же серии, чтобы имена совпали.
+    /// </summary>
+    public IReadOnlyDictionary<string, MediaInfo>? Media { get; init; }
 
     /// <summary>
     /// Номера, введённые вручную: файл → текст. Число — номер серии как есть (без сдвига нумерации, как в оригинале);
@@ -36,6 +50,9 @@ public enum RenameRowStatus
 
     /// <summary>Новое имя занято или совпадает у нескольких файлов.</summary>
     Conflict,
+
+    /// <summary>По шаблону вышло негодное имя: пустое, с запрещённым символом, слишком длинное.</summary>
+    Invalid,
 }
 
 /// <summary>Строка таблицы переименования.</summary>
@@ -45,10 +62,21 @@ public sealed record RenameRow(string File, string? Episode, string? NewName, Re
 /// <summary>Итог: что переименовано (старое → новое) и что не вышло (файл → причина).</summary>
 public sealed record RenameResult(IReadOnlyList<(string Old, string New)> Renamed, IReadOnlyList<(string File, string Error)> Failed, string? JournalPath);
 
-/// <summary>П.5 «Переименовать файлы» (rename_files_by_pattern, py:3199): «Название - 01.ext» по номеру серии.</summary>
-public static class RenameOperation
+/// <summary>
+/// П.5 «Переименовать файлы» (rename_files_by_pattern, py:3199): «Название - 01.ext» по номеру серии;
+/// новое имя — по шаблону (<see cref="RenameTemplate"/>), стандартный даёт то же, что оригинал.
+/// </summary>
+public static partial class RenameOperation
 {
+    /// <summary>Длиннее имени файла не бывает (NTFS).</summary>
+    public const int MaxNameLength = 255;
+
     private static readonly string[] HintVideoExtensions = [".mkv", ".mp4", ".avi", ".mov", ".m2ts", ".ts", ".webm"];
+
+    /// <summary>Видео — его параметры берут {разрешение}, {видео} и т.д.</summary>
+    public static bool IsVideo(string file) =>
+        HintVideoExtensions.Contains(MediaFiles.Suffix(file), StringComparer.OrdinalIgnoreCase)
+        || MediaFiles.VideoExtensions.Contains(MediaFiles.Suffix(file), StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Все файлы папки, кроме .bat, по коду символа (как sort() в оригинале).</summary>
     public static IReadOnlyList<string> ListFiles(string folder) =>
@@ -67,6 +95,17 @@ public static class RenameOperation
         var title = TitleText.AnimeTitle(first);
         return title.Length > 0 ? title : PyText.Stem(first);
     }
+
+    /// <summary>Сезон из имён видео («S2», «2nd Season» — как его видит anitomy), если он есть; иначе пусто.</summary>
+    public static string SeasonHint(IReadOnlyList<string> files) =>
+        files
+            .Where(f => HintVideoExtensions.Contains(MediaFiles.Suffix(f), StringComparer.OrdinalIgnoreCase))
+            .Select(f => Anitomy.Parse(f).AnimeSeason)
+            .OfType<string>()
+            .GroupBy(s => s, StringComparer.Ordinal)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefault() ?? "";
 
     /// <summary>Номер с учётом начала нумерации: «13» при начале 12 → «02»; не больше нуля — null.</summary>
     public static string? Adjust(string? raw, int numberingStart)
@@ -101,35 +140,76 @@ public static class RenameOperation
             throw new PlanException("Начало нумерации — положительное целое число.");
         }
 
+        var template = options.Template ?? RenameTemplate.Default;
+        if (RenameTemplate.Check(template).FirstOrDefault(i => !i.IsWarning) is { } error)
+        {
+            throw new PlanException($"В шаблоне имени ошибка: {error.Message}");
+        }
+
         var baseName = TitleText.FileNameSafe(options.BaseName);
-        if (baseName.Length == 0)
+        if (baseName.Length == 0 && TextTemplate.Uses(template, RenameTemplate.Title))
         {
             throw new PlanException("Базовое название не может быть пустым.");
         }
 
         var suffix = options.Suffix is { Length: > 0 } s && s.StartsWith('.') ? s[1..] : options.Suffix ?? "";
-        var rows = new List<RenameRow>();
-        foreach (var file in files)
+        var season = (options.Season ?? "").Trim();
+        var needsEpisode = TextTemplate.Uses(template, RenameTemplate.Episode);
+        var episodes = files.Select(file =>
         {
-            string? episode;
-            if (options.ManualNumbers is not null && options.ManualNumbers.TryGetValue(file, out var typed))
-            {
-                episode = ParseManual(typed);
-            }
-            else
-            {
-                episode = AutoEpisode(file, options.NumberingStart);
-            }
+            string? typed = null;
+            var manual = options.ManualNumbers?.TryGetValue(file, out typed) == true;
+            return (File: file, Episode: manual ? ParseManual(typed) : AutoEpisode(file, options.NumberingStart), Manual: manual);
+        }).ToList();
 
-            if (episode is null)
+        // Видео серии — для её субтитров и звука: одинаковые имена подхватываются плеером
+        var media = options.Media ?? new Dictionary<string, MediaInfo>();
+        var episodeMedia = new Dictionary<string, MediaInfo>(StringComparer.Ordinal);
+        foreach (var (file, episode, _) in episodes)
+        {
+            if (episode is not null && media.TryGetValue(file, out var info) && info.VideoStreams.Count > 0)
+            {
+                episodeMedia.TryAdd(episode, info);
+            }
+        }
+
+        var rows = new List<RenameRow>();
+        foreach (var (file, episode, manual) in episodes)
+        {
+            // Без номера пропускаем, если он нужен шаблону или его стёрли руками («файл не трогать»)
+            if (episode is null && (needsEpisode || manual))
             {
                 rows.Add(new RenameRow(file, null, null, RenameRowStatus.NoNumber, "номер серии не найден — файл пропускается"));
                 continue;
             }
 
-            var ext = PyText.SplitExt(file).Ext;
-            var newName = suffix.Length > 0 ? $"{baseName} - {episode}.{suffix}{ext}" : $"{baseName} - {episode}{ext}";
-            rows.Add(new RenameRow(file, episode, newName, newName == file ? RenameRowStatus.Unchanged : RenameRowStatus.Rename));
+            var (stem, ext) = PyText.SplitExt(file);
+            AnitomyResult? parsed = null;
+            var info = media.TryGetValue(file, out var own) && own.VideoStreams.Count > 0 ? own
+                : episode is not null && episodeMedia.TryGetValue(episode, out var video) ? video
+                : own;
+            var name = TextTemplate.Render(template, variable => variable switch
+            {
+                RenameTemplate.Title => baseName,
+                RenameTemplate.Episode => episode,
+                RenameTemplate.Season => season,
+                RenameTemplate.Suffix => suffix,
+                RenameTemplate.Group => (parsed ??= Anitomy.Parse(file)).ReleaseGroup,
+                RenameTemplate.Quality => (parsed ??= Anitomy.Parse(file)).VideoResolution,
+                RenameTemplate.Name => stem,
+                _ => info is null ? null : RenameMedia.Value(info, variable),
+            });
+            // Пустая переменная не оставляет «..» (имена как у релизов), пробелы по краям — прочь
+            name = MultipleDotsRegex().Replace(name, ".").Trim(' ');
+            var newName = name + ext;
+            var bad = name.FirstOrDefault(c => RenameTemplate.ForbiddenChars.Contains(c) || char.IsControl(c));
+            var problem = name.Length == 0 ? "по шаблону вышло пустое имя"
+                : bad != default ? char.IsControl(bad) ? "в имени управляющий символ" : $"в имени запрещённый символ «{bad}»"
+                : newName.Length > MaxNameLength ? $"имя длиннее {MaxNameLength} символов"
+                : null;
+            rows.Add(problem is not null
+                ? new RenameRow(file, episode, newName, RenameRowStatus.Invalid, problem)
+                : new RenameRow(file, episode, newName, newName == file ? RenameRowStatus.Unchanged : RenameRowStatus.Rename));
         }
 
         return MarkConflicts(folder, rows);
@@ -189,7 +269,8 @@ public static class RenameOperation
     private static List<RenameRow> MarkConflicts(string folder, List<RenameRow> rows)
     {
         var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-        var targets = rows.Where(r => r.NewName is not null).GroupBy(r => r.NewName!, comparer).Where(g => g.Count() > 1).Select(g => g.Key)
+        var targets = rows.Where(r => r.NewName is not null && r.Status != RenameRowStatus.Invalid)
+            .GroupBy(r => r.NewName!, comparer).Where(g => g.Count() > 1).Select(g => g.Key)
             .ToHashSet(comparer);
         var leaving = rows.Where(r => r.Status == RenameRowStatus.Rename).Select(r => r.File).ToHashSet(comparer);
         return rows.Select(r =>
@@ -212,6 +293,9 @@ public static class RenameOperation
     }
 
     private static bool Exists(string path) => File.Exists(path) || Directory.Exists(path);
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\.{2,}")]
+    private static partial System.Text.RegularExpressions.Regex MultipleDotsRegex();
 
     private static bool SameFile(string a, string b) =>
         string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);

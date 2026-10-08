@@ -32,11 +32,13 @@
       <c:PageHeader DockPanel.Dock="Top" />
       <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,14">
         <StackPanel Spacing="12">
-          <Grid ColumnDefinitions="*,24,Auto,24,Auto">
-            <HeaderedContentControl Classes="field" Header="Базовое название">
+          <!-- поля — только для переменных, которые есть в шаблоне -->
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+            <HeaderedContentControl Classes="field" Header="Базовое название" IsVisible="{Binding UsesTitle}">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBox x:Name="BaseNameBox" Text="{Binding BaseName}" />
-                <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding SearchShikimoriCommand}">
+                <Button x:Name="ShikimoriButton" Grid.Column="1" Margin="8,0,0,0" Command="{Binding SearchShikimoriCommand}"
+                        ToolTip.Tip="Искать на Shikimori то, что в поле, и взять оригинальное название">
                   <StackPanel Orientation="Horizontal" Spacing="7">
                     <mi:MaterialIcon Kind="Magnify" />
                     <TextBlock Text="Найти на Shikimori" />
@@ -44,13 +46,29 @@
                 </Button>
               </Grid>
             </HeaderedContentControl>
-            <HeaderedContentControl Grid.Column="2" Classes="field" Header="Нумерация с">
+            <HeaderedContentControl Grid.Column="1" Classes="field" Header="Нумерация с" Margin="24,0,0,0" IsVisible="{Binding UsesEpisode}">
               <TextBox x:Name="StartBox" Text="{Binding NumberingStart}" Width="80" HorizontalAlignment="Left" />
             </HeaderedContentControl>
-            <HeaderedContentControl Grid.Column="4" Classes="field" Header="Суффикс">
+            <HeaderedContentControl Grid.Column="2" Classes="field" Header="Сезон" Margin="24,0,0,0" IsVisible="{Binding UsesSeason}">
+              <TextBox x:Name="SeasonBox" Text="{Binding Season}" Width="80" HorizontalAlignment="Left" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Grid.Column="3" Classes="field" Header="Суффикс" Margin="24,0,0,0" IsVisible="{Binding UsesSuffix}">
               <TextBox Text="{Binding Suffix}" Width="170" PlaceholderText="напр. надписи" HorizontalAlignment="Left" />
             </HeaderedContentControl>
           </Grid>
+          <HeaderedContentControl Classes="field" Header="Шаблон имени · расширение остаётся своё">
+            <c:TemplateEditor x:Name="TemplateEditor"
+                              Text="{Binding Template}"
+                              Issues="{Binding TemplateIssues}"
+                              Presets="{Binding Presets}"
+                              SavePresetCommand="{Binding SavePresetCommand}"
+                              DeletePresetCommand="{Binding DeletePresetCommand}"
+                              DefaultText="{x:Static p:RenamePageViewModel.DefaultTemplate}"
+                              Variables="{x:Static p:RenamePageViewModel.TemplateVariables}"
+                              Formatted="{x:Static p:RenamePageViewModel.TemplateFormatted}"
+                              Conditions="{x:Static p:RenamePageViewModel.TemplateConditions}"
+                              BuiltInPresets="{x:Static p:RenamePageViewModel.BuiltInPresets}" />
+          </HeaderedContentControl>
           <Grid Classes="hint">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
@@ -82,11 +100,15 @@
                       <TextBox Grid.Column="1" Classes="sm" Text="{Binding Episode}" HorizontalContentAlignment="Center"
                                FontWeight="{Binding IsManual, Converter={x:Static v:Converters.BoldIf}}" />
                       <mi:MaterialIcon Grid.Column="2" Kind="ArrowRight" Classes="faint" Width="15" Height="15" />
-                      <Grid Grid.Column="3" ColumnDefinitions="Auto,*">
-                        <TextBlock Text="{Binding NewName}" VerticalAlignment="Center" Classes="text2" Classes.faint="{Binding !WillRename}"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="460" ToolTip.Tip="{Binding NewName}" />
+                      <!-- имя — сколько влезет (имена как у релизов длинные), пометка — справа; нет имени — пометка на его месте -->
+                      <Grid Grid.Column="3" ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding NewName}" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="text2" Classes.faint="{Binding !WillRename}"
+                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding NewName}" IsVisible="{Binding HasNewName}" />
+                        <TextBlock Text="{Binding Note}" Classes="sm" Classes.err="{Binding IsProblem}" Classes.dim="{Binding !IsProblem}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsVisible="{Binding !HasNewName}" />
                         <TextBlock Grid.Column="1" Text="{Binding Note}" Classes="sm" Classes.err="{Binding IsProblem}" Classes.dim="{Binding !IsProblem}"
-                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="10,0,0,0" />
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="10,0,0,0" MaxWidth="320"
+                                   ToolTip.Tip="{Binding Note}" IsVisible="{Binding HasNewName}" />
                       </Grid>
                     </Grid>
                   </Border>
