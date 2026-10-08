@@ -1,17 +1,38 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Anitools.App.ViewModels"
-        xmlns:sh="using:Anitools.Core.Shikimori"
         xmlns:v="using:Anitools.App.Views"
         xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         Icon="/Assets/anitools.ico"
         x:Class="Anitools.App.Views.Dialogs.ShikimoriDialog"
         x:DataType="vm:ShikimoriPickerViewModel"
         Title="Поиск на Shikimori"
-        Width="860" Height="560" MinWidth="640" MinHeight="400"
+        Width="1040" Height="680" MinWidth="780" MinHeight="480"
         ShowInTaskbar="False"
         Background="{StaticResource PanelBrush}"
         WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <!-- постер: скруглённая плитка, пока картинки нет — значок -->
+    <Style Selector="Border.poster">
+      <Setter Property="Background" Value="{StaticResource Panel3Brush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.poster mi|MaterialIcon">
+      <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.score">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.score">
+      <Setter Property="Foreground" Value="{StaticResource YellowBrush}" />
+    </Style>
+  </Window.Styles>
+
   <DockPanel Margin="20,18,20,18">
     <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,12">
       <StackPanel Spacing="2">
@@ -54,26 +75,100 @@
       <Button Grid.Column="5" Classes="primary" Content="Выбрать" Command="{Binding ChooseCommand}" IsDefault="True" />
     </Grid>
 
-    <ListBox x:Name="ResultsList" Classes="rows" ItemsSource="{Binding Results}" SelectedItem="{Binding Selected}">
-      <ListBox.ItemTemplate>
-        <DataTemplate DataType="sh:ShikimoriAnime">
-          <Grid ColumnDefinitions="70,*,90,50,50,Auto">
-            <TextBlock Text="{Binding Id}" Classes="dim sm" VerticalAlignment="Center" />
-            <StackPanel Grid.Column="1" Spacing="1" Margin="0,0,10,0">
-              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-              <TextBlock Text="{Binding Russian}" Classes="dim sm" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-            <Border Grid.Column="2" Classes="badge" HorizontalAlignment="Left">
-              <TextBlock Text="{Binding KindName}" />
-            </Border>
-            <TextBlock Grid.Column="3" Text="{Binding Episodes, Converter={x:Static v:Converters.EmptyIfZero}}" Classes="text2 sm" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" />
-            <TextBlock Grid.Column="4" Text="{Binding Year}" Classes="text2 sm" VerticalAlignment="Center" />
-            <Button Grid.Column="5" Classes="icon sm" ToolTip.Tip="Открыть на сайте" Click="OnOpenSite" Tag="{Binding}">
-              <mi:MaterialIcon Kind="OpenInNew" />
-            </Button>
-          </Grid>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
+    <Grid ColumnDefinitions="11*,16,14*">
+      <!-- все найденные тайтлы: постер, название, тип · серии · год, оценка -->
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Classes="dim sm" Text="{Binding Found}" Margin="2,0,0,6"
+                   IsVisible="{Binding Found, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <ListBox x:Name="ResultsList" Classes="rows" ItemsSource="{Binding Results}" SelectedItem="{Binding Selected}">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="vm:ShikimoriResultViewModel">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Classes="poster" Width="36" Height="51" CornerRadius="5" VerticalAlignment="Center">
+                  <Panel>
+                    <mi:MaterialIcon Kind="ImageOutline" Width="16" Height="16" />
+                    <Image Source="{Binding Poster}" Stretch="UniformToFill" />
+                  </Panel>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="1" Margin="11,0,8,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                  <TextBlock Text="{Binding OtherNames}" Classes="dim sm" TextTrimming="CharacterEllipsis"
+                             IsVisible="{Binding OtherNames, Converter={x:Static v:Converters.IsNotEmpty}}" />
+                  <TextBlock Text="{Binding Meta}" Classes="faint sm" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center"
+                            IsVisible="{Binding Score, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <mi:MaterialIcon Classes="score" Kind="Star" Width="13" Height="13" />
+                  <TextBlock Classes="score sm" Text="{Binding Score}" />
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <!-- карточка выбранного: постер, названия, тип/статус/серии, оценка, жанры, студия, описание -->
+      <Border Grid.Column="2" Classes="card" Padding="0" IsVisible="{Binding HasSelected}">
+        <ScrollViewer x:Name="DetailScroll" DataContext="{Binding Selected}">
+          <StackPanel Margin="18,16" Spacing="14" x:DataType="vm:ShikimoriResultViewModel">
+            <Grid ColumnDefinitions="Auto,*">
+              <Border Classes="poster" Width="150" Height="212" CornerRadius="9" VerticalAlignment="Top">
+                <Panel>
+                  <mi:MaterialIcon Kind="ImageOutline" Width="34" Height="34" />
+                  <Image Source="{Binding Poster}" Stretch="UniformToFill" />
+                </Panel>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="18,0,0,0" Spacing="8">
+                <SelectableTextBlock Classes="h2" FontSize="18" Text="{Binding Title}" TextWrapping="Wrap" />
+                <SelectableTextBlock Classes="dim" FontSize="13" Text="{Binding OtherNames}" TextWrapping="Wrap"
+                                     IsVisible="{Binding OtherNames, Converter={x:Static v:Converters.IsNotEmpty}}" />
+                <WrapPanel Orientation="Horizontal" ItemSpacing="6" LineSpacing="6">
+                  <Border Classes="badge accent">
+                    <TextBlock Text="{Binding Anime.KindName}" />
+                  </Border>
+                  <Border Classes="badge" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TextBlock Text="{Binding Status}" />
+                  </Border>
+                  <Border Classes="badge" IsVisible="{Binding EpisodesText, Converter={x:Static v:Converters.IsNotEmpty}}">
+                    <TextBlock Text="{Binding EpisodesText}" />
+                  </Border>
+                  <Border Classes="badge" IsVisible="{Binding Duration, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TextBlock Text="{Binding Duration}" />
+                  </Border>
+                  <Border Classes="badge">
+                    <TextBlock Text="{Binding Anime.Year}" />
+                  </Border>
+                </WrapPanel>
+                <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding Score, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <mi:MaterialIcon Classes="score" Kind="Star" Width="16" Height="16" />
+                  <TextBlock Classes="score" FontSize="15" Text="{Binding Score}" VerticalAlignment="Center" />
+                </StackPanel>
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                  <TextBlock Classes="dim sm" Text="Жанры" Margin="0,1,12,4"
+                             IsVisible="{Binding Genres, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <TextBlock Grid.Column="1" Classes="text2 sm" Text="{Binding Genres}" TextWrapping="Wrap" Margin="0,1,0,4"
+                             IsVisible="{Binding Genres, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <TextBlock Grid.Row="1" Classes="dim sm" Text="Студия" Margin="0,1,12,0"
+                             IsVisible="{Binding Studios, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Classes="text2 sm" Text="{Binding Studios}" TextWrapping="Wrap" Margin="0,1,0,0"
+                             IsVisible="{Binding Studios, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Classes="faint sm mono" Text="{Binding Id, StringFormat='ID {0}'}" VerticalAlignment="Center" />
+                  <Button Classes="ghost sm" Click="OnOpenSite" Tag="{Binding}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <mi:MaterialIcon Kind="OpenInNew" Width="14" Height="14" />
+                      <TextBlock Text="Открыть на Shikimori" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+            <SelectableTextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="13.5" LineHeight="21"
+                                 Classes="text2" Classes.faint="{Binding !HasDescription}" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
   </DockPanel>
 </Window>

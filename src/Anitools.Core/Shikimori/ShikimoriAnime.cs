@@ -23,5 +23,39 @@ public sealed record ShikimoriAnime(long Id, string Name, string Russian, string
 
     public string KindName => KindNames.TryGetValue(Kind, out var name) ? name : (Kind.Length > 0 ? Kind : "?");
 
+    /// <summary>Английское название (из подробного поиска).</summary>
+    public string? English { get; init; }
+
+    /// <summary>anons, ongoing, released.</summary>
+    public string? Status { get; init; }
+
+    /// <summary>Оценка на Shikimori; нет — null.</summary>
+    public double? Score { get; init; }
+
+    /// <summary>Сколько серий уже вышло (у онгоингов).</summary>
+    public int EpisodesAired { get; init; }
+
+    /// <summary>Длительность серии, мин.</summary>
+    public int? Duration { get; init; }
+
+    /// <summary>Постер 225×318; нет — null.</summary>
+    public string? PosterUrl { get; init; }
+
+    public IReadOnlyList<string> Genres { get; init; } = [];
+
+    public IReadOnlyList<string> Studios { get; init; } = [];
+
+    /// <summary>Описание без разметки Shikimori ([character=…] и т.п.).</summary>
+    public string? Description { get; init; }
+
+    /// <summary>Статус по-русски: «анонс», «выходит», «вышло».</summary>
+    public string StatusName => Status switch
+    {
+        "anons" => "анонс",
+        "ongoing" => "выходит",
+        "released" => "вышло",
+        _ => "",
+    };
+
     public string Url(Uri site) => new Uri(site, $"/animes/{Id}").ToString();
 }

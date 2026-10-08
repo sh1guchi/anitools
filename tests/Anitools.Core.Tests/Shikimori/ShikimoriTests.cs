@@ -118,6 +118,118 @@ public sealed class ShikimoriTests
         Assert.Equal("https://shikimori.io/api/animes?search=Re%3AZero&limit=15&order=popularity", seen.RequestUri!.AbsoluteUri);
     }
 
+    [Fact]
+    public async Task Detailed_search_asks_graphql_for_everything_the_picker_shows()
+    {
+        const string answer = """
+            {"data":{"animes":[
+              {"id":"52991","name":"Sousou no Frieren","russian":"Провожающая в последний путь Фрирен","english":"Frieren: Beyond Journey's End",
+               "kind":"tv","status":"released","episodes":28,"episodesAired":28,"airedOn":{"year":2023},"score":9.29,"duration":24,
+               "poster":{"mainUrl":"https://shikimori.io/uploads/poster/animes/52991/main-1.webp"},
+               "genres":[{"russian":"Приключения"},{"russian":"Драма"}],"studios":[{"name":"Madhouse"}],
+               "description":"Путь [character=184947]Фрирен[/character] и [[Химмель|Химмеля]].[br][br][br]Смотри [anime=59978]второй сезон[/anime]."},
+              {"id":"59978","name":"Sousou no Frieren 2nd Season","russian":"","english":null,"kind":"tv","status":"ongoing",
+               "episodes":0,"episodesAired":5,"airedOn":null,"score":0,"duration":null,"poster":null,"genres":[],"studios":[],"description":null},
+              {"id":"60000","name":"Anons","russian":"Анонс","kind":"tv","status":"anons","episodes":null,"episodesAired":null,
+               "airedOn":{"year":null},"score":null,"duration":null,"poster":{"mainUrl":null},"genres":null,"studios":null,"description":""},
+              {"id":"0","name":"мусор"}
+            ]}}
+            """;
+        string? body = null;
+        HttpMethod? method = null;
+        var api = new FakeApi((request, _) =>
+        {
+            method = request.Method;
+            body = request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken).GetAwaiter().GetResult();
+            return Response(HttpStatusCode.OK, answer);
+        });
+
+        var found = await api.Client.SearchDetailedAsync("Frieren", ct: TestContext.Current.CancellationToken);
+
+        Assert.Equal(["graphql"], api.Paths);
+        Assert.Equal(HttpMethod.Post, method);
+        using var sent = JsonDocument.Parse(body!);
+        Assert.Equal("Frieren", sent.RootElement.GetProperty("variables").GetProperty("search").GetString());
+        Assert.Equal(50, sent.RootElement.GetProperty("variables").GetProperty("limit").GetInt32());
+        Assert.Contains("order: popularity", sent.RootElement.GetProperty("query").GetString(), StringComparison.Ordinal);
+
+        Assert.Equal([52991L, 59978L, 60000L], found.Select(a => a.Id));
+        var frieren = found[0];
+        Assert.Equal(("Sousou no Frieren", "Провожающая в последний путь Фрирен", "2023", "tv", 28), (frieren.Name, frieren.Russian, frieren.Year, frieren.Kind, frieren.Episodes));
+        Assert.Equal("Frieren: Beyond Journey's End", frieren.English);
+        Assert.Equal(("released", "вышло", 9.29, 24), (frieren.Status, frieren.StatusName, frieren.Score, frieren.Duration));
+        Assert.Equal("https://shikimori.io/uploads/poster/animes/52991/main-1.webp", frieren.PosterUrl);
+        Assert.Equal(["Приключения", "Драма"], frieren.Genres);
+        Assert.Equal(["Madhouse"], frieren.Studios);
+        Assert.Equal("Путь Фрирен и Химмеля.\n\nСмотри второй сезон.", frieren.Description);
+
+        // пустое русское название — ромадзи, нет года — «????», оценка 0 — нет оценки
+        var second = found[1];
+        Assert.Equal(("Sousou no Frieren 2nd Season", "????", 5, "выходит"), (second.Russian, second.Year, second.EpisodesAired, second.StatusName));
+        Assert.Null(second.Score);
+        Assert.Null(second.Duration);
+        Assert.Null(second.PosterUrl);
+        Assert.Null(second.Description);
+        Assert.Empty(second.Genres);
+
+        // у анонса почти всё null
+        var anons = found[2];
+        Assert.Equal(("????", 0, "анонс"), (anons.Year, anons.Episodes, anons.StatusName));
+        Assert.Null(anons.PosterUrl);
+        Assert.Empty(anons.Studios);
+    }
+
+    [Fact]
+    public async Task Detailed_search_falls_back_to_rest_when_graphql_fails()
+    {
+        const string rest = """
+            [{"id":52991,"name":"Sousou no Frieren","russian":"Фрирен","kind":"tv","episodes":28,"aired_on":"2023-09-29","status":"released","score":"9.29",
+              "image":{"original":"/system/animes/original/52991.jpg?1700000000","preview":"/system/animes/preview/52991.jpg"}},
+             {"id":7,"name":"Без постера","kind":"tv","image":{"original":"/assets/globals/missing_original.jpg"}}]
+            """;
+        var api = new FakeApi((request, _) => request.Method == HttpMethod.Post
+            ? Response(HttpStatusCode.OK, """{"errors":[{"message":"Field 'x' doesn't exist"}]}""")
+            : Response(HttpStatusCode.OK, rest));
+
+        var found = await api.Client.SearchDetailedAsync("Frieren", ct: TestContext.Current.CancellationToken);
+
+        Assert.Equal(["graphql", "animes?search=Frieren&limit=50&order=popularity"], api.Paths);
+        Assert.Equal([52991L, 7L], found.Select(a => a.Id));
+        Assert.Equal("https://shikimori.io/system/animes/original/52991.jpg?1700000000", found[0].PosterUrl);
+        Assert.Equal((9.29, "вышло"), (found[0].Score, found[0].StatusName));
+        Assert.Null(found[1].PosterUrl);
+    }
+
+    [Fact]
+    public async Task Smart_detailed_search_tries_fallback_queries_until_something_is_found()
+    {
+        var api = new FakeApi((request, n) => Response(HttpStatusCode.OK, n < 2 ? """{"data":{"animes":[]}}""" : """{"data":{"animes":[{"id":"1","name":"X"}]}}"""));
+        var found = await api.Client.SmartSearchDetailedAsync("Re:Zero kara Hajimeru Isekai Seikatsu", TestContext.Current.CancellationToken);
+        Assert.Equal(1, Assert.Single(found).Id);
+        Assert.Equal(3, api.Paths.Count);
+        Assert.All(api.Paths, p => Assert.Equal("graphql", p));
+    }
+
+    [Theory]
+    [InlineData("[i]Курсив[/i] и [url=https://example.com]ссылка[/url]", "Курсив и ссылка")]
+    [InlineData("Кусина Узумаки [Kushina Uzumaki] и [person=1904]автор[/person]", "Кусина Узумаки [Kushina Uzumaki] и автор")]
+    [InlineData("Стал [[Хокагэ]]", "Стал Хокагэ")]
+    [InlineData("  [br]  ", null)]
+    [InlineData("", null)]
+    public void Description_loses_shikimori_markup(string text, string? expected) =>
+        Assert.Equal(expected, ShikimoriClient.CleanDescription(text));
+
+    [Fact]
+    public async Task Poster_download_failure_is_just_no_poster()
+    {
+        var api = FakeApi.Status(HttpStatusCode.NotFound);
+        Assert.Null(await api.Client.DownloadAsync("https://shikimori.io/uploads/poster/animes/1/main.webp", TestContext.Current.CancellationToken));
+        var broken = new FakeApi((_, _) => throw new HttpRequestException("сеть"));
+        Assert.Null(await broken.Client.DownloadAsync("/system/animes/original/1.jpg", TestContext.Current.CancellationToken));
+        var ok = new FakeApi((_, _) => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([1, 2, 3]) });
+        Assert.Equal([1, 2, 3], await ok.Client.DownloadAsync("/system/animes/original/1.jpg", TestContext.Current.CancellationToken));
+    }
+
     private static string Fixture(string golden, string name) =>
         GoldenFile.Load(golden).Root.GetProperty("fixtures").GetProperty(name).GetRawText();
 

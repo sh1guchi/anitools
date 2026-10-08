@@ -1,5 +1,3 @@
-using System.Net;
-using System.Text;
 using Anitools.App.ViewModels;
 using Anitools.App.Views;
 using Anitools.App.Views.Dialogs;
@@ -209,16 +207,35 @@ public sealed class ScreenshotTests
     public async Task Shikimori_dialog()
     {
         const string results = """
-            [{"id":52991,"name":"Sousou no Frieren","russian":"Провожающая в последний путь Фрирен","kind":"tv","episodes":28,"aired_on":"2023-09-29"},
-             {"id":59978,"name":"Sousou no Frieren 2nd Season","russian":"Провожающая в последний путь Фрирен 2","kind":"tv","episodes":0,"aired_on":"2026-01-16"},
-             {"id":56805,"name":"Sousou no Frieren: ●● no Mahou","russian":"Провожающая в последний путь Фрирен: Магия ●●","kind":"special","episodes":0,"aired_on":"2023-10-06"},
-             {"id":57000,"name":"Sousou no Frieren Recap","russian":"","kind":"tv_special","episodes":1,"aired_on":null}]
+            {"data":{"animes":[
+              {"id":"52991","name":"Sousou no Frieren","russian":"Провожающая в последний путь Фрирен","english":"Frieren: Beyond Journey's End",
+               "kind":"tv","status":"released","episodes":28,"episodesAired":28,"airedOn":{"year":2023},"score":9.29,"duration":24,
+               "poster":{"mainUrl":"https://shikimori.io/p/52991.webp"},
+               "genres":[{"russian":"Приключения"},{"russian":"Драма"},{"russian":"Фэнтези"},{"russian":"Сёнэн"}],"studios":[{"name":"Madhouse"}],
+               "description":"Десять лет [character=1]Фрирен[/character] странствовала с отрядом героя и победила Короля демонов.[br][br]Для эльфийки это лишь миг. Когда спутники начинают уходить один за другим, она понимает, как мало знала о них, и отправляется в новое путешествие — чтобы понять людей."},
+              {"id":"59978","name":"Sousou no Frieren 2nd Season","russian":"Провожающая в последний путь Фрирен 2","english":"Frieren: Beyond Journey's End Season 2",
+               "kind":"tv","status":"ongoing","episodes":10,"episodesAired":4,"airedOn":{"year":2026},"score":9.1,"duration":24,
+               "poster":{"mainUrl":"https://shikimori.io/p/59978.webp"},"genres":[{"russian":"Приключения"}],"studios":[{"name":"Madhouse"}],"description":"Продолжение пути на север."},
+              {"id":56805,"name":"Sousou no Frieren: ●● no Mahou","russian":"Провожающая в последний путь Фрирен: Магия ●●","kind":"special",
+               "status":"released","episodes":10,"episodesAired":10,"airedOn":{"year":2023},"score":7.6,"duration":2,
+               "poster":{"mainUrl":"https://shikimori.io/p/56805.webp"},"genres":[],"studios":[],"description":null},
+              {"id":"57000","name":"Sousou no Frieren Recap","russian":"","kind":"tv_special","status":"released","episodes":1,"airedOn":null,"score":0,"poster":null}
+            ]}}
             """;
-        using var http = new HttpClient(new Answer(results));
+        var site = new FakeShikimori(results)
+        {
+            Posters =
+            {
+                ["https://shikimori.io/p/52991.webp"] = FakeShikimori.Poster(0xFF8FB8E8, 0xFF2E4A6B),
+                ["https://shikimori.io/p/59978.webp"] = FakeShikimori.Poster(0xFFE8C48F, 0xFF6B4A2E),
+                ["https://shikimori.io/p/56805.webp"] = FakeShikimori.Poster(0xFFB394FF, 0xFF3A2470),
+            },
+        };
+        using var http = new HttpClient(site);
         var picker = new ShikimoriPickerViewModel(new ShikimoriClient(http, null, (_, _) => Task.CompletedTask), "Sousou no Frieren");
         var dialog = new ShikimoriDialog(picker);
         dialog.Show();
-        await AppFixture.WaitUntilAsync(() => picker.Results.Count == 4, "результаты");
+        await AppFixture.WaitUntilAsync(() => picker.Results.Count == 4 && picker.Results.Count(r => r.Poster is not null) == 3, "результаты и постеры");
 
         AppFixture.Flush();
         var frame = Screenshots.Capture(dialog, "shikimori");
@@ -397,12 +414,6 @@ public sealed class ScreenshotTests
         window.Show();
         await vm.CheckToolsAsync();
         return (vm, window);
-    }
-
-    private sealed class Answer(string json) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") });
     }
 
     private static void Capture(MainWindow window, string name)

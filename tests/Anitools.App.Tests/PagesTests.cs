@@ -209,6 +209,37 @@ public sealed class PagesTests
         await Task.CompletedTask.WaitAsync(Ct);
     }
 
+    [AvaloniaFact]
+    public async Task Shikimori_picker_shows_every_result_with_details_and_posters()
+    {
+        // 12 тайтлов (раньше показывали 8); у первого — постер, у второго вместо картинки мусор, у остальных постера нет
+        var animes = Enumerable.Range(1, 12).Select(i => $$"""
+            {"id":"{{i}}","name":"Title {{i}}","russian":"Тайтл {{i}}","english":"Title {{i}} EN","kind":"tv","status":"ongoing",
+             "episodes":12,"episodesAired":{{i}},"airedOn":{"year":2020},"score":8.5,"duration":24,
+             "poster":{"mainUrl":"https://shikimori.io/p/{{i}}.webp"},"genres":[{"russian":"Драма"}],"studios":[{"name":"Madhouse"}],
+             "description":"Про [character=1]героя[/character]."}
+            """);
+        var site = new FakeShikimori("""{"data":{"animes":[""" + string.Join(",", animes) + "]}}")
+        {
+            Posters = { ["https://shikimori.io/p/1.webp"] = FakeShikimori.Poster(0xFF9B73FF, 0xFF24252F), ["https://shikimori.io/p/2.webp"] = [1, 2, 3] },
+        };
+        using var http = new HttpClient(site);
+        var picker = new ShikimoriPickerViewModel(new ShikimoriClient(http, null, (_, _) => Task.CompletedTask), "Title");
+
+        await picker.SearchAsync();
+
+        Assert.Equal(12, picker.Results.Count);
+        Assert.Equal("Найдено: 12", picker.Found);
+        var first = picker.Selected!;
+        Assert.Equal(("Тайтл 1", "Title 1 · Title 1 EN", "TV · 1 из 12 эп. · 2020"), (first.Title, first.OtherNames, first.Meta));
+        Assert.Equal(("8.50", "24 мин", "выходит", "Драма", "Madhouse", "Про героя."), (first.Score, first.Duration, first.Status, first.Genres, first.Studios, first.Description));
+
+        await AppFixture.WaitUntilAsync(() => site.PosterRequests == 12 && picker.Results[0].Poster is not null, "постеры");
+        AppFixture.Flush();
+        Assert.Equal(new Avalonia.PixelSize(225, 318), picker.Results[0].Poster!.PixelSize);
+        Assert.All(picker.Results.Skip(1), r => Assert.Null(r.Poster));
+    }
+
     private static string TrackOf(SubtitlesPageViewModel page, int row) =>
         page.Preview.Plan!.Items[row].Command!.Arguments[^1];
 
