@@ -67,7 +67,7 @@ public sealed class MediaToolsIntegrationTests
     [Fact]
     public void Missing_tool_is_a_clear_error() =>
         Assert.Equal(
-            "Не найдена программа ffprobe — укажите путь в настройках",
+            "Не найдена программа ffprobe — поставьте её в «Настройках» («Установить») или укажите путь",
             Assert.Throws<ToolNotFoundException>(() =>
                 new MediaProbe(new ProcessRunner(), new ToolPaths(null, null, null, null))
                     .ProbeAsync("x", TestContext.Current.CancellationToken).GetAwaiter().GetResult()).Message);

@@ -70,6 +70,10 @@ public sealed partial class AssValueRowViewModel(AssFieldValue value) : Observab
 
     [ObservableProperty]
     public partial bool IsChecked { get; set; }
+
+    /// <summary>Подходит под поиск (поиска нет — подходят все).</summary>
+    [ObservableProperty]
+    public partial bool IsMatch { get; set; } = true;
 }
 
 /// <summary>
@@ -80,6 +84,7 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
 {
     private AssEditInspection? _inspection;
     private Dictionary<string, string> _texts = [];
+    private bool _bulk;
 
     public ObservableCollection<AssValueRowViewModel> Values { get; } = [];
 
@@ -96,6 +101,19 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
 
     [ObservableProperty]
     public partial int RemoveCount { get; set; }
+
+    /// <summary>Поиск по значениям: слова через запятую, без учёта регистра («демонобогский, демон»).</summary>
+    [ObservableProperty]
+    public partial string Search { get; set; } = "";
+
+    /// <summary>Сколько значений подходит под поиск.</summary>
+    [ObservableProperty]
+    public partial int MatchCount { get; set; }
+
+    public bool HasSearch => Keywords(Search).Count > 0;
+
+    /// <summary>«найдено 3 из 41».</summary>
+    public string SearchCaption => HasSearch ? $"найдено {MatchCount} из {Values.Count}" : RuText.Plural(Values.Count, "значение", "значения", "значений");
 
     public bool IsStyle
     {
@@ -157,6 +175,8 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
             Values.Add(row);
         }
 
+        ApplySearch();
+
         Message = inspection.Unreadable.Count > 0
             ? "Не в UTF-8, не тронутся: " + string.Join(", ", inspection.Unreadable.Select(u => Path.GetFileName(u.File)))
             : null;
@@ -170,6 +190,7 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
         Values.Clear();
         Summary = "";
         RemoveCount = 0;
+        ApplySearch();
     }
 
     partial void OnFieldChanged(AssField value)
@@ -207,12 +228,61 @@ public sealed partial class AssEditPageViewModel(IShell shell) : PageViewModel(s
         await RefreshAsync();
     }
 
+    /// <summary>Слова поиска: через запятую или точку с запятой, пустые — не считаются.</summary>
+    public static IReadOnlyList<string> Keywords(string search) =>
+        [.. search.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    partial void OnSearchChanged(string value) => ApplySearch();
+
+    /// <summary>Отметить все найденные значения (Enter в поле поиска).</summary>
+    [RelayCommand]
+    private void CheckFound() => SetFound(true);
+
+    [RelayCommand]
+    private void UncheckFound() => SetFound(false);
+
+    private void SetFound(bool check)
+    {
+        if (!HasSearch)
+        {
+            return;
+        }
+
+        _bulk = true;
+        try
+        {
+            foreach (var row in Values.Where(v => v.IsMatch))
+            {
+                row.IsChecked = check;
+            }
+        }
+        finally
+        {
+            _bulk = false;
+        }
+
+        Recount();
+    }
+
+    private void ApplySearch()
+    {
+        var words = Keywords(Search);
+        foreach (var row in Values)
+        {
+            row.IsMatch = words.Count == 0 || words.Any(w => row.Value.Contains(w, StringComparison.OrdinalIgnoreCase));
+        }
+
+        MatchCount = Values.Count(v => v.IsMatch);
+        OnPropertyChanged(nameof(HasSearch));
+        OnPropertyChanged(nameof(SearchCaption));
+    }
+
     private IReadOnlySet<string> Remove(AssEditInspection inspection) =>
         AssEditOperation.ValuesToRemove(inspection, Values.Where(v => v.IsChecked).Select(v => v.Value), KeepSelected);
 
     private void OnValueChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(AssValueRowViewModel.IsChecked))
+        if (e.PropertyName == nameof(AssValueRowViewModel.IsChecked) && !_bulk)
         {
             Recount();
         }

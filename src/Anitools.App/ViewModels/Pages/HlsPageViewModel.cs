@@ -359,11 +359,26 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         }
 
         var services = Shell.Services;
+        if (WorkDirMode == WorkDirMode.RamDisk && services.Imdisk is not null && services.ImDiskAdmin is ElevatedImDisk elevated)
+        {
+            // без прав администратора: разрешение Windows — сейчас, пока пользователь у экрана, а не когда дойдёт очередь
+            try
+            {
+                await elevated.EnsureStartedAsync();
+            }
+            catch (WorkDirException ex)
+            {
+                Message = ex.Message;
+                return;
+            }
+        }
+
         var runner = new HlsRunner(services.Runner, services.Tools, services.Probe, services.Logs, settings);
-        var provider = WorkDirProviders.Create(workDir, services.Runner, services.Imdisk);
+        var provider = WorkDirProviders.Create(workDir, services.Runner, services.Imdisk, services.ImDiskAdmin);
         Func<CancellationToken, Task<bool>>? shutdown = Shutdown ? ct => new ShutdownService(services.Runner).ScheduleAsync(ct) : null;
         Func<CancellationToken, Task<IReadOnlyList<char>>>? cleanup = OperatingSystem.IsWindows()
-            ? ct => ImDiskRamDisk.CleanupOrphansAsync(new ImDisk(services.Runner, services.Imdisk), new RamDiskStateFile(RamDiskStateFile.DefaultPath), ct)
+            ? ct => ImDiskRamDisk.CleanupOrphansAsync(
+                new ImDisk(services.Runner, services.Imdisk), new RamDiskStateFile(RamDiskStateFile.DefaultPath), services.ImDiskAdmin, cancellationToken: ct)
             : null;
         Enqueue("HLS", HlsJobs.Run(toRun, runner, provider, calibrates: settings.FixedCq is null, shutdown, cleanup));
     }
@@ -394,12 +409,12 @@ public sealed partial class HlsPageViewModel(IShell shell) : PageViewModel(shell
         var warnings = new List<string>();
         if (WorkDirMode == WorkDirMode.RamDisk && Shell.Services.Imdisk is null)
         {
-            warnings.Add("ImDisk не найден — RAM-диск не создать; выберите папку или «рядом с выходом».");
+            warnings.Add("ImDisk не найден — RAM-диск не создать: поставьте его в «Настройках» («Установить») или выберите папку / «рядом с выходом».");
         }
 
         if (UseNvenc && Shell.Services.Tools.Ffmpeg is null)
         {
-            warnings.Add("ffmpeg не найден — укажите путь в настройках.");
+            warnings.Add("ffmpeg не найден — поставьте его в «Настройках» («Установить») или укажите путь.");
         }
 
         Warning = warnings.Count > 0 ? string.Join("\n", warnings) : null;

@@ -11,7 +11,7 @@
       <Grid ColumnDefinitions="Auto,*,Auto">
         <mi:MaterialIcon Kind="InformationOutline" Classes="cyan" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,9,0" />
         <TextBlock Grid.Column="1" Classes="text2" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"
-                   Text="Плюс — тишина в начало (звук позже), минус — начало обрезается (звук раньше). Выход — папка «audio_fixed», AAC в .mka." />
+                   Text="{Binding Description}" />
         <Button x:Name="RunButton" Grid.Column="2" Classes="primary lg" Command="{Binding RunCommand}"
                 IsEnabled="{Binding Preview.CheckedCount, Converter={x:Static v:Converters.IsPositive}}">
           <StackPanel Orientation="Horizontal" Spacing="8">
@@ -28,7 +28,15 @@
           <HeaderedContentControl Classes="field" Header="Сдвиг, с">
             <TextBox x:Name="SecondsBox" Text="{Binding Seconds}" Width="96" HorizontalAlignment="Left" />
           </HeaderedContentControl>
-          <HeaderedContentControl Classes="field" Header="Битрейт AAC">
+          <HeaderedContentControl Classes="field" Header="Как сдвигать">
+            <Border Classes="seg">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="LosslessRadio" Classes="seg" GroupName="shiftMode" Content="без перекодирования" IsChecked="{Binding IsLossless}" />
+                <RadioButton x:Name="AacRadio" Classes="seg" GroupName="shiftMode" Content="в AAC, как в оригинале" IsChecked="{Binding Reencode}" />
+              </StackPanel>
+            </Border>
+          </HeaderedContentControl>
+          <HeaderedContentControl Classes="field" Header="Битрейт AAC" IsVisible="{Binding Reencode}">
             <TextBox Text="{Binding Bitrate}" Width="96" HorizontalAlignment="Left" />
           </HeaderedContentControl>
           <HeaderedContentControl Classes="field" Header="Файлов сразу">

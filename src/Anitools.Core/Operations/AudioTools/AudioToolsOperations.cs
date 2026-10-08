@@ -5,10 +5,16 @@ using Anitools.Core.Processes;
 
 namespace Anitools.Core.Operations.AudioTools;
 
-/// <summary>Сдвиг аудио: секунды (плюс — тишина в начало, минус — обрезать начало), битрейт AAC, сколько файлов сразу.</summary>
+/// <summary>
+/// Сдвиг аудио: секунды (плюс — звук позже, минус — обрезать начало), перекодировать ли в AAC (как в оригинале;
+/// по умолчанию нет — без потерь), битрейт AAC, сколько файлов сразу.
+/// </summary>
 public sealed record AudioShiftOptions
 {
     public double Seconds { get; init; } = 1.0;
+
+    /// <summary>false — без перекодирования (mkvmerge --sync), true — в AAC, как delay+1s.py / delay-1s.py.</summary>
+    public bool Reencode { get; init; }
 
     public string Bitrate { get; init; } = "256k";
 
@@ -16,9 +22,11 @@ public sealed record AudioShiftOptions
 }
 
 /// <summary>
-/// Сдвиг аудио (delay+1s.py / delay-1s.py): файлы папки → audio_fixed\&lt;имя&gt;.mka, AAC.
-/// «+N» — оригинал склеивал тишину стерео 48 кГц фильтром concat (5.1 и 44,1 кГц при этом приводились к ней);
-/// здесь — adelay по всем каналам: раскладка и частота исходника сохраняются. «−N» — как в оригинале, -ss.
+/// Сдвиг аудио (delay+1s.py / delay-1s.py): файлы папки → audio_fixed\&lt;имя&gt;.mka.
+/// По умолчанию без перекодирования: mkvmerge --sync сдвигает метки времени всех дорожек (плюс — звук начинается
+/// позже, минус — начало отбрасывается с точностью до аудиокадра), кодек и качество — как в исходнике.
+/// С перекодированием в AAC — как в оригинале: «+N» — оригинал склеивал тишину стерео 48 кГц фильтром concat
+/// (5.1 и 44,1 кГц при этом приводились к ней), здесь — adelay по всем каналам; «−N» — -ss.
 /// </summary>
 public static class AudioShiftOperation
 {
@@ -50,8 +58,25 @@ public static class AudioShiftOperation
                 return new PlanItem { Source = file, Label = name, Status = PlanItemStatus.Skip, Reason = "уже готово", Outputs = [output] };
             }
 
+            var milliseconds = (long)Math.Round(options.Seconds * 1000);
+            if (!options.Reencode)
+            {
+                // -1 — все дорожки файла; обложку (видео) не берём, как «-vn» в варианте с AAC
+                return new PlanItem
+                {
+                    Source = file,
+                    Label = name,
+                    Status = PlanItemStatus.Run,
+                    Outputs = [output],
+                    Command = new PlannedCommand(Tool.Mkvmerge, ["-o", output, "--no-video", "--sync", FormattableString.Invariant($"-1:{milliseconds}"), file])
+                    {
+                        WarningExitCodes = [1],
+                    },
+                };
+            }
+
             string[] shift = options.Seconds > 0
-                ? ["-i", file, "-af", FormattableString.Invariant($"adelay=delays={(long)Math.Round(options.Seconds * 1000)}:all=1")]
+                ? ["-i", file, "-af", FormattableString.Invariant($"adelay=delays={milliseconds}:all=1")]
                 : ["-i", file, "-ss", seconds];
             return new PlanItem
             {
@@ -62,7 +87,7 @@ public static class AudioShiftOperation
                 Command = new PlannedCommand(Tool.Ffmpeg, ["-hide_banner", "-nostdin", .. shift, "-c:a", "aac", "-b:a", options.Bitrate, "-vn", "-y", output]),
             };
         }).ToList();
-        var title = options.Seconds > 0 ? $"Сдвиг аудио +{seconds} с" : $"Сдвиг аудио −{seconds} с";
+        var title = (options.Seconds > 0 ? $"Сдвиг аудио +{seconds} с" : $"Сдвиг аудио −{seconds} с") + (options.Reencode ? " (AAC)" : "");
         return new OperationPlan(title, folder, items);
     }
 }
@@ -86,6 +111,9 @@ public enum AudioFormat
 
     /// <summary>PCM 16 бит, без потерь.</summary>
     Wav,
+
+    /// <summary>AAC LC в QuickTime (.mov) — только аудио, без обложки (для монтажных программ).</summary>
+    Mov,
 }
 
 public sealed record AudioConvertOptions
@@ -124,6 +152,7 @@ public static class AudioConvertOperation
         AudioFormat.Ogg => (".ogg", ["-c:a", "libvorbis", "-b:a", bitrate]),
         AudioFormat.Flac => (".flac", ["-c:a", "flac"]),
         AudioFormat.Wav => (".wav", ["-c:a", "pcm_s16le"]),
+        AudioFormat.Mov => (".mov", ["-c:a", "aac", "-profile:a", "aac_low", "-b:a", bitrate]),
         _ => throw new ArgumentOutOfRangeException(nameof(format)),
     };
 
@@ -158,9 +187,9 @@ public static class AudioConvertOperation
             }
 
             args.AddRange(["-map_metadata", "0"]);
-            if (ext != ".mka")
+            if (ext is not (".mka" or ".mov"))
             {
-                // Обложку как attached_pic понимают mp4/m4a/mp3 и т.п., но не Matroska
+                // Обложку как attached_pic понимают mp4/m4a/mp3 и т.п., но не Matroska; в .mov — только аудио
                 args.AddRange(["-map", "0:v?", "-c:v", "copy", "-disposition:v", "attached_pic"]);
             }
 

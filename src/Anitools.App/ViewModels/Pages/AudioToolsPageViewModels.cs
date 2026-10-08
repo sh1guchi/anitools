@@ -8,7 +8,10 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>«Сдвиг аудио» (§4.11, delay±1s.py): плюс — тишина в начало, минус — обрезать начало; → audio_fixed.</summary>
+/// <summary>
+/// «Сдвиг аудио» (§4.11, delay±1s.py): плюс — звук позже, минус — обрезать начало; → audio_fixed. По умолчанию без
+/// перекодирования (mkvmerge), по желанию — в AAC, как в оригинале.
+/// </summary>
 public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewModel(shell, "Сдвиг аудио", MaterialIconKind.ClockOutline)
 {
     public PlanPreviewViewModel Preview { get; } = new();
@@ -22,6 +25,21 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
     [ObservableProperty]
     public partial string Workers { get; set; } = Text(shell.Services.Settings.AudioShift.Workers);
 
+    /// <summary>Перекодировать в AAC (как в оригинале); нет — сдвиг без потерь.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLossless))]
+    public partial bool Reencode { get; set; } = shell.Services.Settings.AudioShift.Reencode;
+
+    public bool IsLossless
+    {
+        get => !Reencode;
+        set => Reencode = !value;
+    }
+
+    public string Description => Reencode
+        ? "Перекодирование в AAC, как в оригинале: плюс — тишина в начало, минус — начало обрезается. Выход — папка «audio_fixed», .mka."
+        : "Без перекодирования (mkvmerge): плюс — звук начинается позже, минус — начало отбрасывается. Кодек и качество — как в исходнике. Выход — папка «audio_fixed», .mka.";
+
     protected override Task LoadAsync(string folder, CancellationToken cancellationToken)
     {
         Replan();
@@ -33,6 +51,12 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
     partial void OnSecondsChanged(string value) => Replan();
 
     partial void OnBitrateChanged(string value) => Replan();
+
+    partial void OnReencodeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(Description));
+        Replan();
+    }
 
     [RelayCommand]
     private void Run()
@@ -51,6 +75,7 @@ public sealed partial class AudioShiftPageViewModel(IShell shell) : PageViewMode
             Seconds = SettingsPageViewModel.Number(Seconds, "Сдвиг", errors, -3600, 3600),
             Bitrate = Bitrate.Trim().Length > 0 ? Bitrate.Trim() : "256k",
             Workers = SettingsPageViewModel.Int(Workers, "Файлов сразу", errors, 1, 64),
+            Reencode = Reencode,
         };
         Message = errors.Count > 0 ? string.Join("\n", errors) : null;
         return errors.Count > 0 ? null : options;

@@ -109,17 +109,36 @@ public sealed class PagesTests
         var vm = app.CreateViewModel();
         var page = vm.SubtitlesPage;
         vm.SelectedNav = page;
-        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 2 && page.Preview.Rows.Count == 2, "дорожки");
+        await AppFixture.WaitUntilAsync(() => page.Tracks.Count == 2 && page.Preview.Rows.Count == 4, "дорожки");
 
         Assert.Equal("S_TEXT/ASS → .ass", page.Tracks[0].Codec);
-        Assert.Equal("2:", TrackOf(page, 1)[..2]);
+        // по тайтлам: «Надписи» — в надписи, «Полные» — в сабы; шаги — по сериям, обе папки за один запуск
+        Assert.Equal([(true, false), (false, true)], page.Tracks.Select(t => (t.IsSigns, t.IsSubs)));
+        Assert.Equal(
+            ["Frieren - 01.mkv · надписи", "Frieren - 01.mkv · сабы", "Frieren - 02.mkv · надписи", "Frieren - 02.mkv · сабы"],
+            page.Preview.Rows.Select(r => r.Label));
+        Assert.Equal("2:", TrackOf(page, 2)[..2]); // по ID: во второй серии ID 2 — уже «Полные»
 
         page.IsByTitle = true;
-        await AppFixture.WaitUntilAsync(() => TrackOf(page, 1).StartsWith("3:", StringComparison.Ordinal), "по тайтлу");
-        Assert.Equal("→ " + Path.Combine("надписи", "Frieren - 02.надписи.ass"), page.Preview.Rows[1].Target);
+        await AppFixture.WaitUntilAsync(() => TrackOf(page, 2).StartsWith("3:", StringComparison.Ordinal), "по тайтлу");
+        Assert.Equal("→ " + Path.Combine("надписи", "Frieren - 02.надписи.ass"), page.Preview.Rows[2].Target);
+        Assert.Equal("2:", TrackOf(page, 3)[..2]);
+        Assert.Contains(".сабы.ass", page.Preview.Rows[3].Target, StringComparison.Ordinal);
 
-        page.IsSubs = true;
-        await AppFixture.WaitUntilAsync(() => page.Preview.Rows[1].Target.Contains(".сабы.ass", StringComparison.Ordinal), "сабы");
+        // у папки одна дорожка: «Полные» ещё и в надписи — прежняя дорожка надписей снимается, «Полные» идут в обе папки
+        page.Tracks[1].IsSigns = true;
+        Assert.Equal([(false, false), (true, true)], page.Tracks.Select(t => (t.IsSigns, t.IsSubs)));
+        await AppFixture.WaitUntilAsync(() => TrackOf(page, 0).StartsWith("3:", StringComparison.Ordinal), "одна дорожка в обе папки");
+        Assert.Equal(TrackOf(page, 0)[..2], TrackOf(page, 1)[..2]);
+        Assert.Equal("2:", TrackOf(page, 2)[..2]);
+        Assert.Equal("2:", TrackOf(page, 3)[..2]);
+        Assert.Equal(["надписи", "сабы", "надписи", "сабы"], page.Preview.Rows.Select(r => Path.GetDirectoryName(r.Target[2..])));
+
+        page.Tracks[1].IsSubs = false;
+        await AppFixture.WaitUntilAsync(() => page.Preview.Rows.Count == 2, "только надписи");
+        Assert.All(page.Preview.Rows, r => Assert.Contains(".надписи.ass", r.Target, StringComparison.Ordinal));
+        page.Tracks[1].IsSigns = false;
+        Assert.Equal("Выберите дорожку для надписей или для сабов.", page.Message);
         // mkvmerge -J по каждой серии — один раз, дальше из кэша
         Assert.Equal(2, app.Runner.Calls.Count(c => c.Arguments.Contains("-J")));
     }
@@ -195,6 +214,37 @@ public sealed class PagesTests
         picker.SkipCommand.Execute(null);
         Assert.True(chosen?.IsSkip);
         await Task.CompletedTask.WaitAsync(Ct);
+    }
+
+    [AvaloniaFact]
+    public async Task Shikimori_picker_shows_every_result_with_details_and_posters()
+    {
+        // 12 тайтлов (раньше показывали 8); у первого — постер, у второго вместо картинки мусор, у остальных постера нет
+        var animes = Enumerable.Range(1, 12).Select(i => $$"""
+            {"id":"{{i}}","name":"Title {{i}}","russian":"Тайтл {{i}}","english":"Title {{i}} EN","kind":"tv","status":"ongoing",
+             "episodes":12,"episodesAired":{{i}},"airedOn":{"year":2020},"score":8.5,"duration":24,
+             "poster":{"mainUrl":"https://shikimori.io/p/{{i}}.webp"},"genres":[{"russian":"Драма"}],"studios":[{"name":"Madhouse"}],
+             "description":"Про [character=1]героя[/character]."}
+            """);
+        var site = new FakeShikimori("""{"data":{"animes":[""" + string.Join(",", animes) + "]}}")
+        {
+            Posters = { ["https://shikimori.io/p/1.webp"] = FakeShikimori.Poster(0xFF9B73FF, 0xFF24252F), ["https://shikimori.io/p/2.webp"] = [1, 2, 3] },
+        };
+        using var http = new HttpClient(site);
+        var picker = new ShikimoriPickerViewModel(new ShikimoriClient(http, null, (_, _) => Task.CompletedTask), "Title");
+
+        await picker.SearchAsync();
+
+        Assert.Equal(12, picker.Results.Count);
+        Assert.Equal("Найдено: 12", picker.Found);
+        var first = picker.Selected!;
+        Assert.Equal(("Тайтл 1", "Title 1 · Title 1 EN", "TV · 1 из 12 эп. · 2020"), (first.Title, first.OtherNames, first.Meta));
+        Assert.Equal(("8.50", "24 мин", "выходит", "Драма", "Madhouse", "Про героя."), (first.Score, first.Duration, first.Status, first.Genres, first.Studios, first.Description));
+
+        await AppFixture.WaitUntilAsync(() => site.PosterRequests == 12 && picker.Results[0].Poster is not null, "постеры");
+        AppFixture.Flush();
+        Assert.Equal(new Avalonia.PixelSize(225, 318), picker.Results[0].Poster!.PixelSize);
+        Assert.All(picker.Results.Skip(1), r => Assert.Null(r.Poster));
     }
 
     private static string TrackOf(SubtitlesPageViewModel page, int row) =>

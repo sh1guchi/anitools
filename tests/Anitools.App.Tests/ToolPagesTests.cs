@@ -1,6 +1,7 @@
 using Anitools.App.ViewModels;
 using Anitools.Core.Operations.AudioTools;
 using Anitools.Core.Jobs;
+using Anitools.Core.Processes;
 using Avalonia.Headless.XUnit;
 
 namespace Anitools.App.Tests;
@@ -47,6 +48,11 @@ public sealed class ToolPagesTests
         vm.SelectedNav = shift;
         await AppFixture.WaitUntilAsync(() => shift.Preview.Rows.Count == 2, "сдвиг");
 
+        // по умолчанию — без перекодирования (mkvmerge --sync), AAC — по выбору, как в оригинале
+        Assert.False(shift.Reencode);
+        Assert.Contains("-1:1000", shift.Preview.Plan!.Items[0].Command!.Arguments);
+        Assert.Equal(Tool.Mkvmerge, shift.Preview.Plan!.Items[0].Command!.Tool);
+        shift.Reencode = true;
         Assert.Contains("adelay=delays=1000:all=1", shift.Preview.Plan!.Items[0].Command!.Arguments);
         shift.Seconds = "-0,5";
         Assert.Equal(["-ss", "0.5"], shift.Preview.Plan!.Items[0].Command!.Arguments.SkipWhile(a => a != "-ss").Take(2));
@@ -62,6 +68,14 @@ public sealed class ToolPagesTests
         Assert.Equal("→ " + Path.Combine("converted", "Show - 01.flac"), convert.Preview.Rows[0].Target);
         convert.Channels = "";
         Assert.DoesNotContain("-ac", convert.Preview.Plan!.Items[0].Command!.Arguments);
+
+        // MOV — AAC в QuickTime, только звук: обложка (attached_pic) не переносится
+        convert.Format = AudioFormat.Mov;
+        Assert.True(convert.HasBitrate);
+        Assert.Equal("→ " + Path.Combine("converted", "Show - 01.mov"), convert.Preview.Rows[0].Target);
+        Assert.DoesNotContain("attached_pic", convert.Preview.Plan!.Items[0].Command!.Arguments);
+        Assert.Equal("MOV · AAC, только звук", Views.Converters.AudioFormatLabel.Convert(AudioFormat.Mov, typeof(string), null, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal("FLAC", Views.Converters.AudioFormatLabel.Convert("Flac", typeof(string), null, System.Globalization.CultureInfo.InvariantCulture));
     }
 
     [AvaloniaFact]
@@ -78,6 +92,9 @@ public sealed class ToolPagesTests
         page.IsNumbers = true;
         await page.CopyCommand.ExecuteAsync(null);
         Assert.Equal("1. AniLibria.TV\n2. Оригинальная\n3. DEEP\n", app.Dialogs.Clipboard);
+        // через запятую: русские озвучки, потом English, потом Original
+        page.IsComma = true;
+        Assert.Equal("AniLibria.TV, DEEP, Original", page.CopyText);
     }
 
     [AvaloniaFact]
@@ -104,7 +121,18 @@ public sealed class ToolPagesTests
         await AppFixture.WaitUntilAsync(() => clean.Values.Count == 2, "стили");
         Assert.Equal(["Default", "Signs"], clean.Values.Select(v => v.Value));
         Assert.Equal(0, clean.RemoveCount);
-        clean.Values[1].IsChecked = true;
+        // поиск по словам: найденные видны и отмечаются одной кнопкой (Enter)
+        clean.Search = "def, нет такого";
+        Assert.Equal(1, clean.MatchCount);
+        Assert.Equal([true, false], clean.Values.Select(v => v.IsMatch));
+        clean.CheckFoundCommand.Execute(null);
+        Assert.Equal([true, false], clean.Values.Select(v => v.IsChecked));
+        clean.UncheckFoundCommand.Execute(null);
+        clean.Search = "SIGN";
+        clean.CheckFoundCommand.Execute(null);
+        clean.Search = "";
+        Assert.All(clean.Values, v => Assert.True(v.IsMatch));
+        Assert.Equal([false, true], clean.Values.Select(v => v.IsChecked));
         Assert.Equal(1, clean.RemoveCount);
         Assert.StartsWith("Будет удалено строк: 1 в 1 файле", clean.Summary);
 

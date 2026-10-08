@@ -114,8 +114,11 @@ public sealed class RamDiskStateFile(string path)
     }
 }
 
-/// <summary>Команды ImDisk (py:4563–4639).</summary>
-public sealed class ImDisk(IProcessRunner runner, string? imdiskPath)
+/// <summary>
+/// Команды ImDisk (py:4563–4639). Создавать и снимать диски напрямую можно, только если приложение запущено от
+/// администратора; иначе это делает <see cref="ElevatedImDisk"/>.
+/// </summary>
+public sealed class ImDisk(IProcessRunner runner, string? imdiskPath) : IImDiskAdmin
 {
     /// <summary>Установлен ли ImDisk: «imdisk -l» отвечает 0 или 1 (1 — дисков нет, но программа есть).</summary>
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
@@ -135,7 +138,7 @@ public sealed class ImDisk(IProcessRunner runner, string? imdiskPath)
         {
             var output = result is null ? "ImDisk не ответил" : string.Join('\n', new[] { result.StandardOutput, result.StandardErrorTail }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
             throw new WorkDirException(
-                "Не удалось создать RAM-диск. Самая частая причина — нет прав администратора: запустите anitools от имени администратора."
+                $"Не удалось создать RAM-диск {sizeGb} ГБ. Частые причины — не хватает свободной памяти или ImDisk установлен не полностью."
                 + (output.Length > 0 ? $"\nImDisk: {(output.Length > 300 ? output[..300] : output)}" : ""));
         }
     }
@@ -174,9 +177,12 @@ public sealed class ImDisk(IProcessRunner runner, string? imdiskPath)
 /// рабочая папка &lt;буква&gt;:\anitools_tmp. Буква записывается в файл состояния, чтобы снять диск, даже если
 /// приложение убьют. Снимается при освобождении аренды.
 /// </summary>
-public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile state, IDriveSystem? drives = null, bool requireWindows = true)
+/// <param name="admin">Кто создаёт и снимает диск: сам ImDisk (приложение от администратора) или помощник с правами.</param>
+public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile state, IDriveSystem? drives = null, bool requireWindows = true, IImDiskAdmin? admin = null)
     : IWorkDirProvider
 {
+    private readonly IImDiskAdmin _admin = admin ?? imdisk;
+
     public const int DefaultSizeGb = 14;
 
     public const int MinSizeGb = 2;
@@ -207,7 +213,7 @@ public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile st
 
         var letter = DriveLetters.FindFree(_drives.UsedLetters())
             ?? throw new WorkDirException("Нет свободной буквы диска. Выберите папку для временных файлов.");
-        await imdisk.CreateAsync(SizeGb, letter, cancellationToken).ConfigureAwait(false);
+        await _admin.CreateAsync(SizeGb, letter, cancellationToken).ConfigureAwait(false);
         for (var i = 0; i < 20 && !_drives.DriveExists(letter); i++)
         {
             await Delay(TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
@@ -215,8 +221,8 @@ public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile st
 
         if (!_drives.DriveExists(letter))
         {
-            await imdisk.RemoveAsync(letter).ConfigureAwait(false);
-            throw new WorkDirException($"RAM-диск {letter}: создан, но не появился в системе. Выберите папку для временных файлов.");
+            await _admin.RemoveAsync(letter).ConfigureAwait(false);
+            throw new WorkDirException($"RAM-диск {letter}: создан, но не открывается (не отформатировался). Выберите папку для временных файлов.");
         }
 
         state.Add(letter);
@@ -228,23 +234,27 @@ public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile st
 
         return new WorkDirLease(work, $"RAM-диск {letter}: ({SizeGb} ГБ)", async () =>
         {
-            await imdisk.RemoveAsync(letter).ConfigureAwait(false);
+            await _admin.RemoveAsync(letter).ConfigureAwait(false);
             state.Remove(letter);
         });
     }
 
     /// <summary>
     /// Снимает RAM-диски, оставшиеся от аварийно завершённого запуска (_cleanup_orphan_ramdisks), и очищает
-    /// файл состояния. Возвращает снятые буквы.
+    /// файл состояния. Буквы, которых в системе уже нет (перезагрузка, диск снял помощник), не трогаются — чтобы
+    /// не спрашивать права администратора зря. Возвращает снятые буквы.
     /// </summary>
-    public static async Task<IReadOnlyList<char>> CleanupOrphansAsync(ImDisk imdisk, RamDiskStateFile state, CancellationToken cancellationToken = default)
+    public static async Task<IReadOnlyList<char>> CleanupOrphansAsync(
+        ImDisk imdisk, RamDiskStateFile state, IImDiskAdmin? admin = null, IDriveSystem? drives = null, CancellationToken cancellationToken = default)
     {
-        var letters = state.Read().Where(l => l.Length == 1 && char.IsAsciiLetter(l[0])).Select(l => char.ToUpperInvariant(l[0])).ToList();
+        var present = (drives ?? new WindowsDriveSystem()).UsedLetters();
+        var letters = state.Read().Where(l => l.Length == 1 && char.IsAsciiLetter(l[0])).Select(l => char.ToUpperInvariant(l[0]))
+            .Where(present.Contains).ToList();
         if (letters.Count > 0 && await imdisk.IsAvailableAsync(cancellationToken).ConfigureAwait(false))
         {
             foreach (var letter in letters)
             {
-                await imdisk.RemoveAsync(letter).ConfigureAwait(false);
+                await (admin ?? imdisk).RemoveAsync(letter).ConfigureAwait(false);
             }
         }
         else
@@ -260,9 +270,10 @@ public sealed class ImDiskRamDisk(ImDisk imdisk, int sizeGb, RamDiskStateFile st
 /// <summary>Поставщик временной папки по настройкам.</summary>
 public static class WorkDirProviders
 {
-    public static IWorkDirProvider Create(WorkDirSettings settings, IProcessRunner runner, string? imdiskPath) => settings.Mode switch
+    /// <param name="admin">Кто создаёт RAM-диск; null — сам ImDisk (нужны права администратора).</param>
+    public static IWorkDirProvider Create(WorkDirSettings settings, IProcessRunner runner, string? imdiskPath, IImDiskAdmin? admin = null) => settings.Mode switch
     {
-        WorkDirMode.RamDisk => new ImDiskRamDisk(new ImDisk(runner, imdiskPath), settings.RamDiskGb, new RamDiskStateFile(RamDiskStateFile.DefaultPath)),
+        WorkDirMode.RamDisk => new ImDiskRamDisk(new ImDisk(runner, imdiskPath), settings.RamDiskGb, new RamDiskStateFile(RamDiskStateFile.DefaultPath), admin: admin),
         WorkDirMode.Folder => new FolderWorkDir(settings.Folder),
         _ => new NearOutputWorkDir(),
     };

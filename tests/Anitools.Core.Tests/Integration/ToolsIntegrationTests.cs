@@ -19,22 +19,51 @@ public sealed class ToolsIntegrationTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Audio_shift_adds_or_cuts_a_second_and_keeps_5_1()
+    public async Task Audio_shift_without_reencoding_moves_start_and_keeps_codec()
+    {
+        var tools = TestTools.RequireMkvToolNix();
+        var probe = new MediaProbe(new ProcessRunner(), tools);
+        using var dir = new TempDir();
+        await MediaFactory.CreateAsync(dir.Combine("Voice.ac3"), ["-f", "lavfi", "-t", "3", "-i", "anullsrc=channel_layout=5.1:sample_rate=48000", "-c:a", "ac3"]);
+
+        var plus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 1 }), 6);
+        Assert.Equal(ItemOutcome.Done, Assert.Single(plus.Items).Outcome);
+        var shifted = dir.Combine("audio_fixed", "Voice.mka");
+        Assert.InRange(await StartTimeAsync(tools, shifted), 0.95, 1.05); // звук начинается на секунду позже
+        var info = await probe.ProbeAsync(shifted, Ct);
+        Assert.Equal((6, "ac3"), (info.AudioStreams[0].Channels, info.AudioStreams[0].CodecName)); // тот же кодек, без перекодирования
+
+        File.Delete(shifted);
+        var minus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -1 }), 6);
+        Assert.Equal(ItemOutcome.Done, Assert.Single(minus.Items).Outcome);
+        Assert.InRange((await probe.ProbeAsync(shifted, Ct)).Duration!.Value, 1.9, 2.1); // первая секунда отброшена
+    }
+
+    [Fact]
+    public async Task Audio_shift_with_aac_adds_or_cuts_a_second_and_keeps_5_1()
     {
         var (tools, probe) = Tools();
         using var dir = new TempDir();
         await MediaFactory.CreateAsync(dir.Combine("Voice.ac3"), ["-f", "lavfi", "-t", "3", "-i", "anullsrc=channel_layout=5.1:sample_rate=44100", "-c:a", "ac3"]);
 
-        var plus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 1 }), 6);
+        var plus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = 1, Reencode = true }), 6);
         Assert.Equal(ItemOutcome.Done, Assert.Single(plus.Items).Outcome);
         var longer = await probe.ProbeAsync(dir.Combine("audio_fixed", "Voice.mka"), Ct);
         Assert.InRange(longer.Duration!.Value, 3.9, 4.15);
         Assert.Equal((6, "aac"), (longer.AudioStreams[0].Channels, longer.AudioStreams[0].CodecName)); // раскладка исходника цела
 
         File.Delete(dir.Combine("audio_fixed", "Voice.mka"));
-        var minus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -1 }), 6);
+        var minus = await Execute(tools, probe, dir, AudioShiftOperation.Plan(dir.Path, new AudioShiftOptions { Seconds = -1, Reencode = true }), 6);
         Assert.Equal(ItemOutcome.Done, Assert.Single(minus.Items).Outcome);
         Assert.InRange((await probe.ProbeAsync(dir.Combine("audio_fixed", "Voice.mka"), Ct)).Duration!.Value, 1.9, 2.15);
+    }
+
+    /// <summary>Начало первой дорожки по ffprobe (start_time), с.</summary>
+    private static async Task<double> StartTimeAsync(ToolPaths tools, string file)
+    {
+        var result = await new ProcessRunner().RunAsync(
+            new ProcessSpec(tools.Ffprobe!, ["-v", "error", "-select_streams", "a:0", "-show_entries", "stream=start_time", "-of", "csv=p=0", file]), Ct);
+        return double.Parse(result.StandardOutput.Trim(), System.Globalization.CultureInfo.InvariantCulture);
     }
 
     [Fact]
@@ -53,6 +82,36 @@ public sealed class ToolsIntegrationTests
         var flac = await Execute(tools, probe, dir, AudioConvertOperation.Plan(dir.Path, new AudioConvertOptions { Format = AudioFormat.Flac }), 8);
         Assert.All(flac.Items, i => Assert.Equal(ItemOutcome.Done, i.Outcome));
         Assert.Equal("flac", (await probe.ProbeAsync(dir.Combine("converted", "B.flac"), Ct)).AudioStreams[0].CodecName);
+    }
+
+    [Fact]
+    public async Task Audio_convert_to_mov_keeps_only_audio()
+    {
+        var (tools, probe) = Tools();
+        using var dir = new TempDir();
+        // mp3 с обложкой: в m4a обложка переносится, в .mov — нет, там только звук
+        await MediaFactory.CreateAsync(dir.Combine("C.mp3"),
+        [
+            .. MediaFactory.Sine(440), "-f", "lavfi", "-i", "color=c=red:s=64x64:d=1",
+            "-map", "0:a", "-map", "1:v", "-c:a", "libmp3lame", "-c:v", "png", "-frames:v", "1", "-disposition:v:0", "attached_pic",
+        ]);
+        Assert.Single((await probe.ProbeAsync(dir.Combine("C.mp3"), Ct)).VideoStreams);
+
+        var mov = await Execute(tools, probe, dir, AudioConvertOperation.Plan(dir.Path, new AudioConvertOptions { Format = AudioFormat.Mov }), 8);
+
+        var item = Assert.Single(mov.Items);
+        Assert.True(item.Outcome == ItemOutcome.Done, $"{item.Message} {item.LogPath}");
+        var info = await probe.ProbeAsync(dir.Combine("converted", "C.mov"), Ct);
+        Assert.Empty(info.VideoStreams);
+        Assert.Equal(("aac", 2), (Assert.Single(info.AudioStreams).CodecName, info.AudioStreams[0].Channels));
+        // именно QuickTime: в ftyp основной бренд «qt  », а не mp4/m4a
+        var head = new byte[12];
+        await using (var file = File.OpenRead(dir.Combine("converted", "C.mov")))
+        {
+            await file.ReadExactlyAsync(head, Ct);
+        }
+
+        Assert.Equal("ftypqt  ", System.Text.Encoding.ASCII.GetString(head, 4, 8));
     }
 
     [Fact]
@@ -140,6 +199,26 @@ public sealed class ToolsIntegrationTests
         using var zip = ZipFile.OpenRead(result.ZipPath!);
         using var reader = new StreamReader(zip.GetEntry("Шрифт.ttf")!.Open());
         Assert.Equal("TTF-данные", await reader.ReadToEndAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Fonts_from_a_single_video_are_still_fonts_zip()
+    {
+        var tools = TestTools.RequireMkvToolNix();
+        var probe = new MediaProbe(new ProcessRunner(), tools);
+        using var dir = new TempDir();
+        var font = dir.File("_src/Шрифт.ttf", "TTF");
+        await MediaFactory.CreateAsync(dir.Combine("_src", "plain.mkv"), [.. MediaFactory.Video, "-c:v", "libx264", "-preset", "ultrafast"]);
+        var made = await new ProcessRunner().RunAsync(new ProcessSpec(tools.Mkvmerge!, [
+            "-o", dir.Combine("Movie.mkv"), dir.Combine("_src", "plain.mkv"),
+            "--attachment-mime-type", "application/x-truetype-font", "--attach-file", font]), Ct);
+        Assert.True(made.ExitCode <= 1, made.StandardOutput);
+
+        var result = await new VideoFontsOperation(new ProcessRunner(), tools, probe, new ErrorLogWriter(dir.Combine("_logs"))).ExecuteAsync(dir.Path, cancellationToken: Ct);
+
+        // одна серия — архив всё равно fonts.zip, а не по имени видео
+        Assert.Equal(dir.Combine("fonts.zip"), result.ZipPath);
+        Assert.Equal(["Шрифт.ttf"], result.Packed);
     }
 
     [Fact]

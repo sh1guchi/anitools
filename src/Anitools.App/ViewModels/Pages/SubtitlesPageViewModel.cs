@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Anitools.Core.Jobs;
 using Anitools.Core.Media;
 using Anitools.Core.Operations.Common;
@@ -9,8 +10,11 @@ using Material.Icons;
 
 namespace Anitools.App.ViewModels.Pages;
 
-/// <summary>Дорожка субтитров первого файла: «1  Надписи  S_TEXT/ASS → .ass  rus».</summary>
-public sealed class SubtitleTrackRowViewModel(SubtitleTrack track)
+/// <summary>
+/// Дорожка субтитров первого файла: «1  Надписи  S_TEXT/ASS → .ass  rus» и куда её извлекать — в надписи, в сабы,
+/// в обе папки сразу или никуда.
+/// </summary>
+public sealed partial class SubtitleTrackRowViewModel(SubtitleTrack track) : ObservableObject
 {
     public SubtitleTrack Track { get; } = track;
 
@@ -21,10 +25,17 @@ public sealed class SubtitleTrackRowViewModel(SubtitleTrack track)
     public string Codec => $"{Track.CodecId} → {SubtitleTrackMatcher.CodecIdToExtension(Track.CodecId)}";
 
     public string Language => Track.Language.Length > 0 ? Track.Language : Track.LanguageIetf;
+
+    [ObservableProperty]
+    public partial bool IsSigns { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsSubs { get; set; }
 }
 
 /// <summary>
-/// П.4 «Субтитры» (§4.6): дорожка по первому файлу; в каждой серии — та же по ID, тайтлу или языку;
+/// П.4 «Субтитры» (§4.6): дорожки по первому файлу; у надписей и у сабов — своя дорожка (или никакой; одна дорожка
+/// может идти в обе папки), извлекаются за один запуск; в каждой серии — та же по ID, тайтлу или языку;
 /// надписи → «надписи\… .надписи.ass», сабы → «сабы\… .сабы.ass».
 /// </summary>
 public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel(shell, "Субтитры", MaterialIconKind.SubtitlesOutline)
@@ -32,25 +43,24 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
     private CachedMediaProbe _probe = new(shell.Services.Probe);
     private SubtitleSource? _source;
     private CancellationTokenSource? _planning;
+    private bool _assigning;
 
     public ObservableCollection<SubtitleTrackRowViewModel> Tracks { get; } = [];
 
     public PlanPreviewViewModel Preview { get; } = new();
 
     [ObservableProperty]
-    public partial SubtitleTrackRowViewModel? SelectedTrack { get; set; }
-
-    [ObservableProperty]
     public partial SubtitleMatchMode Mode { get; set; } = SubtitleMatchMode.ById;
-
-    [ObservableProperty]
-    public partial SubtitleKind Kind { get; set; } = SubtitleKind.Signs;
 
     [ObservableProperty]
     public partial string TracksCaption { get; set; } = "";
 
     [ObservableProperty]
     public partial bool IsPlanning { get; set; }
+
+    public SubtitleTrackRowViewModel? SignsTrack => Tracks.FirstOrDefault(t => t.IsSigns);
+
+    public SubtitleTrackRowViewModel? SubsTrack => Tracks.FirstOrDefault(t => t.IsSubs);
 
     public bool IsById
     {
@@ -70,43 +80,28 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         set => SetMode(value, SubtitleMatchMode.ByLanguage);
     }
 
-    public bool IsSigns
-    {
-        get => Kind == SubtitleKind.Signs;
-        set
-        {
-            if (value)
-            {
-                Kind = SubtitleKind.Signs;
-            }
-        }
-    }
-
-    public bool IsSubs
-    {
-        get => Kind == SubtitleKind.Subs;
-        set
-        {
-            if (value)
-            {
-                Kind = SubtitleKind.Subs;
-            }
-        }
-    }
-
     protected override async Task LoadAsync(string folder, CancellationToken cancellationToken)
     {
         _probe = new CachedMediaProbe(Shell.Services.Probe);
         var source = await SubtitleExtractOperation.InspectAsync(folder, _probe, cancellationToken);
         _source = source;
-        Tracks.Clear();
-        foreach (var track in source.Tracks)
+        foreach (var row in Tracks)
         {
-            Tracks.Add(new SubtitleTrackRowViewModel(track));
+            row.PropertyChanged -= OnTrackChanged;
         }
 
+        Tracks.Clear();
+        var (signs, subs) = SubtitleTrackMatcher.GuessRoles(source.Tracks);
+        _assigning = true;
+        foreach (var track in source.Tracks)
+        {
+            var row = new SubtitleTrackRowViewModel(track) { IsSigns = track == signs, IsSubs = track == subs };
+            row.PropertyChanged += OnTrackChanged;
+            Tracks.Add(row);
+        }
+
+        _assigning = false;
         TracksCaption = $"по первому файлу: {Path.GetFileName(source.Files[0])} · всего файлов: {source.Files.Count}";
-        SelectedTrack = Tracks.FirstOrDefault();
         await ReplanAsync();
     }
 
@@ -118,8 +113,6 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         TracksCaption = "";
     }
 
-    partial void OnSelectedTrackChanged(SubtitleTrackRowViewModel? value) => _ = ReplanAsync();
-
     partial void OnModeChanged(SubtitleMatchMode value)
     {
         OnPropertyChanged(nameof(IsById));
@@ -128,10 +121,40 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
         _ = ReplanAsync();
     }
 
-    partial void OnKindChanged(SubtitleKind value)
+    /// <summary>
+    /// У надписей и у сабов — по одной дорожке: отметили другую — прежняя в этой папке снимается. Одна и та же
+    /// дорожка может стоять и в надписях, и в сабах.
+    /// </summary>
+    private void OnTrackChanged(object? sender, PropertyChangedEventArgs e)
     {
-        OnPropertyChanged(nameof(IsSigns));
-        OnPropertyChanged(nameof(IsSubs));
+        if (_assigning || sender is not SubtitleTrackRowViewModel changed
+            || e.PropertyName is not (nameof(SubtitleTrackRowViewModel.IsSigns) or nameof(SubtitleTrackRowViewModel.IsSubs)))
+        {
+            return;
+        }
+
+        _assigning = true;
+        try
+        {
+            foreach (var other in Tracks.Where(t => t != changed))
+            {
+                if (e.PropertyName == nameof(SubtitleTrackRowViewModel.IsSigns) && changed.IsSigns)
+                {
+                    other.IsSigns = false;
+                }
+                else if (e.PropertyName == nameof(SubtitleTrackRowViewModel.IsSubs) && changed.IsSubs)
+                {
+                    other.IsSubs = false;
+                }
+            }
+        }
+        finally
+        {
+            _assigning = false;
+        }
+
+        OnPropertyChanged(nameof(SignsTrack));
+        OnPropertyChanged(nameof(SubsTrack));
         _ = ReplanAsync();
     }
 
@@ -155,18 +178,36 @@ public sealed partial class SubtitlesPageViewModel(IShell shell) : PageViewModel
     /// <summary>План читает дорожки каждой серии (mkvmerge -J) — один раз, дальше из кэша.</summary>
     private async Task ReplanAsync()
     {
-        if (_source is not { } source || SelectedTrack is not { } track)
+        if (_source is not { } source)
         {
             return;
         }
 
+        List<SubtitleExtractOptions> selections = [];
+        if (SignsTrack is { } signs)
+        {
+            selections.Add(new SubtitleExtractOptions(signs.Track.Id, Mode, SubtitleKind.Signs));
+        }
+
+        if (SubsTrack is { } subs)
+        {
+            selections.Add(new SubtitleExtractOptions(subs.Track.Id, Mode, SubtitleKind.Subs));
+        }
+
         _planning?.Cancel();
+        if (selections.Count == 0)
+        {
+            Preview.Clear();
+            Message = "Выберите дорожку для надписей или для сабов.";
+            return;
+        }
+
         var cts = new CancellationTokenSource();
         _planning = cts;
         IsPlanning = true;
         try
         {
-            var plan = await SubtitleExtractOperation.PlanAsync(source, new SubtitleExtractOptions(track.Track.Id, Mode, Kind), _probe, cts.Token);
+            var plan = await SubtitleExtractOperation.PlanAsync(source, selections, _probe, cts.Token);
             if (!cts.IsCancellationRequested)
             {
                 Preview.Show(plan, Shell.FileSize);

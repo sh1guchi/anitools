@@ -1,4 +1,5 @@
 using Anitools.App.Startup;
+using Anitools.Core.WorkDir;
 using Avalonia;
 using Avalonia.Media;
 
@@ -13,6 +14,12 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Помощник с правами администратора для RAM-диска: без окна и без проверки «один экземпляр»
+        if (args is [ImDiskHelper.Argument, var pipe, var app] && int.TryParse(app, out var appProcessId))
+        {
+            return RunImDiskHelper(pipe, appProcessId);
+        }
+
         var instance = SingleInstance.TryBecomePrimary(SingleInstance.DefaultName);
         if (instance is null)
         {
@@ -26,6 +33,23 @@ internal static class Program
 
         App.Instance = instance;
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    /// <summary>
+    /// Помощник выходит тихо при любом исходе: упавший процесс с правами администратора показал бы окно Windows
+    /// «программа не работает». Свои RAM-диски он снимает до выхода (finally в ImDiskHelper.ServeAsync).
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031", Justification = "Процесс-помощник не должен падать с окном ошибки.")]
+    private static int RunImDiskHelper(string pipe, int appProcessId)
+    {
+        try
+        {
+            return ImDiskHelper.RunAsync(pipe, appProcessId).GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            return 1;
+        }
     }
 
     // Используется и дизайнером Avalonia

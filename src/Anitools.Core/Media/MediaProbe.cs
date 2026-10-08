@@ -16,7 +16,7 @@ public interface IMediaProbe
 
 /// <summary>Программа не найдена (нет в PATH и в настройках).</summary>
 public sealed class ToolNotFoundException(Tool tool)
-    : Exception($"Не найдена программа {tool.ToString().ToLowerInvariant()} — укажите путь в настройках")
+    : Exception($"Не найдена программа {tool.ToString().ToLowerInvariant()} — поставьте её в «Настройках» («Установить») или укажите путь")
 {
     public Tool Tool { get; } = tool;
 }

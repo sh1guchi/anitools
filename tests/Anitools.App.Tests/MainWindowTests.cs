@@ -87,6 +87,26 @@ public sealed class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Error_of_the_previous_folder_does_not_wipe_the_new_one()
+    {
+        // Папку сменили, пока страница ещё читала прежнюю; прежняя закончилась ошибкой уже после новой
+        using var app = new AppFixture();
+        var page = new GatedPage(app.CreateViewModel());
+        page.SetFolder("old");
+        page.Activate();
+        page.SetFolder("new");
+        page.Release("new");
+        await AppFixture.WaitUntilAsync(() => page.Shown == "new", "новая папка");
+
+        page.Release("old");
+        AppFixture.Flush();
+
+        Assert.Equal("new", page.Shown);
+        Assert.Null(page.Message);
+        Assert.False(page.IsLoading);
+    }
+
+    [AvaloniaFact]
     public void Without_folder_pages_ask_to_choose_one()
     {
         using var app = new AppFixture();
@@ -310,6 +330,44 @@ public sealed class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Install_button_downloads_the_latest_version_and_writes_the_paths()
+    {
+        using var app = new AppFixture();
+        app.Services.Installer = FakeToolSite.WithFfmpeg("9.0.2", mkvToolNixHangs: true).Installer(app.Root);
+        var vm = app.CreateViewModel();
+        var settings = vm.SettingsPage;
+        var ffmpeg = settings.Packages[0];
+        Assert.Equal(OperatingSystem.IsWindows() ? ["FFmpeg", "MKVToolNix", "ImDisk"] : ["FFmpeg", "MKVToolNix"], settings.Packages.Select(p => p.Title));
+        Assert.Equal(["ffmpeg", "ffprobe"], ffmpeg.Rows.Select(r => r.Name));
+        Assert.True(ffmpeg.CanInstall);
+        Assert.Equal("Обновить", ffmpeg.InstallText); // ffmpeg уже есть — поставить последнюю
+
+        vm.SelectedNav = settings; // первое открытие настроек — узнать последние версии
+        await AppFixture.WaitUntilAsync(() => ffmpeg.Latest == "последняя: 9.0.2", "последняя версия");
+
+        await ffmpeg.InstallCommand.ExecuteAsync(null);
+
+        var folder = Path.Combine(app.Root, "tools", "ffmpeg-9.0.2");
+        Assert.Equal(Path.Combine(folder, "ffmpeg.exe"), settings.ToolPaths[0].Configured);
+        Assert.Equal(Path.Combine(folder, "ffprobe.exe"), settings.ToolPaths[1].Configured);
+        Assert.True(settings.ToolPaths[0].IsFound);
+        Assert.Equal(Path.Combine(folder, "ffmpeg.exe"), app.Services.Settings.Tools.Ffmpeg); // сохранено сразу
+        Assert.Equal(Path.Combine(folder, "ffprobe.exe"), app.Services.Tools.Ffprobe);
+        Assert.Contains(vm.Toasts, t => t.Kind == ToastKind.Ok && t.Text == "FFmpeg 9.0.2 установлен — пути прописаны в настройках.");
+        Assert.False(ffmpeg.IsInstalling);
+
+        // долгую загрузку можно отменить
+        var mkv = settings.Packages[1];
+        var installing = mkv.InstallCommand.ExecuteAsync(null);
+        await AppFixture.WaitUntilAsync(() => mkv.IsInstalling && mkv.Stage == "узнаю последнюю версию", "установка идёт");
+        Assert.False(mkv.InstallCommand.CanExecute(null));
+        mkv.CancelInstallCommand.Execute(null);
+        await installing;
+        Assert.Contains(vm.Toasts, t => t.Kind == ToastKind.Warn && t.Text == "Установка MKVToolNix отменена.");
+        Assert.False(mkv.IsInstalling);
+    }
+
+    [AvaloniaFact]
     public void Tool_path_rows_show_what_is_found()
     {
         using var app = new AppFixture();
@@ -323,5 +381,32 @@ public sealed class MainWindowTests
         Assert.StartsWith("по этому пути программы нет — пока берётся ", ffmpeg.Found);
         ffmpeg.Configured = Path.Combine(app.Root, "bin");
         Assert.True(ffmpeg.IsFound);
+    }
+
+    /// <summary>Страница, чья загрузка ждёт, пока тест её не отпустит; папка «old» заканчивается ошибкой.</summary>
+    private sealed class GatedPage(IShell shell) : PageViewModel(shell, "Тест", Material.Icons.MaterialIconKind.TestTube)
+    {
+        private readonly Dictionary<string, TaskCompletionSource> _gates = new()
+        {
+            ["old"] = new(TaskCreationOptions.RunContinuationsAsynchronously),
+            ["new"] = new(TaskCreationOptions.RunContinuationsAsynchronously),
+        };
+
+        public string? Shown { get; private set; }
+
+        public void Release(string folder) => _gates[folder].SetResult();
+
+        protected override async Task LoadAsync(string folder, CancellationToken cancellationToken)
+        {
+            await _gates[folder].Task; // отмену не слушает — как чтение, застрявшее на диске
+            if (folder == "old")
+            {
+                throw new Core.Operations.Common.PlanException("Видео не найдены.");
+            }
+
+            Shown = folder;
+        }
+
+        protected override void Clear() => Shown = null;
     }
 }
